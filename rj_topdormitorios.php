@@ -130,12 +130,11 @@ class Rj_TopDormitorios extends Module
      */
     public function getContent()
     {
-        
         /**
          * If values have been submitted in the form, process.
          */
-        if (((bool)Tools::isSubmit('submitrj_topdormitoriosModule')) == true) {
-            $this->postProcess();
+        if (Tools::isSubmit('submitModulePay')) {
+            $this->_postProcess();
         }
 
         $this->context->smarty->assign('module_dir', $this->_path);
@@ -143,9 +142,138 @@ class Rj_TopDormitorios extends Module
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
         // $output .= $this->renderForm();
+        $output .= $this->displayFormModulePay();
+
         $output .= $this->renderList();
 
         return $output;
+    }
+    protected function _postProcess()
+    {
+        $errors = array();
+        $shop_context = Shop::getContext();
+
+        /* Processes Slider */
+        if (Tools::isSubmit('submitModulePay')) {
+            $shop_groups_list = array();
+            $shops = Shop::getContextListShopID();
+
+            foreach ($shops as $shop_id) {
+                $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
+
+                if (!in_array($shop_group_id, $shop_groups_list)) {
+                    $shop_groups_list[] = $shop_group_id;
+                }
+
+                $res = Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id, $shop_id);
+            }
+
+            /* Update global shop context if needed*/
+            switch ($shop_context) {
+                case Shop::CONTEXT_ALL:
+                    $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'));
+                    if (count($shop_groups_list)) {
+                        foreach ($shop_groups_list as $shop_group_id) {
+                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
+                        }
+                    }
+                    break;
+                case Shop::CONTEXT_GROUP:
+                    if (count($shop_groups_list)) {
+                        foreach ($shop_groups_list as $shop_group_id) {
+                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
+                        }
+                    }
+                    break;
+            }
+
+            if (!$res) {
+                $errors[] = $this->displayError($this->l('The configuration could not be updated.'));
+            } else {
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&conf=6&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name);
+            }
+        } 
+
+        if (count($errors)) {
+            $this->_html .= $this->displayError(implode('<br />', $errors));
+        } elseif (Tools::isSubmit('submitModulePay')) {
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&conf=3&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name);
+        }
+    }
+
+    public function displayFormModulePay()
+    {
+        $optionsModules = array();
+
+        $modules = $this->getModulesListByName();
+        foreach ($modules as $module) {
+            $optionsModules[] =  array(
+                'id' => $module['name'],
+                'name' => $module['name']
+            );
+        }
+
+        $fields_form = array(
+            'form' => array(
+                'legend' => array(
+                    'title' => $this->l('Module pay information'),
+                    'icon' => 'icon-cogs'
+                ),
+                'input' => array(
+                    array(
+                        'type' => 'select',
+                        'lang' => true,
+                        'label' => $this->l('Select module'),
+                        'name' => 'RJ_MODULE_PAY',
+                        'desc' => $this->l('Seleccione modulo de pago.'),
+                        'options' => array(
+                            'query' => $optionsModules,
+                            'id' => 'id',
+                            'name' => 'name'
+                        )
+                    )
+                ),
+                'submit' => array(
+                    'title' => $this->l('Save')
+                )
+            ),
+        );
+ 
+        $helper = new HelperForm();
+        $helper->show_toolbar = false;
+        $helper->table = $this->table;
+        $lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
+        $helper->default_form_language = $lang->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+        $this->fields_form = array();
+
+        $helper->identifier = $this->identifier;
+        $helper->submit_action = 'submitModulePay';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->tpl_vars = array(
+            'fields_value' => $this->getConfigValuesFormModulePay(),
+            'languages' => $this->context->controller->getLanguages(),
+            'id_language' => $this->context->language->id
+        );
+
+        return $helper->generateForm(array($fields_form));
+    }
+
+    public static function getModulesListByName()
+    {
+        $sqlQuery = 'SELECT m.id_module, m.name, m.active
+                    FROM `' . _DB_PREFIX_ . 'module` m
+                    WHERE m.active = 1';
+
+        return Db::getInstance()->executeS($sqlQuery);
+    }
+
+    public function getConfigValuesFormModulePay()
+    {
+        return array(
+            'RJ_MODULE_PAY' => Configuration::get('RJ_MODULE_PAY', true)
+        );
     }
 
     /**
