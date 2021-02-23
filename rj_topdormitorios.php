@@ -142,144 +142,22 @@ class Rj_TopDormitorios extends Module
         $output = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
         // $output .= $this->renderForm();
-        $output .= $this->displayFormModulePay();
 
-        $output .= $this->renderList();
+        // $output .= $this->renderList();
 
         return $output;
     }
     protected function _postProcess()
     {
-        $errors = array();
-        $shop_context = Shop::getContext();
 
-        /* Processes Slider */
-        if (Tools::isSubmit('submitModulePay')) {
-            $shop_groups_list = array();
-            $shops = Shop::getContextListShopID();
-
-            foreach ($shops as $shop_id) {
-                $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
-
-                if (!in_array($shop_group_id, $shop_groups_list)) {
-                    $shop_groups_list[] = $shop_group_id;
-                }
-
-                $res = Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id, $shop_id);
-            }
-
-            /* Update global shop context if needed*/
-            switch ($shop_context) {
-                case Shop::CONTEXT_ALL:
-                    $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'));
-                    if (count($shop_groups_list)) {
-                        foreach ($shop_groups_list as $shop_group_id) {
-                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
-                        }
-                    }
-                    break;
-                case Shop::CONTEXT_GROUP:
-                    if (count($shop_groups_list)) {
-                        foreach ($shop_groups_list as $shop_group_id) {
-                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
-                        }
-                    }
-                    break;
-            }
-
-            if (!$res) {
-                $errors[] = $this->displayError($this->l('The configuration could not be updated.'));
-            } else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&conf=6&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name);
-            }
-        } 
-
-        if (count($errors)) {
-            $this->_html .= $this->displayError(implode('<br />', $errors));
-        } elseif (Tools::isSubmit('submitModulePay')) {
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true) . '&conf=3&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name);
-        }
     }
 
-    public function displayFormModulePay()
-    {
-        $optionsModules = array();
 
-        $modules = $this->getModulesListByName();
-        foreach ($modules as $module) {
-            $optionsModules[] =  array(
-                'id' => $module['name'],
-                'name' => $module['name']
-            );
-        }
-
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('Module pay information'),
-                    'icon' => 'icon-cogs'
-                ),
-                'input' => array(
-                    array(
-                        'type' => 'select',
-                        'lang' => true,
-                        'label' => $this->l('Select module'),
-                        'name' => 'RJ_MODULE_PAY',
-                        'desc' => $this->l('Seleccione modulo de pago.'),
-                        'options' => array(
-                            'query' => $optionsModules,
-                            'id' => 'id',
-                            'name' => 'name'
-                        )
-                    )
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save')
-                )
-            ),
-        );
- 
-        $helper = new HelperForm();
-        $helper->show_toolbar = false;
-        $helper->table = $this->table;
-        $lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
-        $helper->default_form_language = $lang->id;
-        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-        $this->fields_form = array();
-
-        $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitModulePay';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
-        $helper->tpl_vars = array(
-            'fields_value' => $this->getConfigValuesFormModulePay(),
-            'languages' => $this->context->controller->getLanguages(),
-            'id_language' => $this->context->language->id
-        );
-
-        return $helper->generateForm(array($fields_form));
-    }
-
-    public static function getModulesListByName()
-    {
-        $sqlQuery = 'SELECT m.id_module, m.name, m.active
-                    FROM `' . _DB_PREFIX_ . 'module` m
-                    WHERE m.active = 1';
-
-        return Db::getInstance()->executeS($sqlQuery);
-    }
-
-    public function getConfigValuesFormModulePay()
-    {
-        return array(
-            'RJ_MODULE_PAY' => Configuration::get('RJ_MODULE_PAY', true)
-        );
-    }
 
     /**
      * Create the form that will be displayed in the configuration of your module.
      */
-    protected function renderForm()
+    /* protected function renderForm()
     {
         $helper = new HelperForm();
 
@@ -296,18 +174,18 @@ class Rj_TopDormitorios extends Module
         $helper->token = Tools::getAdminTokenLite('AdminModules');
 
         $helper->tpl_vars = array(
-            'fields_value' => $this->getConfigFormValues(), /* Add values for your inputs */
+            'fields_value' => $this->getConfigFormValues(),
             'languages' => $this->context->controller->getLanguages(),
             'id_language' => $this->context->language->id,
         );
 
         return $helper->generateForm(array($this->getConfigForm()));
-    }
+    } */
 
     /**
      * Create the structure of your form.
      */
-    protected function getConfigForm()
+    /* protected function getConfigForm()
     {
         return array(
             'form' => array(
@@ -354,21 +232,21 @@ class Rj_TopDormitorios extends Module
                 ),
             ),
         );
-    }
+    } */
 
     /**
      * Set values for the inputs.
      */
-    protected function getConfigFormValues()
+    /* protected function getConfigFormValues()
     {
         return array(
             'rj_topdormitorios_LIVE_MODE' => Configuration::get('rj_topdormitorios_LIVE_MODE', true),
             'rj_topdormitorios_ACCOUNT_EMAIL' => Configuration::get('rj_topdormitorios_ACCOUNT_EMAIL', 'contact@prestashop.com'),
             'rj_topdormitorios_ACCOUNT_PASSWORD' => Configuration::get('rj_topdormitorios_ACCOUNT_PASSWORD', null),
         );
-    }
+    } */
 
-    protected function getOrders()
+    /* protected function getOrders()
     {
         // obtengo multi-tienda
         $context = Context::getContext();
@@ -392,65 +270,13 @@ class Rj_TopDormitorios extends Module
         $dbquery->where('o.`id_shop` = ' . (int) $id_shop);
         $dbquery->orderBy('o.`id_order` DESC');
         $dbquery->limit('50');
-
-
-        /*$req = "SELECT
-                    CONCAT(cu.`firstname`, ' ' , cu.`lastname`) as `customer`,
-                    o.id_order,
-                    o.reference,
-                    o.total_paid_tax_incl,
-                    os.paid,
-                    osl.name AS osname,
-                    o.id_currency,
-                    cur.iso_code,
-                    o.current_state,
-                    o.id_customer,
-                    cu.`id_customer` IS NULL as `deleted_customer`,
-                    os.color,
-                    o.payment,
-                    s.name AS shop_name,
-                    o.date_add,
-                    cu.company,
-                    cl.name AS country_name,
-                    o.invoice_number,
-                    o.delivery_number,
-                    IF (
-                        (
-                            SELECT
-                                so.id_order
-                            FROM
-                                "._DB_PREFIX_."orders so
-                            WHERE
-                                (so.id_customer = o.id_customer)
-                                AND (so.id_order < o.id_order)
-                            LIMIT
-                                1
-                        ) > 0, 0, 1
-                    ) AS new
-                FROM
-                    "._DB_PREFIX_."orders o
-                    LEFT JOIN "._DB_PREFIX_."customer cu ON o.id_customer = cu.id_customer
-                    LEFT JOIN "._DB_PREFIX_."currency cur ON o.id_currency = cur.id_currency
-                    INNER JOIN "._DB_PREFIX_."address a ON o.id_address_delivery = a.id_address
-                    LEFT JOIN "._DB_PREFIX_."order_state os ON o.current_state = os.id_order_state
-                    LEFT JOIN "._DB_PREFIX_."shop s ON o.id_shop = s.id_shop
-                    INNER JOIN "._DB_PREFIX_."country c ON a.id_country = c.id_country
-                    INNER JOIN "._DB_PREFIX_."country_lang cl ON c.id_country = cl.id_country AND cl.id_lang = ".(int)$id_lang."
-                    LEFT JOIN "._DB_PREFIX_."order_state_lang osl ON os.id_order_state = osl.id_order_state AND osl.id_lang = ".(int)$id_lang."
-                WHERE
-                    o.`id_shop` = ".(int)$id_shop."
-                ORDER BY
-                    o.id_order DESC
-                LIMIT
-                    50";*/
-
-        // $row = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($req);
+    
         $row = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($dbquery->build());
         // dump($row);
         return ($row);
-    }
+    } */
 
-    public function renderList()
+    /* public function renderList()
     {
 
         $fields_list = array(
@@ -503,28 +329,20 @@ class Rj_TopDormitorios extends Module
         $ordes = $this->paginateOrdes($ordes, $page, $pagination);
 
         return $helper_list->generateList($ordes, $fields_list);
-    }
+    } */
 
-    public function paginateOrdes($ordes, $page = 1, $pagination = 50)
-    {
-        if (count($ordes) > $pagination) {
-            $ordes = array_slice($ordes, $pagination * ($page - 1), $pagination);
-        }
-
-        return $ordes;
-    }
 
     /**
      * Save form data.
      */
-    protected function postProcess()
+    /* protected function postProcess()
     {
         $form_values = $this->getConfigFormValues();
 
         foreach (array_keys($form_values) as $key) {
             Configuration::updateValue($key, Tools::getValue($key));
         }
-    }
+    } */
 
     /**
     * Add the CSS & JavaScript files you want to be loaded in the BO.

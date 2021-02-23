@@ -53,12 +53,16 @@ class AdminTDInfoAgenciaEspController extends ModuleAdminController
     }
     public function initContent()
     {
-        // $this->content .= $this->renderForm();
+        $this->content .= $this->displayFormModulePay();
         return parent::initContent();
     }
 
     protected function getOrders()
     {
+        $id_shop_group = Shop::getContextShopGroupID();
+        $id_shop = Shop::getContextShopID();
+        $state_export = Configuration::get('RJ_STATE_EXPORT', null, $id_shop_group, $id_shop);
+
         $this->_select = '
             CONCAT(cu.`firstname`, \' \' , cu.`lastname`) as `customer`,
             os.`paid`,
@@ -90,8 +94,10 @@ class AdminTDInfoAgenciaEspController extends ModuleAdminController
             LEFT JOIN `'._DB_PREFIX_.'shop` s ON a.id_shop = s.id_shop
             LEFT JOIN `'._DB_PREFIX_.'country` c ON ad.id_country = c.id_country
             LEFT JOIN `'._DB_PREFIX_.'country_lang` cl ON c.id_country = cl.id_country AND cl.id_lang = '.(int)$this->context->language->id.'
-            LEFT JOIN `'._DB_PREFIX_.'order_state_lang` osl ON (os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = '.(int)$this->context->language->id.')';
-        
+            LEFT JOIN `'._DB_PREFIX_.'order_state_lang` osl ON (os.id_order_state = osl.id_order_state AND osl.id_lang = '.(int)$this->context->language->id.')';
+        if($state_export) {
+            $this->_where = 'AND os.id_order_state = '.$state_export;
+        }
         $this->_orderBy = 'a.id_order';
         $this->_orderWay = 'DESC';
 
@@ -198,7 +204,6 @@ class AdminTDInfoAgenciaEspController extends ModuleAdminController
         if($modulePay === $order->module){
             return Tools::displayPrice($echo, (int)$order->id_currency);
         }
-        // dump($order);
     }
 
     public static function setOrderCurrencyCSV($echo, $tr)
@@ -271,17 +276,63 @@ class AdminTDInfoAgenciaEspController extends ModuleAdminController
 
     public function postProcess()
     {
-        if (Tools::isSubmit('submitModulePay')){
-            dump(Tools::getValue('rj_module_pago'));
+        $errors = array();
+        $shop_context = Shop::getContext();
+
+        /* Processes Slider */
+        if (Tools::isSubmit('submitConfigAgenciaEsp')) {
+            $shop_groups_list = array();
+            $shops = Shop::getContextListShopID();
+
+            foreach ($shops as $shop_id) {
+                $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
+
+                if (!in_array($shop_group_id, $shop_groups_list)) {
+                    $shop_groups_list[] = $shop_group_id;
+                }
+
+                $res = Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id, $shop_id);
+                $res = Configuration::updateValue('RJ_STATE_EXPORT', Tools::getValue('RJ_STATE_EXPORT'), false, $shop_group_id, $shop_id);
+            }
+
+            /* Update global shop context if needed*/
+            switch ($shop_context) {
+                case Shop::CONTEXT_ALL:
+                    $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'));
+                    $res &= Configuration::updateValue('RJ_STATE_EXPORT', Tools::getValue('RJ_STATE_EXPORT'));
+                    if (count($shop_groups_list)) {
+                        foreach ($shop_groups_list as $shop_group_id) {
+                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
+                            $res &= Configuration::updateValue('RJ_STATE_EXPORT', Tools::getValue('RJ_STATE_EXPORT'), false, $shop_group_id);
+                        }
+                    }
+                    break;
+                case Shop::CONTEXT_GROUP:
+                    if (count($shop_groups_list)) {
+                        foreach ($shop_groups_list as $shop_group_id) {
+                            $res &= Configuration::updateValue('RJ_MODULE_PAY', Tools::getValue('RJ_MODULE_PAY'), false, $shop_group_id);
+                            $res &= Configuration::updateValue('RJ_STATE_EXPORT', Tools::getValue('RJ_STATE_EXPORT'), false, $shop_group_id);
+                        }
+                    }
+                    break;
+            }
+
+            if (!$res) {
+                $errors[] = $this->module->displayError($this->l('The configuration could not be updated.'));
+            } else {
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminTDInfoAgenciaEsp', true) . '&conf=6');
+            }
+        } 
+
+        if (count($errors)) {
+            $this->content .= $this->module->displayError(implode('<br />', $errors));
+        } elseif (Tools::isSubmit('submitModulePay')) {
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminTDInfoAgenciaEsp', true) . '&conf=3');
         }
-      return parent::postProcess();
+
+        return parent::postProcess();
     }
 
-    /**
-     * @param string $text_delimiter
-     *
-     * @throws PrestaShopException
-     */
     public function processExport($text_delimiter = '"')
     {
         $this->fields_list = array(
@@ -441,6 +492,116 @@ class AdminTDInfoAgenciaEspController extends ModuleAdminController
         @fclose($fd);
         die;
         // return parent::processExport();
+    }
+
+    public function displayFormModulePay()
+    {
+        $optionsModules[] = array(
+                'id' => '',
+                'name' => ''
+        );
+
+        $modules = $this->getModulesListByName();
+        foreach ($modules as $module) {
+            $optionsModules[] =  array(
+                'id' => $module['name'],
+                'name' => $module['name']
+            );
+        }
+
+        $statuses_array[] = array(
+            'id' => '',
+            'name' => ''
+        );
+
+        $statuses = OrderState::getOrderStates((int) $this->context->language->id);
+        foreach ($statuses as $status) {
+            // $this->statuses_array[$status['id_order_state']] = $status['name'];
+            $statuses_array[] =  array(
+                'id' => $status['id_order_state'],
+                'name' => $status['name']
+            );
+        }
+
+        $fields_form = array(
+            'form' => array(
+                'legend' => array(
+                    'title' => $this->l('Module pay information'),
+                    'icon' => 'icon-cogs'
+                ),
+                'input' => array(
+                    array(
+                        'type' => 'select',
+                        'lang' => true,
+                        'label' => $this->l('Select module'),
+                        'name' => 'RJ_MODULE_PAY',
+                        'desc' => $this->l('Seleccione modulo de pago.'),
+                        'options' => array(
+                            'query' => $optionsModules,
+                            'id' => 'id',
+                            'name' => 'name'
+                        )
+                    ),
+                    array(
+                        'type' => 'select',
+                        'lang' => true,
+                        'label' => $this->l('Select State'),
+                        'name' => 'RJ_STATE_EXPORT',
+                        'desc' => $this->l('Seleccione estado a exportar.'),
+                        'options' => array(
+                            'query' => $statuses_array,
+                            'id' => 'id',
+                            'name' => 'name'
+                        )
+                    )
+                ),
+                'submit' => array(
+                    'title' => $this->l('Save'),
+                    'id' => 'submitConfigAgenciaEsp'
+                )
+            ),
+        );
+ 
+        $helper = new HelperForm();
+        $helper->show_toolbar = false;
+        $helper->table = 'configagenciaesp';
+        $lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
+        $helper->default_form_language = $lang->id;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+        $this->fields_form = array();
+        // $this->submit_action = 'submitModulePay';
+        $helper->identifier = $this->identifier;
+        // $helper->identifier = 'submitModulePay';
+        $helper->submit_action = 'submitConfigAgenciaEsp';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminTDInfoAgenciaEsp', false);
+        $helper->token = Tools::getAdminTokenLite('AdminTDInfoAgenciaEsp');
+        $helper->tpl_vars = array(
+            'fields_value' => $this->getConfigValuesFormModulePay(),
+            'languages' => $this->context->controller->getLanguages(),
+            'id_language' => $this->context->language->id
+        );
+
+        return $helper->generateForm(array($fields_form));
+    }
+
+    public static function getModulesListByName()
+    {
+        $sqlQuery = 'SELECT m.id_module, m.name, m.active
+                    FROM `' . _DB_PREFIX_ . 'module` m
+                    WHERE m.active = 1';
+
+        return Db::getInstance()->executeS($sqlQuery);
+    }
+
+    public function getConfigValuesFormModulePay()
+    {
+        $id_shop_group = Shop::getContextShopGroupID();
+        $id_shop = Shop::getContextShopID();
+
+        return array(
+            'RJ_MODULE_PAY' => Tools::getValue('RJ_MODULE_PAY', Configuration::get('RJ_MODULE_PAY', null, $id_shop_group, $id_shop)),
+            'RJ_STATE_EXPORT' => Tools::getValue('RJ_STATE_EXPORT', Configuration::get('RJ_STATE_EXPORT', null, $id_shop_group, $id_shop)),
+        );
     }
 
 }
