@@ -25,3 +25,57 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
+.rj-tag-transport{
+    border: 1px solid #ccc;
+    padding: 50px;
+}
+
+.rj-data-carrier {
+    display: block;
+    border-bottom: 1px solid #999;
+}
+
+.rj-data-carrier h4 {
+    font-size: 45px;
+    display: block;
+    text-align: right;
+}
+
+.rj-tag-transport .rj-sub-title {
+    color: #c0c0c0;
+}
+.rj-tag-transport .rj-data-from h4{
+    font-size: 20px;
+    margin-bottom: 0px;
+}
+.rj-tag-transport .rj-data-from {
+    border-bottom: 1px solid #999;
+}
+.rj-tag-transport .rj-data-from .col-md-8 {
+    border-right: 1px solid #999;
+}
+.rj-tag-transport .rj-data-customer {
+    padding: 20px;
+    border: 5px solid #999;
+    margin-top: 15px;
+}
+.rj-tag-transport .rj-data-customer h4{
+    font-size: 16px;
+    margin-bottom: 0px;
+}
+.rj-tag-transport .rj-data-customer .col-md-8 {
+    border-right: 1px solid #999;
+}
+
+
+.rj-tag-transport .rj-data-order {
+    padding: 10px;
+    border: 1px solid #999;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.rj-tag-transport .rj-data-order .rj-weight{
+    border-left: 1px solid #ccc;
+    border-right: 1px solid #ccc;
+}

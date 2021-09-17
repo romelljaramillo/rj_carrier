@@ -24,25 +24,25 @@
 *}
 
 <div class="panel">
-	<h3><i class="icon icon-credit-card"></i> {l s='Informe de agencias especializadas' mod='rj_topdormitorios'}</h3>
+	<h3><i class="icon icon-credit-card"></i> {l s='Informe de agencias especializadas' mod='rj_carrier'}</h3>
 	<p>
-		<strong>{l s='Here is my new generic module!' mod='rj_topdormitorios'}</strong><br />
-		{l s='Thanks to PrestaShop, now I have a great module.' mod='rj_topdormitorios'}<br />
-		{l s='I can configure it using the following configuration form.' mod='rj_topdormitorios'}
+		<strong>{l s='Here is my new generic module!' mod='rj_carrier'}</strong><br />
+		{l s='Thanks to PrestaShop, now I have a great module.' mod='rj_carrier'}<br />
+		{l s='I can configure it using the following configuration form.' mod='rj_carrier'}
 	</p>
 	<br />
 	<p>
-		{l s='This module will boost your sales!' mod='rj_topdormitorios'}
+		{l s='This module will boost your sales!' mod='rj_carrier'}
 	</p>
 </div>
 
 <div class="panel">
-	<h3><i class="icon icon-tags"></i> {l s='Documentation' mod='rj_topdormitorios'}</h3>
+	<h3><i class="icon icon-tags"></i> {l s='Documentation' mod='rj_carrier'}</h3>
 	<p>
-		&raquo; {l s='You can get a PDF documentation to configure this module' mod='rj_topdormitorios'} :
+		&raquo; {l s='You can get a PDF documentation to configure this module' mod='rj_carrier'} :
 		<ul>
-			<li><a href="#" target="_blank">{l s='English' mod='rj_topdormitorios'}</a></li>
-			<li><a href="#" target="_blank">{l s='French' mod='rj_topdormitorios'}</a></li>
+			<li><a href="#" target="_blank">{l s='English' mod='rj_carrier'}</a></li>
+			<li><a href="#" target="_blank">{l s='French' mod='rj_carrier'}</a></li>
 		</ul>
 	</p>
 </div>

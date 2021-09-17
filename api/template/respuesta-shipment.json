@@ -1,0 +1,72 @@
+{
+    "shipmentId": "bcdeaa3e-b887-4695-90f8-24b3c836ff57",
+    "product": "IBERIA",
+    "pieces": [
+        {
+            "labelId": "bcdeaa3e-b887-4695-90f8-24b3c836ff57",
+            "trackerCode": "SAMPLE0000219679",
+            "parcelType": "SMALL",
+            "pieceNumber": 1,
+            "weight": 50,
+            "labelType": "B2X_Generic_A4_Third",
+            "dimensions": {
+                "length": 40,
+                "width": 40,
+                "height": 40
+            }
+        },
+        {
+            "labelId": "068a9bb5-f3c0-32cc-a451-c957c7fec81f",
+            "trackerCode": "SAMPLE0000219680",
+            "parcelType": "SMALL",
+            "pieceNumber": 1,
+            "weight": 50,
+            "labelType": "B2X_Generic_A4_Third",
+            "dimensions": {
+                "length": 40,
+                "width": 40,
+                "height": 40
+            }
+        },
+        {
+            "labelId": "9b339adf-5d7e-3b0d-baea-47849eddc7f5",
+            "trackerCode": "SAMPLE0000219682",
+            "parcelType": "SMALL",
+            "pieceNumber": 1,
+            "weight": 50,
+            "labelType": "B2X_Generic_A4_Third",
+            "dimensions": {
+                "length": 40,
+                "width": 40,
+                "height": 40
+            }
+        },
+        {
+            "labelId": "378a43fe-c55c-3cbf-8c12-cf94bb98a9f8",
+            "trackerCode": "SAMPLE0000219681",
+            "parcelType": "SMALL",
+            "pieceNumber": 1,
+            "weight": 50,
+            "labelType": "B2X_Generic_A4_Third",
+            "dimensions": {
+                "length": 40,
+                "width": 40,
+                "height": 40
+            }
+        },
+        {
+            "labelId": "e1f98788-8dc3-3e2c-af3e-0b305433e3d0",
+            "trackerCode": "SAMPLE0000219683",
+            "parcelType": "SMALL",
+            "pieceNumber": 1,
+            "weight": 50,
+            "labelType": "B2X_Generic_A4_Third",
+            "dimensions": {
+                "length": 40,
+                "width": 40,
+                "height": 40
+            }
+        }
+    ],
+    "orderReference": "DHL2"
+}

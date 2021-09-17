@@ -25,3 +25,34 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
+
+
+function saveRjTransport(){
+    var data = {
+        "rj_carrier" : $("#rj_carrier").val(),
+        "rj_packages" : $("#rj_packages").val(),
+        "rj_weight" : $("#rj_weight").val(),
+        "rj_message" : $("#rj_message").val(),
+        "action"	: "submitFormPackageCarrier"
+    }
+	// v"ar noteContent = $('#noteContent').val();
+	// var data = 'token=' + 
+    // token_admin_customers + 
+    // '&tab=AdminCustomers&ajax=1&action=updateCustomerNote&id_customer=' + 
+    // customerId + 
+    // '&note=' + 
+    // encodeURIComponent(noteContent);
+	$.ajax({
+		type: "POST",
+		url: "index.php",
+		data: data,
+		async : true,
+		success: function(r) {
+
+			if (r == 'ok') {
+				// $('#submitCustomerNote').attr('disabled', true);
+			}
+			showSuccessMessage(update_success_msg);
+		}
+	});
+}

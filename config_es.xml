@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
-    <name>rj_topdormitorios</name>
-    <displayName><![CDATA[Informe agencia especializadas]]></displayName>
+    <name>rj_carrier</name>
+    <displayName><![CDATA[Service multi-carrier Rj Carrier]]></displayName>
     <version><![CDATA[1.0.0]]></version>
-    <description><![CDATA[Informe de agencia especializadas Top Dormitorios]]></description>
+    <description><![CDATA[Service multi-carrier economic]]></description>
     <author><![CDATA[Roanja]]></author>
     <tab><![CDATA[administration]]></tab>
 	<confirmUninstall><![CDATA[Are you sure you want to uninstall the module?]]></confirmUninstall>

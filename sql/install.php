@@ -25,10 +25,102 @@
 */
 $sql = array();
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_topdormitorios` (
-    `id_rj_topdormitorios` int(11) NOT NULL AUTO_INCREMENT,
-    PRIMARY KEY  (`id_rj_topdormitorios`)
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier` (
+    `id_rjcarrier` int(11) NOT NULL AUTO_INCREMENT,
+    `id_order` int(10) NOT NULL,
+    `id_reference_carrier` int(10) NOT NULL,
+    `packages` int(10) unsigned NOT NULL DEFAULT \'1\',
+    `weight` decimal(20,6) NULL,
+    `length` decimal(20,6) NULL,
+    `width` decimal(20,6) NULL,
+    `height` decimal(20,6) NULL,
+    `message` varchar(255) NULL,
+    `print` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
+    `date_add` datetime NOT NULL,
+	`date_upd` datetime NOT NULL,
+    PRIMARY KEY  (`id_rjcarrier`),
+    INDEX `id_order` (`id_order`) USING BTREE,
+    INDEX `id_reference_carrier` (`id_reference_carrier`) USING BTREE
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shop` (
+    `id_rjcarrier` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id_rjcarrier`, `id_shop`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_infoshop` (
+    `id_infoshop` int(11) NOT NULL AUTO_INCREMENT,
+    `firstname` varchar(100) NOT NULL,
+    `lastname` varchar(100) NULL,
+    `company` varchar(100) NULL,
+    `additionalname` varchar(100) NULL,
+    `countrycode` varchar(5) NULL,
+    `city` varchar(255) NOT NULL,
+    `street` varchar(255) NOT NULL,
+    `number` varchar(10) NULL,
+    `postcode` varchar(10) NULL,
+    `additionaladdress` varchar(100) NULL,
+    `isbusiness` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
+    `email` varchar(150) NULL,
+    `addition` varchar(100) NULL,
+    `phone` varchar(20) NULL,
+    `vatnumber` varchar(20) NULL,
+    `eorinumber` varchar(20) NULL,
+    `date_add` datetime NOT NULL,
+	`date_upd` datetime NOT NULL,
+    PRIMARY KEY  (`id_infoshop`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_infoshop_shop` (
+    `id_infoshop` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id_infoshop`, `id_shop`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
+    `id_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `shipmentid` CHAR(36) NOT NULL,
+    `id_rjcarrier` int(10) NOT NULL,
+    `id_order` int(10) NOT NULL,
+    `product` varchar(100) NOT NULL,
+    `order_reference` varchar(100) NOT NULL,
+    `delete` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
+    `date_add` datetime NOT NULL,
+	`date_upd` datetime NOT NULL,
+    INDEX ( `id_shipment` , `id_order`, `id_rjcarrier`, `shipmentid`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shipment_shop` (
+    `id_shipment` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) UNSIGNED NOT NULL,
+    PRIMARY KEY (`id_shipment`, `id_shop`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
+    `id_label` int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    `id_shipment` INT(11) UNSIGNED NOT NULL,
+    `labelid` CHAR(36) NOT NULL,
+    `tracker_code` varchar(100) NOT NULL,
+    `parcel_type` varchar(100) NOT NULL,
+    `piece_number` int(10) NOT NULL,
+    `label_type` varchar(100) NOT NULL,
+    `routing_code` varchar(100) NOT NULL,
+    `userid` CHAR(36) NOT NULL,
+    `organizationid` CHAR(36) NOT NULL,
+    `order_reference` varchar(100) NOT NULL,
+    `pdf` BLOB,
+    `print` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
+    `date_add` datetime NOT NULL,
+	`date_upd` datetime NOT NULL,
+    INDEX ( `id_shipment` , `labelid`, `tracker_code`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
+    `id_label` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id_label`, `id_shop`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
