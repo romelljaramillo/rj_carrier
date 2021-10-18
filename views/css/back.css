@@ -25,7 +25,7 @@
 * Don't forget to prefix your containers with your own identifier
 * to avoid any conflicts with others containers.
 */
-.rj-tag-transport{
+.rj-label-carrier{
     border: 1px solid #ccc;
     padding: 50px;
 }
@@ -36,46 +36,46 @@
 }
 
 .rj-data-carrier h4 {
-    font-size: 45px;
+    font-size: 35px;
     display: block;
     text-align: right;
 }
 
-.rj-tag-transport .rj-sub-title {
+.rj-label-carrier .rj-sub-title {
     color: #c0c0c0;
 }
-.rj-tag-transport .rj-data-from h4{
-    font-size: 20px;
+.rj-label-carrier .rj-data-from h4{
+    font-size: 15px;
     margin-bottom: 0px;
 }
-.rj-tag-transport .rj-data-from {
+.rj-label-carrier .rj-data-from {
     border-bottom: 1px solid #999;
 }
-.rj-tag-transport .rj-data-from .col-md-8 {
+.rj-label-carrier .rj-data-from .col-md-8 {
     border-right: 1px solid #999;
 }
-.rj-tag-transport .rj-data-customer {
+.rj-label-carrier .rj-data-customer {
     padding: 20px;
     border: 5px solid #999;
     margin-top: 15px;
 }
-.rj-tag-transport .rj-data-customer h4{
-    font-size: 16px;
+.rj-label-carrier .rj-data-customer h4{
+    font-size: 15px;
     margin-bottom: 0px;
 }
-.rj-tag-transport .rj-data-customer .col-md-8 {
+.rj-label-carrier .rj-data-customer .col-md-8 {
     border-right: 1px solid #999;
 }
 
 
-.rj-tag-transport .rj-data-order {
+.rj-label-carrier .rj-data-package {
     padding: 10px;
     border: 1px solid #999;
     margin-top: 15px;
     text-align: center;
 }
 
-.rj-tag-transport .rj-data-order .rj-weight{
+.rj-label-carrier .rj-data-package .rj-weight{
     border-left: 1px solid #ccc;
     border-right: 1px solid #ccc;
 }

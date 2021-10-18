@@ -9,27 +9,30 @@ Class DHLapi {
     protected $urlShipments = '/shipments';
     protected $urlLabels = '/labels';
     protected $urlRefresToken = '/authenticate/refresh-token';
-    protected $accessToken;
+    protected $accessToken = null;
 
     public function __construct()
     {
-        $this->getConfigurationDHL();
-
+        
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
-
+        
+        $this->getConfigurationDHL();
         $this->postLogin();
     }
 
     private function getConfigurationDHL()
     {
         $this->userId = Configuration::get('RJ_DHL_USERID', null, $this->id_shop_group, $this->id_shop);
-        $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
-        $urlPro = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
-        $urlDev = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
         $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
+        if($env){
+            $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
+            $this->baseUrl = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
+        } else {
+            $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
+            $this->baseUrl = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
+        }
 
-        $this->baseUrl = ($env) ? $urlPro : $urlDev;
     }
 
     public function postLogin()
@@ -38,17 +41,9 @@ Class DHLapi {
             $body = $this->bodyLogin();
             $resp = $this->request('POST', $this->urllogin, $body);
             if($resp){
-                $this->setCookie($resp);
-                if(!$this->getCookieToken()){
-                    return false;
-                }
+                return $this->setCookies($resp);
             }
         }
-
-        if($this->accessToken){
-            return true;
-        }
-        return false;
     }
 
     private function bodyLogin()
@@ -61,34 +56,35 @@ Class DHLapi {
         return json_encode($body);
     }
 
-    private function setCookie($cookies)
+    private function setCookies($cookies)
     {
-        setcookie(
+        $res = setcookie(
             "accessToken", 
             $cookies->{'accessToken'}, 
             $cookies->{'accessTokenExpiration'}
         );
+
         setcookie(
             "refreshToken", 
             $cookies->{'refreshToken'}, 
             $cookies->{'refreshTokenExpiration'}
         );
-        return true;
+
+        $this->accessToken = $cookies->{'accessToken'};
+
+        return $res;
     }
 
     public function getCookieToken()
     {
-        if (isset($_COOKIE['accessToken'])) {
+        if(isset($_COOKIE['accessToken'])) {
             $this->accessToken = $_COOKIE['accessToken'];
             return true;
         } elseif (isset($_COOKIE['refreshToken'])) {
-           
             $refreshToken = json_encode(array('refreshToken' => $_COOKIE['refreshToken']));
-           
             $resp = $this->request('POST', $this->urlRefresToken, $refreshToken);
-            
             if($resp){
-                if($this->setCookie($resp)){
+                if($this->setCookies($resp)){
                     $this->accessToken = $resp->{'accessToken'};
                     return true;
                 }
@@ -120,13 +116,14 @@ Class DHLapi {
     }
 
     private function headerRequest(){
-        if($this->accessToken){
-            $auth = 'Authorization: Bearer ' . $this->accessToken;
+        if(!$this->accessToken){
+            $this->accessToken = $_COOKIE['accessToken'];
         }
+
         return array(
             'Content-Type: application/json',
             'Accept:application/json',
-            $auth 
+            'Authorization: Bearer ' . $this->accessToken
         );
     }
 
@@ -138,14 +135,25 @@ Class DHLapi {
         $infoReceiver['countryCode'] = $countryCode;
         $infoReceiver['email'] = $customer->email;
 
+
         $infoShipper = $infoShipment['infoShop'];
 
         $infoPackage = $infoShipment['infoPackage'];
-
         $uuid = $this->generateUUID();
         $receiver = $this->getReceiver($infoReceiver);
         $shipper = $this->getShipper($infoShipper);
         $pieces = $this->getPieces($infoPackage);
+
+        if($infoPackage['price_contrareembolso'] > 0){
+            $options = [
+                "key"   => "COD_CASH",
+                "input" => $infoPackage['price_contrareembolso']
+            ];
+        } else {
+            $options = [
+                "key"   => "DOOR"
+            ];
+        }
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
 
@@ -155,11 +163,7 @@ Class DHLapi {
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,
-            "options" => [
-                [
-                    "key"=> "DOOR"
-                ]
-            ],
+            "options" => [$options],
             "returnLabel" => false,
             "pieces" => $pieces
         ];

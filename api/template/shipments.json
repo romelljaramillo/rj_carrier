@@ -48,7 +48,8 @@
     "accountId": "130002620",
     "options": [
         {
-            "key": "DOOR"
+            "key": "DOOR", #contra reembolso = COD_CASH
+            "input": 5 #precio del reembolso
         }
     ],
     "returnLabel": false,

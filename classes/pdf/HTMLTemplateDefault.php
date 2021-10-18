@@ -149,7 +149,7 @@ class HTMLTemplateDefault extends HTMLTemplate
         $order = new Order($this->order->id);
         $infoCustomer = new Address($order->id_address_delivery);
         $infoShop = InfoShop::getShopData();
-        $infoPackage = RjCarrier::getDataPackage($this->order->id);
+        $infoPackage = RjCarrierInfoPackage::getDataPackage($this->order->id);
         $carriers = Carrier::getCarriers((int) $id_lang);
 
         if($infoPackage['id_reference_carrier']){

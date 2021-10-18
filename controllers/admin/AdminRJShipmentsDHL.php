@@ -68,9 +68,6 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
 
     public function postProcess()
     {
-        // $_GET;
-        // $_POST;
-
         if (Tools::isSubmit('update' . $this->table)) {
             $rjcarrierShipment = new RjcarrierShipment(Tools::getValue('id_shipment'));
             $parameters = ['vieworder' => 1, 'id_order' => (int) $rjcarrierShipment->id_order];
@@ -106,38 +103,36 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         $this->_where = ' AND a.`delete`=0';
         $this->fields_list = array(
             'id_order' => array(
-                'title' => $this->l('id_order'),
+                'title' => $this->l('Nº Order'),
                 'align' => 'text-center',
                 'class' => 'fixed-width-xs',
                 'havingFilter' => true,
             ),
             'id_shipment' => array(
-                'title' => $this->l('id'),
+                'title' => $this->l('id Envío'),
                 'align' => 'text-center',
                 'class' => 'fixed-width-xs',
                 'havingFilter' => true,
             ),
             'shipmentid' => array(
-                'title' => $this->l('shipmentid'),
+                'title' => $this->l('Id DHL'),
                 'havingFilter' => true,
             ),
             'product' => array(
-                'title' => $this->l('product'),
+                'title' => $this->l('Product DHL'),
                 'havingFilter' => true,
             ),
-            'id_rjcarrier' => array(
-                'title' => $this->l('Carrier'),
+            'id_infopackage' => array(
+                'title' => $this->l('Contrareembolso'),
                 'havingFilter' => true,
-                'align' => 'text-right',
                 'callback' => 'getCarrierShipment',
             ),
             'order_reference' => array(
-                'title' => $this->l('order_reference'),
+                'title' => $this->l('order reference DHL'),
                 'havingFilter' => true,
-                'align' => 'text-right',
             ),
             'date_add' => array(
-                'title' => $this->l('date_add'),
+                'title' => $this->l('Fecha'),
                 'havingFilter' => true,
                 'type' => 'datetime',
                 'filter_key' => 'a!date_add',
@@ -147,9 +142,9 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
 
     public function getCarrierShipment($echo, $tr)
     {
-        $rjcarrier = new RjCarrier((int)$tr['id_rjcarrier']);
-        $carrier = Carrier::getCarrierByReference((int)$rjcarrier->id_reference_carrier);
-        return $carrier->name;
+        $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)$tr['id_infopackage']);
+
+        return Tools::displayPrice($rjCarrierInfoPackage->price_contrareembolso);
     }
 
     public function renderList()

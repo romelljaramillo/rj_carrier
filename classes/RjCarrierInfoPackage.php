@@ -24,11 +24,12 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class RjCarrier extends ObjectModel
+class RjCarrierInfoPackage extends ObjectModel
 {
     public $id_order;
     public $id_carrier;
     public $packages;
+    public $price_contrareembolso;
     public $weight;
     public $length;
     public $width;
@@ -43,13 +44,14 @@ class RjCarrier extends ObjectModel
      * @see ObjectModel::$definition
      */
     public static $definition = array(
-        'table' => 'rj_carrier',
-        'primary' => 'id_rjcarrier',
+        'table' => 'rj_carrier_infopackage',
+        'primary' => 'id_infopackage',
         'multishop' => true,
         'fields' => array(
             'id_order' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
             'id_reference_carrier' => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
             'packages' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
+            'price_contrareembolso' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
             'weight' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true),
             'length' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
             'width' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
@@ -61,18 +63,19 @@ class RjCarrier extends ObjectModel
         )
     );
 
-    public	function __construct($id_rjcarrier = null, $id_lang = null, $id_shop = null, Context $context = null)
+    public	function __construct($id_infopackage = null, $id_lang = null, $id_shop = null, Context $context = null)
 	{
-        Shop::addTableAssociation('rj_carrier', array('type' => 'shop'));
-		parent::__construct($id_rjcarrier, $id_lang, $id_shop);
+        Shop::addTableAssociation('rj_carrier_infopackage', array('type' => 'shop'));
+		parent::__construct($id_infopackage, $id_lang, $id_shop);
 	}
 
     public static function getDataPackage($id_order)
 	{
         $resul = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-                SELECT tr.`id_rjcarrier` as id, 
+                SELECT tr.`id_infopackage` as id, 
                 tr.`id_reference_carrier`,
                 tr.`packages`,
+                tr.`price_contrareembolso`,
                 tr.`weight`,
                 tr.`length`,
                 tr.`width`,
@@ -80,7 +83,7 @@ class RjCarrier extends ObjectModel
                 tr.`height`,
                 tr.`message`,
                 tr.`print`
-				FROM `'._DB_PREFIX_.'rj_carrier` tr
+				FROM `'._DB_PREFIX_.'rj_carrier_infopackage` tr
 				WHERE tr.`id_order` = '.(int)$id_order);
 		return $resul;
 	}

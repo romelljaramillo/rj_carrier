@@ -88,7 +88,7 @@
                     </div>
                     <div class="col-md-6 text-right">
                         <a class="btn btn-primary right-column _blank"
-                            href="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1],['action'=>'createEtiquetaPDF', 'id_rjcarrier'=>{$infoPackage.id}])|escape:'html':'UTF-8'}">
+                            href="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1],['action'=>'createEtiquetaPDF', 'id_infopackage'=>{$infoPackage.id}])|escape:'html':'UTF-8'}">
                             {l s='Print ticket' mod='rj_carrier'}
                             <i class="icon-external-link"></i>
                         </a>

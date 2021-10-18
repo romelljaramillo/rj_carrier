@@ -21,8 +21,6 @@ class AdminRJModuleController extends ModuleAdminController
     public function __construct()
     {
         parent::__construct();
-        // $url = 'index.php?controller=AdminModules&configure=rj_carrier&token=' . Tools::getAdminTokenLite('AdminModules');
-        // Tools::redirectAdmin($url);
 
         \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink('AdminModules').'&configure=rj_carrier');
     }

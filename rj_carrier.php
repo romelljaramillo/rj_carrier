@@ -34,7 +34,7 @@ use Ramsey\Uuid\Uuid;
 
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierShipment.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/Rjcarrier.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjCarrierInfoPackage.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/InfoShop.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjInfoshop.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/api/DHLapi.php');
@@ -91,14 +91,16 @@ class Rj_Carrier extends Module
                 $this->registerHook('displayProductAdditionalInfo');
                 $this->registerHook('displayBackOfficeHeader');
                 $this->registerHook('updateCarrier');
+
             }
 
             include(dirname(__FILE__).'/sql/install.php');
             
             $this->installTab('AdminParentTabRjCarrier', 'RJ Carrier'); 
             $this->installTab('AdminRJModule', 'Configuration', 'AdminParentTabRjCarrier');
-            $this->installTab('AdminRJCarrier', 'RJ Carrier', 'AdminParentTabRjCarrier');
             $this->installTab('AdminRJShipmentsDHL', 'Shipments DHL', 'AdminParentTabRjCarrier');
+            $this->installTab('AdminRJCarrier', 'AdminRJCarrier');
+            $this->installTab('AdminAjaxRJCarrier', 'AdminAjaxRJCarrier');
 
             return true;
         }
@@ -128,11 +130,11 @@ class Rj_Carrier extends Module
 
     public function uninstall()
     {
-        include(dirname(__FILE__).'/sql/uninstall.php');
+        // include(dirname(__FILE__).'/sql/uninstall.php');
         $res = $this->uninstallTab('AdminParentTabRjCarrier');
         $res &= $this->uninstallTab('AdminRJModule');
-        $res &= $this->uninstallTab('AdminTDInfoAgenciaEsp');
         $res &= $this->uninstallTab('AdminRJCarrier');
+        $res &= $this->uninstallTab('AdminAjaxRJCarrier');
 
         return parent::uninstall();
     }
@@ -182,7 +184,7 @@ class Rj_Carrier extends Module
         $this->context->controller->addJS($this->_path.'/views/js/front.js');
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
-    
+
     public function hookDisplayAdminOrder($params)
     {
         $this->context = Context::getContext();
@@ -199,7 +201,7 @@ class Rj_Carrier extends Module
         if (Tools::isSubmit('submitFormPackCarrier')) {
             $infoPackage = $this->setPackCarrier($id_order);
         }else {
-            $infoPackage = RjCarrier::getDataPackage($id_order);
+            $infoPackage = RjCarrierInfoPackage::getDataPackage($id_order);
         }
 
         if (Tools::isSubmit('submitDeleteShipment')) {
@@ -230,13 +232,14 @@ class Rj_Carrier extends Module
             'infoShop' => $infoShop,
             'carriers' => $carriers,
             'name_carrier' => $name_carrier->name,
-            'activeDHL' => $activeDHL
+            'activeDHL' => $activeDHL,
+            'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
         );
 
         if (Tools::isSubmit('submitShipment')){
             $this->selectShipment($infoOrder);
         }
-
+        
         $shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
         if($shipment){
             $infoOrder['shipment'] = $shipment;
@@ -275,6 +278,7 @@ class Rj_Carrier extends Module
 
         if(!$shipmentId){
             $dhlapi = new DHLapi();
+
             $body = $dhlapi->generateBodyShipment($infoOrder);
 
             $dataShipment = $dhlapi->postShipment($body);
@@ -303,7 +307,7 @@ class Rj_Carrier extends Module
     {
         $shipment = new RjcarrierShipment();
         $shipment->shipmentid = $dataShipment->shipmentId;
-        $shipment->id_rjcarrier = $infoOrder['infoPackage']['id'];
+        $shipment->id_infopackage = $infoOrder['infoPackage']['id'];
         $shipment->id_order = $infoOrder['order_id'];
         $shipment->product = $dataShipment->product;
         $shipment->order_reference = $dataShipment->orderReference;
@@ -344,37 +348,38 @@ class Rj_Carrier extends Module
      */
     private function setPackCarrier($id_order)
     {
-        if (Tools::getValue('id_rjcarrier')) {
-            $rjcarrier = new RjCarrier((int)Tools::getValue('id_rjcarrier'));
+        if (Tools::getValue('id_infopackage')) {
+            $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)Tools::getValue('id_infopackage'));
 
-            if (!Validate::isLoadedObject($rjcarrier))
+            if (!Validate::isLoadedObject($rjCarrierInfoPackage))
             {
                 $this->_html .= $this->displayError($this->l('Invalid slide ID'));
                 return false;
             }
         } else {
-            $rjcarrier = new RjCarrier();
+            $rjCarrierInfoPackage = new RjCarrierInfoPackage();
         }
 
-        $rjcarrier->id_order = (int)$id_order;
-        $rjcarrier->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
-        $rjcarrier->packages = (int)Tools::getValue('rj_packages');
-        $rjcarrier->weight = Tools::getValue('rj_weight');
-        $rjcarrier->length = Tools::getValue('rj_length');
-        $rjcarrier->width = Tools::getValue('rj_width');
-        $rjcarrier->height = Tools::getValue('rj_height');
-        $rjcarrier->message = Tools::getValue('rj_message');
+        $rjCarrierInfoPackage->id_order = (int)$id_order;
+        $rjCarrierInfoPackage->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
+        $rjCarrierInfoPackage->packages = (int)Tools::getValue('rj_packages');
+        $rjCarrierInfoPackage->price_contrareembolso = Tools::getValue('rj_price_contrareembolso');
+        $rjCarrierInfoPackage->weight = Tools::getValue('rj_weight');
+        $rjCarrierInfoPackage->length = Tools::getValue('rj_length');
+        $rjCarrierInfoPackage->width = Tools::getValue('rj_width');
+        $rjCarrierInfoPackage->height = Tools::getValue('rj_height');
+        $rjCarrierInfoPackage->message = Tools::getValue('rj_message');
 
-        if (!Tools::getValue('id_rjcarrier'))
+        if (!Tools::getValue('id_infopackage'))
         {
-            if (!$rjcarrier->add())
+            if (!$rjCarrierInfoPackage->add())
             $this->errors[] = $this->l('The transport could not be added.');
-        }elseif (!$rjcarrier->update()){
+        }elseif (!$rjCarrierInfoPackage->update()){
             $this->errors[] = $this->l('The transport could not be updated.');
         } 
         $this->success[] = $this->l('Information successfully updated.');
 
-        return (array)$rjcarrier;
+        return (array)$rjCarrierInfoPackage;
     }
 
     /**
@@ -425,6 +430,7 @@ class Rj_Carrier extends Module
                 $res = Configuration::updateValue('RJ_DHL_ACCOUNID', Tools::getValue('RJ_DHL_ACCOUNID'), false, $shop_group_id, $shop_id);
                 $res = Configuration::updateValue('RJ_DHL_USERID', Tools::getValue('RJ_DHL_USERID'), false, $shop_group_id, $shop_id);
                 $res &= Configuration::updateValue('RJ_DHL_KEY', Tools::getValue('RJ_DHL_KEY'), false, $shop_group_id, $shop_id);
+                $res &= Configuration::updateValue('RJ_DHL_KEY_DEV', Tools::getValue('RJ_DHL_KEY_DEV'), false, $shop_group_id, $shop_id);
                 $res &= Configuration::updateValue('RJ_DHL_URL_PRO', Tools::getValue('RJ_DHL_URL_PRO'), false, $shop_group_id, $shop_id);
                 $res &= Configuration::updateValue('RJ_DHL_URL_DEV', Tools::getValue('RJ_DHL_URL_DEV'), false, $shop_group_id, $shop_id);
                 $res &= Configuration::updateValue('RJ_DHL_ID_REFERENCE_CARRIER', Tools::getValue('RJ_DHL_ID_REFERENCE_CARRIER'), false, $shop_group_id, $shop_id);
@@ -437,6 +443,7 @@ class Rj_Carrier extends Module
                     $res = Configuration::updateValue('RJ_DHL_ACCOUNID', Tools::getValue('RJ_DHL_ACCOUNID'));
                     $res = Configuration::updateValue('RJ_DHL_USERID', Tools::getValue('RJ_DHL_USERID'));
                     $res &= Configuration::updateValue('RJ_DHL_KEY', Tools::getValue('RJ_DHL_KEY'));
+                    $res &= Configuration::updateValue('RJ_DHL_KEY_DEV', Tools::getValue('RJ_DHL_KEY_DEV'));
                     $res &= Configuration::updateValue('RJ_DHL_URL_PRO', Tools::getValue('RJ_DHL_URL_PRO'));
                     $res &= Configuration::updateValue('RJ_DHL_URL_DEV', Tools::getValue('RJ_DHL_URL_DEV'));
                     $res &= Configuration::updateValue('RJ_DHL_ID_REFERENCE_CARRIER', Tools::getValue('RJ_DHL_ID_REFERENCE_CARRIER'));
@@ -446,6 +453,7 @@ class Rj_Carrier extends Module
                             $res = Configuration::updateValue('RJ_DHL_ACCOUNID', Tools::getValue('RJ_DHL_ACCOUNID'), false, $shop_group_id);
                             $res = Configuration::updateValue('RJ_DHL_USERID', Tools::getValue('RJ_DHL_USERID'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_KEY', Tools::getValue('RJ_DHL_KEY'), false, $shop_group_id);
+                            $res &= Configuration::updateValue('RJ_DHL_KEY_DEV', Tools::getValue('RJ_DHL_KEY_DEV'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_URL_PRO', Tools::getValue('RJ_DHL_URL_PRO'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_URL_DEV', Tools::getValue('RJ_DHL_URL_DEV'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_ID_REFERENCE_CARRIER', Tools::getValue('RJ_DHL_ID_REFERENCE_CARRIER'), false, $shop_group_id);
@@ -459,6 +467,7 @@ class Rj_Carrier extends Module
                             $res = Configuration::updateValue('RJ_DHL_ACCOUNID', Tools::getValue('RJ_DHL_ACCOUNID'), false, $shop_group_id);
                             $res = Configuration::updateValue('RJ_DHL_USERID', Tools::getValue('RJ_DHL_USERID'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_KEY', Tools::getValue('RJ_DHL_KEY'), false, $shop_group_id);
+                            $res &= Configuration::updateValue('RJ_DHL_KEY_DEV', Tools::getValue('RJ_DHL_KEY_DEV'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_URL_PRO', Tools::getValue('RJ_DHL_URL_PRO'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_URL_DEV', Tools::getValue('RJ_DHL_URL_DEV'), false, $shop_group_id);
                             $res &= Configuration::updateValue('RJ_DHL_ID_REFERENCE_CARRIER', Tools::getValue('RJ_DHL_ID_REFERENCE_CARRIER'), false, $shop_group_id);
@@ -729,8 +738,14 @@ class Rj_Carrier extends Module
                     ),
                     array(
                         'type' => 'text',
-                        'label' => $this->l('Key'),
+                        'label' => $this->l('Key PRO'),
                         'name' => 'RJ_DHL_KEY',
+                        'required' => true,
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Key DEV'),
+                        'name' => 'RJ_DHL_KEY_DEV',
                         'required' => true,
                     ),
                     array(
@@ -811,6 +826,7 @@ class Rj_Carrier extends Module
 			'RJ_DHL_ACCOUNID' => Tools::getValue('RJ_DHL_ACCOUNID', Configuration::get('RJ_DHL_ACCOUNID', null, $id_shop_group, $id_shop)),
 			'RJ_DHL_USERID' => Tools::getValue('RJ_DHL_USERID', Configuration::get('RJ_DHL_USERID', null, $id_shop_group, $id_shop)),
 			'RJ_DHL_KEY' => Tools::getValue('RJ_DHL_KEY', Configuration::get('RJ_DHL_KEY', null, $id_shop_group, $id_shop)),
+			'RJ_DHL_KEY_DEV' => Tools::getValue('RJ_DHL_KEY_DEV', Configuration::get('RJ_DHL_KEY_DEV', null, $id_shop_group, $id_shop)),
 			'RJ_DHL_URL_PRO' => Tools::getValue('RJ_DHL_URL_PRO', Configuration::get('RJ_DHL_URL_PRO', null, $id_shop_group, $id_shop)),
 			'RJ_DHL_URL_DEV' => Tools::getValue('RJ_DHL_URL_DEV', Configuration::get('RJ_DHL_URL_DEV', null, $id_shop_group, $id_shop)),
 			'RJ_DHL_ID_REFERENCE_CARRIER' => Tools::getValue('RJ_DHL_ID_REFERENCE_CARRIER', Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop)),

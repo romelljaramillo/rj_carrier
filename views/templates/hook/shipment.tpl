@@ -7,7 +7,7 @@
             <th>{l s='Order' mod='rj_carrier'}</th>
             <th>{l s='Carrier' mod='rj_carrier'}</th>
             <th>{l s='Product' mod='rj_carrier'}</th>
-            <th>{l s='O. Reference' mod='rj_carrier'}</th>
+            <th>{l s='Reference' mod='rj_carrier'}</th>
             <th></th>
         </tr>
     </thead>
@@ -33,7 +33,7 @@
             </td>
             <td class="text-right cellShipmentActions">
             <div class="row">
-                <div class="col p-0">
+                <div class="col-6 p-0">
                     <form name="order_rj_shipment"
                         action="{$link->getAdminLink('AdminOrders', true, ['id_order' => $order_id|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                         method="post" class="form-horizontal">
@@ -44,7 +44,7 @@
                         </button>
                     </form>
                 </div>
-                <div class="col p-0 mr-2">
+                <div class="col-6 pl-1">
                     <form action="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                         method="post" class="form-horizontal">
                         <input type="hidden" name="id_shipment" value="{$shipment.id_shipment}">

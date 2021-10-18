@@ -25,11 +25,12 @@
 */
 $sql = array();
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier` (
-    `id_rjcarrier` int(11) NOT NULL AUTO_INCREMENT,
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
+    `id_infopackage` int(11) NOT NULL AUTO_INCREMENT,
     `id_order` int(10) NOT NULL,
     `id_reference_carrier` int(10) NOT NULL,
     `packages` int(10) unsigned NOT NULL DEFAULT \'1\',
+    `price_contrareembolso` DECIMAL(20,6) NULL,
     `weight` decimal(20,6) NULL,
     `length` decimal(20,6) NULL,
     `width` decimal(20,6) NULL,
@@ -38,15 +39,15 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier` (
     `print` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
     `date_add` datetime NOT NULL,
 	`date_upd` datetime NOT NULL,
-    PRIMARY KEY  (`id_rjcarrier`),
+    PRIMARY KEY  (`id_infopackage`),
     INDEX `id_order` (`id_order`) USING BTREE,
     INDEX `id_reference_carrier` (`id_reference_carrier`) USING BTREE
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shop` (
-    `id_rjcarrier` int(10) unsigned NOT NULL AUTO_INCREMENT,
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
+    `id_infopackage` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) unsigned NOT NULL,
-    PRIMARY KEY (`id_rjcarrier`, `id_shop`)
+    PRIMARY KEY (`id_infopackage`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_infoshop` (
@@ -81,14 +82,14 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_infoshop_shop` (
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
     `id_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `shipmentid` CHAR(36) NOT NULL,
-    `id_rjcarrier` int(10) NOT NULL,
+    `id_infopackage` int(10) NOT NULL,
     `id_order` int(10) NOT NULL,
     `product` varchar(100) NOT NULL,
     `order_reference` varchar(100) NOT NULL,
     `delete` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
     `date_add` datetime NOT NULL,
 	`date_upd` datetime NOT NULL,
-    INDEX ( `id_shipment` , `id_order`, `id_rjcarrier`, `shipmentid`)
+    INDEX ( `id_shipment` , `id_order`, `id_infopackage`, `shipmentid`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shipment_shop` (

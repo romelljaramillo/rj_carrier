@@ -27,7 +27,7 @@ include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
 class RjcarrierShipment extends ObjectModel
 {
     public $shipmentid;
-    public $id_rjcarrier;
+    public $id_infopackage;
     public $id_order;
     public $product;
     public $order_reference;
@@ -45,7 +45,7 @@ class RjcarrierShipment extends ObjectModel
         'fields' => array(
             'shipmentid'    => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'required' => true, 'size' => 36),
             'id_order'      => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'id_rjcarrier'  => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
+            'id_infopackage'  => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
             'product'       => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
             'order_reference' => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
             'delete'         => array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
@@ -66,7 +66,7 @@ class RjcarrierShipment extends ObjectModel
 		SELECT cs.*, ca.name as name_carrier
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_shipment` cs
 		INNER JOIN `' . _DB_PREFIX_ . 'rj_carrier_shipment_shop` css ON cs.`id_shipment`= css.`id_shipment`
-		INNER JOIN `' . _DB_PREFIX_ . 'rj_carrier` c ON cs.`id_rjcarrier`= c.`id_rjcarrier`
+		INNER JOIN `' . _DB_PREFIX_ . 'rj_carrier_infopackage` c ON cs.`id_infopackage`= c.`id_infopackage`
 		INNER JOIN `' . _DB_PREFIX_ . 'carrier` ca ON c.`id_reference_carrier`= ca.`id_reference` AND ca.`deleted`= 0
 		WHERE cs.`id_order` = ' . (int) $id_order . ' 
         AND css.`id_shop`=' . (int) Context::getContext()->shop->id . '
