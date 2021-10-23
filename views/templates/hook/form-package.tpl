@@ -1,5 +1,5 @@
 <form name="order_rj_packages"
-    action="{$link->getAdminLink('AdminOrders', true, ['id_order' => $order_id|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
+    action="{$link->getAdminLink('AdminOrders', true, ['id_order' => $order_id|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}#block-rj-carrier"
     method="post" class="form-horizontal">
     <div class="form-group row">
         <label class="form-control-label label-on-top col-12">{l s='Select Carrier'
@@ -68,8 +68,11 @@
     <input type="hidden" name="id_order" id="rj_id_order" value="{$infoPackage.order_id}">
     <input type="hidden" name="id_infopackage" value="{$infoPackage.id}">
     <div class="panel-footer">
-        <button type="submit" id="FormPackageCarrier" class="btn btn-primary pull-right" name="submitFormPackCarrier">
+        <button type="submit" id="formPackageCarrier" class="btn btn-primary pull-right" name="submitFormPackCarrier">
             {l s='Save'}
+        </button>
+        <button type="submit" id="savePackSend" class="btn btn-primary pull-right" name="submitSavePackSend">
+            {l s='Save and generate' mod='rj_carrier'}
         </button>
     </div>
 </form>

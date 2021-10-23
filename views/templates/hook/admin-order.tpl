@@ -1,7 +1,7 @@
 {block name='notifications'}
 {include file='./notifications.tpl'}
 {/block}
-<div class="carrier-row row">
+<div id="block-rj-carrier" class="carrier-row row">
     <div class="col-md-6 left-column">
         <div class="carrier card"  id="rjcarrierPanel">
             <div class="card-header">
@@ -37,7 +37,7 @@
                     {l s='Info shipment' mod='rj_carrier'}
                 </h3>
             </div>
-            <div class="card-body">
+            <div class="card-body table-responsive">
                 <div class="spinner-order-products-container" id="shipmentLoading">
                     <div class="spinner spinner-primary"></div>
                 </div>
@@ -52,7 +52,7 @@
                     {l s='Info labels' mod='rj_carrier'}
                 </h3>
             </div>
-            <div class="card-body">
+            <div class="card-body table-responsive">
                 <div class="spinner-order-products-container" id="labelsLoading">
                     <div class="spinner spinner-primary"></div>
                 </div>

@@ -159,7 +159,7 @@ Class DHLapi {
 
         return [
             "shipmentId" => $uuid,
-            "orderReference" => "DHL2",
+            "orderReference" => (string)$infoShipment['order_id'],
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,

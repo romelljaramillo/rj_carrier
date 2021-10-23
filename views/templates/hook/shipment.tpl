@@ -6,8 +6,6 @@
             <th>{l s='ShipmentId' mod='rj_carrier'}</th>
             <th>{l s='Order' mod='rj_carrier'}</th>
             <th>{l s='Carrier' mod='rj_carrier'}</th>
-            <th>{l s='Product' mod='rj_carrier'}</th>
-            <th>{l s='Reference' mod='rj_carrier'}</th>
             <th></th>
         </tr>
     </thead>
@@ -24,12 +22,6 @@
             </td>
             <td class="cellShipmentCarrier">
                 {$shipment.name_carrier}
-            </td>
-            <td class="cellShipmentProduct">
-                {$shipment.product}
-            </td>
-            <td class="cellShipmentReference">
-                {$shipment.order_reference}
             </td>
             <td class="text-right cellShipmentActions">
             <div class="row">

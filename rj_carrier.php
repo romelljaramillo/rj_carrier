@@ -153,7 +153,7 @@ class Rj_Carrier extends Module
     public function getContent()
     {
         if (Tools::isSubmit('submitConfigDhl') 
-        || Tools::isSubmit('submitConfigEtiqueta')
+        || Tools::isSubmit('submitConfigExtraInfo')
         || Tools::isSubmit('submitConfigInfoShop')){
             $this->_postProcess();
         }
@@ -164,7 +164,7 @@ class Rj_Carrier extends Module
 
         $output .= $this->renderFormInfoCompany();
         $output .= $this->renderFormDhl();
-        $output .= $this->renderFormConfigEtiqueta();
+        $output .= $this->renderFormConfigExtraInfo();
         return $output;
     }
 
@@ -194,15 +194,35 @@ class Rj_Carrier extends Module
         $infoShop = [];
         $id_order = (int)$params['id_order'];
         $name_carrier = '';
+        $generarEnvio = false;
 
         $this->order = new Order($id_order);
         $infoCustomer = new Address($this->order->id_address_delivery);
+        
 
-        if (Tools::isSubmit('submitFormPackCarrier')) {
+        if (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) {
             $infoPackage = $this->setPackCarrier($id_order);
+            if(Tools::isSubmit('submitSavePackSend')){
+                $generarEnvio = true;
+            }
         }else {
             $infoPackage = RjCarrierInfoPackage::getDataPackage($id_order);
         }
+
+        // obtener contrareembolso
+        $datosOrden = '';
+        if(!isset($infoPackage['price_contrareembolso'])){
+            $contrareembolso = Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop);
+            if(!$contrareembolso){
+                $this->warning[] = $this->l('Aun no esta configurado el contrareembolso, debe configurarlo en opciones del modulo!.');
+            }
+            
+            if($contrareembolso === 'codfee'){
+                $datosOrden = $this->order->getFields();
+                $infoPackage['price_contrareembolso'] = $datosOrden['total_paid_tax_incl'];
+            }
+        }
+
 
         if (Tools::isSubmit('submitDeleteShipment')) {
             $rjcarrierShipment = new RjcarrierShipment((int)Tools::getValue('id_shipment'));
@@ -236,7 +256,7 @@ class Rj_Carrier extends Module
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
         );
 
-        if (Tools::isSubmit('submitShipment')){
+        if (Tools::isSubmit('submitShipment') || $generarEnvio){
             $this->selectShipment($infoOrder);
         }
         
@@ -482,7 +502,7 @@ class Rj_Carrier extends Module
             } else {
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=6&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
             }
-        }elseif (Tools::isSubmit('submitConfigEtiqueta')) {
+        }elseif (Tools::isSubmit('submitConfigExtraInfo')) {
             $shop_groups_list = array();
             $shops = Shop::getContextListShopID();
 
@@ -494,15 +514,18 @@ class Rj_Carrier extends Module
                 }
 
                 $res = Configuration::updateValue('RJ_ETIQUETA_TRANSP_PREFIX', Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX'), false, $shop_group_id, $shop_id);
+                $res = Configuration::updateValue('RJ_MODULE_CONTRAREEMBOLSO', Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO'), false, $shop_group_id, $shop_id);
             }
 
             /* Update global shop context if needed*/
             switch ($shop_context) {
                 case Shop::CONTEXT_ALL:
                     $res = Configuration::updateValue('RJ_ETIQUETA_TRANSP_PREFIX', Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX'));
+                    $res = Configuration::updateValue('RJ_MODULE_CONTRAREEMBOLSO', Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO'));
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             $res = Configuration::updateValue('RJ_ETIQUETA_TRANSP_PREFIX', Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX'), false, $shop_group_id);
+                            $res = Configuration::updateValue('RJ_MODULE_CONTRAREEMBOLSO', Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO'), false, $shop_group_id);
                         }
                     }
                     break;
@@ -510,6 +533,7 @@ class Rj_Carrier extends Module
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             $res = Configuration::updateValue('RJ_ETIQUETA_TRANSP_PREFIX', Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX'), false, $shop_group_id);
+                            $res = Configuration::updateValue('RJ_MODULE_CONTRAREEMBOLSO', Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO'), false, $shop_group_id);
                         }
                     }
                     break;
@@ -834,12 +858,25 @@ class Rj_Carrier extends Module
 		);
 	}
 
-    public function renderFormConfigEtiqueta()
+    public function renderFormConfigExtraInfo()
     {
+        $this->l('No se puede eliminar el envío revisar su estado!.');
+        $modulesPay = self::getModulesPay();
+        $modules_array[] =  array(
+            'id' => '',
+            'name' => ''
+        );
+        foreach ($modulesPay as $module) {
+            $modules_array[] =  array(
+                'id' => $module['name'],
+                'name' => $module['name']
+            );
+        }
+
         $fields_form = array(
             'form' => array(
                 'legend' => array(
-                    'title' => $this->l('Configuration etiqueta'),
+                    'title' => $this->l('Configuration extra information'),
                     'icon' => 'icon-cogs'
                 ),
                 'input' => array(
@@ -848,7 +885,17 @@ class Rj_Carrier extends Module
                         'label' => $this->l('Prefix etiqueta'),
                         'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
                         'required' => true,
-                    )
+                    ),
+                    array(
+                        'type' => 'select',
+                        'label' => $this->l('Module contrareembolso'),
+                        'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
+                        'options' => array(
+                            'query' => $modules_array,
+                            'id' => 'id',
+                            'name' => 'name'
+                        )
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Save'),
@@ -865,7 +912,7 @@ class Rj_Carrier extends Module
 		$this->fields_form = array();
 
 		$helper->identifier = $this->identifier;
-		$helper->submit_action = 'submitConfigEtiqueta';
+		$helper->submit_action = 'submitConfigExtraInfo';
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 		$helper->tpl_vars = array(
@@ -877,7 +924,6 @@ class Rj_Carrier extends Module
 		return $helper->generateForm(array($fields_form));
     }
 
-
     public function getConfigFieldsValuesEtiqueta()
 	{
 		$id_shop_group = Shop::getContextShopGroupID();
@@ -885,6 +931,18 @@ class Rj_Carrier extends Module
 
 		return array(
 			'RJ_ETIQUETA_TRANSP_PREFIX' => Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX', Configuration::get('RJ_ETIQUETA_TRANSP_PREFIX', null, $id_shop_group, $id_shop)),
+			'RJ_MODULE_CONTRAREEMBOLSO' => Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO', Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop)),
 		);
 	}
+
+
+    public static function getModulesPay()
+    {
+        $id_shop = Shop::getContextShopID();
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
+        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
+        WHERE mc.`id_shop` = ' . $id_shop . '
+        GROUP BY m.`id_module`');
+    }
 }

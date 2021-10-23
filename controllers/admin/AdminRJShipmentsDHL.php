@@ -1,15 +1,15 @@
 <?php
 /**
- * 2016-2018 TIPSA.COM
- *
- * NOTICE OF LICENSE
- *
- *  @author Romell Jaramillo <integraciones@tip-sa.com>
- *  @copyright 2016-2018 TIPSA.COM
- *  @license GNU General Public License version 2
- *
- * You can not resell or redistribute this software.
- */
+* NOTICE OF LICENSE
+*
+* This file is licenced under the GNU General Public License, version 3 (GPL-3.0).
+* With the purchase or the installation of the software in your application
+* you accept the licence agreement.
+*
+* @author    Roanja www.roanja.com <info@roanja.com>
+* @copyright 2021 Roanja.com
+* @license   https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
+*/
 include_once _PS_MODULE_DIR_ . 'rj_carrier/controllers/admin/AdminRJCarrierController.php';
 class AdminRJShipmentsDHLController extends ModuleAdminController
 {
@@ -98,38 +98,70 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         }
     }
 
+    protected function querySql(){
+        $this->_select = "a.id_order,
+                            a.id_shipment,
+                            a.shipmentid,
+                            a.product,
+                            a.order_reference,
+                            pk.price_contrareembolso,
+                            pk.packages,
+                            pk.weight,
+                            a.date_add";
+        $this->_join = " INNER JOIN `"._DB_PREFIX_."rj_carrier_infopackage` pk ON a.id_infopackage = pk.id_infopackage";
+        $this->_where = ' AND a.delete=0';
+    }
+
     protected function getFieldsList()
     {
-        $this->_where = ' AND a.`delete`=0';
+        $this->querySql();
+
         $this->fields_list = array(
             'id_order' => array(
                 'title' => $this->l('Nº Order'),
                 'align' => 'text-center',
                 'class' => 'fixed-width-xs',
                 'havingFilter' => true,
+                'filter_key' => 'a!id_order'
             ),
             'id_shipment' => array(
                 'title' => $this->l('id Envío'),
                 'align' => 'text-center',
                 'class' => 'fixed-width-xs',
                 'havingFilter' => true,
+                'search' =>false,
             ),
             'shipmentid' => array(
                 'title' => $this->l('Id DHL'),
                 'havingFilter' => true,
+                'search' =>false,
             ),
             'product' => array(
                 'title' => $this->l('Product DHL'),
                 'havingFilter' => true,
+                'search' =>false,
             ),
-            'id_infopackage' => array(
+            'price_contrareembolso' => array(
                 'title' => $this->l('Contrareembolso'),
                 'havingFilter' => true,
-                'callback' => 'getCarrierShipment',
+                'type' => 'price',
+                'filter_key' => 'pk!price_contrareembolso',
+            ),
+            'packages' => array(
+                'title' => $this->l('Packages'),
+                'havingFilter' => true,
+                'search' =>false,
+            ),
+            'weight' => array(
+                'title' => $this->l('Weight'),
+                'havingFilter' => true,
+                'type' => 'decimal',
+                'search' =>false,
             ),
             'order_reference' => array(
                 'title' => $this->l('order reference DHL'),
                 'havingFilter' => true,
+                'search' =>false,
             ),
             'date_add' => array(
                 'title' => $this->l('Fecha'),
@@ -140,11 +172,18 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         );
     }
 
-    public function getCarrierShipment($echo, $tr)
+    public function getInfopackContrareembolso($echo, $tr)
     {
         $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)$tr['id_infopackage']);
 
         return Tools::displayPrice($rjCarrierInfoPackage->price_contrareembolso);
+    }
+
+    public function getInfopackPackcage($echo, $tr)
+    {
+        $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)$tr['id_infopackage']);
+
+        return $rjCarrierInfoPackage->packages;
     }
 
     public function renderList()
@@ -155,16 +194,4 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         return parent::renderList();
     }
 
-    public function initPageHeaderToolbar()
-    {
-        if (empty($this->display)) {
-            $this->page_header_toolbar_btn['new_turnotipo'] = array(
-                'href' => self::$currentIndex . '&addmiplanning_turno_tipo&token=' . $this->token,
-                'desc' => $this->l('Add new Type of shift'),
-                'icon' => 'process-icon-new',
-            );
-        }
-
-        parent::initPageHeaderToolbar();
-    }
 }
