@@ -300,7 +300,6 @@ class Rj_Carrier extends Module
             $dhlapi = new DHLapi();
 
             $body = $dhlapi->generateBodyShipment($infoOrder);
-
             $dataShipment = $dhlapi->postShipment($body);
             
             if(!isset($dataShipment->shipmentId)){

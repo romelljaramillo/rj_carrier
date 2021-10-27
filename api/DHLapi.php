@@ -115,7 +115,8 @@ Class DHLapi {
         return $resp;
     }
 
-    private function headerRequest(){
+    private function headerRequest()
+    {
         if(!$this->accessToken){
             $this->accessToken = $_COOKIE['accessToken'];
         }
@@ -130,30 +131,35 @@ Class DHLapi {
     public function generateBodyShipment($infoShipment)
     {
         $infoReceiver = $infoShipment['infoCustomer'];
+        $infoShipper = $infoShipment['infoShop'];
+        $infoPackage = $infoShipment['infoPackage'];
+
         $countryCode = Country::getIsoById($infoReceiver['id_country']);
         $customer = new Customer((int)$infoReceiver['id_customer']);
         $infoReceiver['countryCode'] = $countryCode;
         $infoReceiver['email'] = $customer->email;
+        $infoReceiver['referenceClient'] = $infoPackage['message'];
 
-
-        $infoShipper = $infoShipment['infoShop'];
-
-        $infoPackage = $infoShipment['infoPackage'];
         $uuid = $this->generateUUID();
         $receiver = $this->getReceiver($infoReceiver);
         $shipper = $this->getShipper($infoShipper);
         $pieces = $this->getPieces($infoPackage);
 
         if($infoPackage['price_contrareembolso'] > 0){
-            $options = [
+            $typeDelivery = [
                 "key"   => "COD_CASH",
                 "input" => $infoPackage['price_contrareembolso']
             ];
         } else {
-            $options = [
+            $typeDelivery = [
                 "key"   => "DOOR"
             ];
         }
+
+        $options = [
+            "key"   => "REFERENCE",
+            "input" => (string)$infoShipment['order_id']
+        ];
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
 
@@ -163,7 +169,7 @@ Class DHLapi {
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,
-            "options" => [$options],
+            "options" => [$typeDelivery, $options],
             "returnLabel" => false,
             "pieces" => $pieces
         ];
@@ -171,11 +177,12 @@ Class DHLapi {
 
     public function getPieces($info)
     {
+        $weight = (float)$info['weight'] / (float)$info['packages'];
         return [
             [
                 "parcelType" => "SMALL",
                 "quantity" => (int)$info['packages'],
-                "weight" => (float)$info['weight'],
+                "weight" => (float)$weight,
                 "dimensions" => [
                     "length" => (float)$info['length'],
                     "width" => (float)$info['width'],
@@ -192,6 +199,8 @@ Class DHLapi {
      */
     public function getReceiver($info)
     {
+        $phone = ($info['phone']) ? $info['phone_mobile'] .' | '. $info['phone'] : $info['phone_mobile'];
+
         return [
             "name" => [
                 "firstName"=> $info['firstname'],
@@ -210,9 +219,10 @@ Class DHLapi {
                 "addition"=> $info['other']
             ],
             "email"=> $info['email'],
-            "phoneNumber"=> $info['phone'],
+            "phoneNumber"=> $phone,
             "vatNumber"=> $info['vat_number'],
-            "eoriNumber"=> $info['dni']
+            "eoriNumber"=> $info['dni'],
+            "reference"=> $info['referenceClient']
         ];
     }
 
