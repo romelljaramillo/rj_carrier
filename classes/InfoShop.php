@@ -100,6 +100,7 @@ class InfoShop
         $fields['additionalname'] = Tools::getValue('additionalname', $infoshop->additionalname);
         $fields['countrycode'] = Tools::getValue('countrycode', $infoshop->countrycode);
         $fields['city'] = Tools::getValue('city', $infoshop->city);
+        $fields['state'] = Tools::getValue('state', $infoshop->state);
         $fields['street'] = Tools::getValue('street', $infoshop->street);
         $fields['number'] = Tools::getValue('number', $infoshop->number);
         $fields['postcode'] = Tools::getValue('postcode', $infoshop->postcode);

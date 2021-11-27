@@ -58,6 +58,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_infoshop` (
     `additionalname` varchar(100) NULL,
     `countrycode` varchar(5) NULL,
     `city` varchar(255) NOT NULL,
+    `state` varchar(255) NOT NULL,
     `street` varchar(255) NOT NULL,
     `number` varchar(10) NULL,
     `postcode` varchar(10) NULL,

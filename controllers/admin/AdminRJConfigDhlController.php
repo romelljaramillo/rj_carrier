@@ -12,4 +12,10 @@
 */
 class AdminRJConfigDhlController extends ModuleAdminController
 {
+
+    public function initContent()
+    {
+        $this->title = $this->module->l('My module title');
+    }
+
 }

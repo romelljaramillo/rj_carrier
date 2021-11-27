@@ -32,6 +32,7 @@ class RjInfoshop extends ObjectModel
     public $additionalname;
     public $countrycode;
     public $city;
+    public $state;
     public $street;
     public $number;
     public $postcode;
@@ -60,6 +61,7 @@ class RjInfoshop extends ObjectModel
             'additionalname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'countrycode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'city' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'state' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'street' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'number' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'postcode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
