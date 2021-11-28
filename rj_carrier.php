@@ -41,10 +41,8 @@ include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjCarrierInfoPackage.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/InfoShop.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjInfoshop.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/api/DHLapi.php');
 
-include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierDhl.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCex.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
 
 class Rj_Carrier extends Module
 {
@@ -113,6 +111,8 @@ class Rj_Carrier extends Module
         'RJ_ENABLEWEIGHT',
         'RJ_DEFAULTKG'
     ];
+
+    public $fields_multi_confi = [];
 
     public function __construct()
     {
@@ -231,17 +231,39 @@ class Rj_Carrier extends Module
         // $this->context->smarty->assign('module_dir', $this->_path);
 
         // $this->_html = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-        $this->_html .= $this->renderFormInfoShop();
-        
-        $dhl = new CarrierDhl();
-        $this->_html .= $dhl->renderConfig();
 
-        $cex = new CarrierCex();
-        $this->_html .= $cex->renderConfig();
+        $this->_html .= $this->renderFormInfoShop();
+
+        $this->_html .= $this->renderConfigCarriers();
 
         $this->_html .= $this->renderFormConfigInfoExtra();
         
         return $this->_html;
+    }
+
+    /**
+     * Devuelve los formularios de config de las class Carrier + company
+     *
+     * @return html Forms
+     */
+    public function renderConfigCarriers() 
+    {
+        $html = '';
+        $carries_company = CarrierCompany::getCarriersCompany();
+        
+        foreach ($carries_company as $company) {
+            $shortname = strtolower($company['shortname']);
+            $class_name = 'Carrier' . ucfirst($shortname);
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php')) {
+            include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
+                if (class_exists($class_name)) {
+                    $class = new $class_name();
+                    $html .= $class->renderConfig();
+                }
+            }
+        }
+        
+        return $html;
     }
 
     public function hookBackOfficeHeader()
@@ -266,6 +288,7 @@ class Rj_Carrier extends Module
         $this->context = Context::getContext();
         $id_shop = $this->context->shop->id;
         $id_shop_group = $this->context->shop->id_shop_group;
+
         $id_lang = $this->context->language->id;
         $infoShop = [];
         $id_order = (int)$params['id_order'];
@@ -274,7 +297,6 @@ class Rj_Carrier extends Module
 
         $this->order = new Order($id_order);
         $infoCustomer = new Address($this->order->id_address_delivery);
-        
 
         if (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) {
             $infoPackage = $this->setPackCarrier($id_order);
@@ -299,7 +321,6 @@ class Rj_Carrier extends Module
             }
         }
 
-
         if (Tools::isSubmit('submitDeleteShipment')) {
             $rjcarrierShipment = new RjcarrierShipment((int)Tools::getValue('id_shipment'));
             if(!$rjcarrierShipment->delete()){
@@ -310,12 +331,11 @@ class Rj_Carrier extends Module
         }
 
         $carriers = Carrier::getCarriers((int) $id_lang);
-        $activeDHL = false;
+        $company_carrier = false;
         if($infoPackage['id_reference_carrier']){
             $name_carrier = Carrier::getCarrierByReference((int)$infoPackage['id_reference_carrier'], $id_lang);
-            if($infoPackage['id_reference_carrier'] == Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop)){
-                $activeDHL = true;
-            }
+
+            $company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($infoPackage['id_reference_carrier']);
         }
 
         $infoShop = InfoShop::getShopData();
@@ -328,7 +348,7 @@ class Rj_Carrier extends Module
             'infoShop' => $infoShop,
             'carriers' => $carriers,
             'name_carrier' => $name_carrier->name,
-            'activeDHL' => $activeDHL,
+            'company_carrier' => $company_carrier,
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
         );
 
@@ -350,95 +370,29 @@ class Rj_Carrier extends Module
         return $this->_html;
     }
 
-    public function selectShipment($infoOrder){
-
-        $id_shop_group = Shop::getContextShopGroupID();
-		$id_shop = Shop::getContextShopID();
-
+    /**
+     * Crea envío según la compañia seleccionada
+     *
+     * @param array $infoOrder
+     * @return void
+     */
+    protected function selectShipment($infoOrder)
+    {
         $id_reference_carrier = $infoOrder['infoPackage']["id_reference_carrier"];
 
-        $dhl = Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop);
-        switch ($id_reference_carrier) {
-            case $dhl:
-                $this->dhlshipment($infoOrder);
-                break;
-            // case $cex:
-            //     $this->cexShipment($infoOrder);
-            //     break;
-            default:
-                $this->errors[] = $this->l('No existe ese transportista.');
-                break;
-        }
+        $shortname = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($id_reference_carrier);
 
-    }
-
-    public function cexShipment($infoOrder){
-
-    }
-    public function dhlshipment($infoOrder){
-        $shipmentId = RjcarrierShipment::getShipmentIdByIdOrder($infoOrder['order_id']);
-
-        if(!$shipmentId){
-            $dhlapi = new DHLapi();
-
-            $body = $dhlapi->generateBodyShipment($infoOrder);
-            $dataShipment = $dhlapi->postShipment($body);
-            
-            if(!isset($dataShipment->shipmentId)){
-                $this->errors[] = $this->l('Algo esta mal en la información del envío.');
-                return false;
+        if($shortname) {
+            $shortname = strtolower($shortname);
+            $class_name = 'Carrier' . ucfirst($shortname);
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php')) {
+                include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
+                if (class_exists($class_name)) {
+                    $class = new $class_name();
+                    $class->createShipment($infoOrder);
+                }
             }
-
-            $this->saveShipment($dataShipment, $infoOrder);
-            $idShipment = RjcarrierShipment::getIdShipmentByIdOrder($infoOrder['order_id']);
-            $this->saveLabels($idShipment, $dataShipment);
-            // $dataShipment = $dhlapi->getShipment($dataShipment->shipmentId);
-            
-        } else{
-            $this->errors[] = $this->l('Ya existe un envío para este pedido.');
-
-            return false;
         }
-        $this->success[] = $this->l('Envio realizado con exito.');
-        return true;
-
-    }
-
-    public function saveShipment($dataShipment, $infoOrder)
-    {
-        $shipment = new RjcarrierShipment();
-        $shipment->shipmentid = $dataShipment->shipmentId;
-        $shipment->id_infopackage = $infoOrder['infoPackage']['id'];
-        $shipment->id_order = $infoOrder['order_id'];
-        $shipment->product = $dataShipment->product;
-        $shipment->order_reference = $dataShipment->orderReference;
-
-        $shipment->add();
-        return true;
-    }
-
-    public function saveLabels($idShipment, $dataShipment)
-    {        
-        $infoLabels = $dataShipment->pieces;
-        $dhlapi = new DHLapi();
-        foreach ($infoLabels as $label) {
-            $labelapi = $dhlapi->getLabel($label->labelId);
-            $carrierLabel = new RjcarrierLabel();
-            $carrierLabel->id_shipment = $idShipment;
-            $carrierLabel->labelid = $labelapi->labelId;
-            $carrierLabel->label_type = $labelapi->labelType;
-            $carrierLabel->parcel_type = $labelapi->parcelType;
-            $carrierLabel->tracker_code = $labelapi->trackerCode;
-            $carrierLabel->piece_number = $labelapi->pieceNumber;
-            $carrierLabel->routing_code = $labelapi->routingCode;
-            $carrierLabel->userid = $labelapi->userId;
-            $carrierLabel->organizationid = $labelapi->organizationId;
-            $carrierLabel->order_reference = $labelapi->orderReference;
-            $carrierLabel->pdf = $labelapi->pdf;
-
-            $carrierLabel->add();
-        }
-        return true;
     }
 
     /**

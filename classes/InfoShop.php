@@ -81,7 +81,8 @@ class InfoShop
         ];
     }
 
-    public static function getInfoShop($id_infoshop = null) {
+    public static function getInfoShop($id_infoshop = null) 
+    {
         $fields = array();
         
         if ($id_infoshop) {

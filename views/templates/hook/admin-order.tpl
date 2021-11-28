@@ -15,17 +15,17 @@
                 {/block}
             </div>
         </div>
-        {if $activeDHL}
+        {if $company_carrier}
         {if !$shipment}
         <div class="carrier card"  id="rjcarrierPanel">
             <div class="card-header">
                 <h3 class="card-header-title">
-                    {l s='DHL' mod='rj_carrier'}
+                    {$company_carrier}
                 </h3>
             </div>
             <div id="rj_packages" class="card-body">
-                {block name='dhl-create-shipment.tpl'}
-                {include file='./dhl-create-shipment.tpl'}
+                {block name='create-shipment.tpl'}
+                {include file='./create-shipment.tpl'}
                 {/block}
             </div>
         </div>
@@ -63,7 +63,6 @@
         </div>
         {/if}
         {/if}
-
     </div>
     <div class="col-md-6 right-column">
         <div class="etiqueta card">

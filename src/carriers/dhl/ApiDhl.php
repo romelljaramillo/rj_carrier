@@ -1,7 +1,7 @@
 <?php
 use Ramsey\Uuid\Uuid;
 
-Class DHLapi {
+Class ApiDhl {
     protected $userId;
     protected $key;
     protected $baseUrl = 'https://api-gw.dhlparcel.nl';
@@ -112,19 +112,6 @@ Class DHLapi {
         $urlLabel = $this->urlLabels . '/' . $labelId;
         $resp = $this->request('GET', $urlLabel);
         return $resp;
-    }
-
-    private function headerRequest()
-    {
-        if(!$this->accessToken){
-            $this->accessToken = $_COOKIE['accessToken'];
-        }
-
-        return array(
-            'Content-Type: application/json',
-            'Accept:application/json',
-            'Authorization: Bearer ' . $this->accessToken
-        );
     }
 
     public function generateBodyShipment($infoShipment)
@@ -260,6 +247,19 @@ Class DHLapi {
     public function generateUUID(){
         $uuid = Uuid::uuid4();
         return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
+    }
+
+    private function headerRequest()
+    {
+        if(!$this->accessToken){
+            $this->accessToken = $_COOKIE['accessToken'];
+        }
+
+        return array(
+            'Content-Type: application/json',
+            'Accept:application/json',
+            'Authorization: Bearer ' . $this->accessToken
+        );
     }
 
     /**

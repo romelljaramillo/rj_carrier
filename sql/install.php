@@ -124,6 +124,18 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
     PRIMARY KEY (`id_label`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
+    `id_carrier_company` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `shortname` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `icon` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    PRIMARY KEY (`id_carrier_company`)
+  ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
+$sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
+	(1, \'DHL\', \'DHL\', NULL),
+	(2, \'Correo Express\', \'CEX\', NULL);';
+    
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
         return false;

@@ -1,6 +1,6 @@
 <?php
 
-Class CEXapi {
+Class ApiCex {
 
     public function __construct()
     {

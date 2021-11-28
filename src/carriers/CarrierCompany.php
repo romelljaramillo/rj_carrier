@@ -1,6 +1,6 @@
 <?php
 
-class CarrierRj extends Module
+class CarrierCompany extends Module
 {
 
     /** @var string Nombre unico de transportista */
@@ -27,24 +27,16 @@ class CarrierRj extends Module
         $this->name = 'rj_carrier';
         parent::__construct();
 
-        // $this->fields_multi_confi = ['RJ_'.$this->shortname.'_ID_REFERENCE_CARRIER'];
-
     }
 
     public function renderConfig() 
     {
-        // $companys = $this->getCarriersCompany();
-        
         if (Tools::isSubmit('submitConfig'. $this->shortname)) {
             if($this->validationConfig())
                 $this->_postProcess();
         }
 
         $this->_html .= $this->renderFormConfig();
-
-        // foreach ($variable as $key => $value) {
-        //     # code...
-        // }
 
         return $this->_html;
     }
@@ -69,7 +61,7 @@ class CarrierRj extends Module
         if (Tools::isSubmit('submitConfig'. $this->shortname)) {
 
             // tener presente para cuando hay mas transportistas modificar
-            $carries_company = $this->getCarriersCompany();
+            $carries_company = self::getCarriersCompany();
             foreach ($carries_company as $company) {
                 if($company['shortname'] != $this->shortname){
                     $array_carriers = Tools::unSerialize(Configuration::get('RJ_'.$company['shortname'].'_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop));
@@ -173,7 +165,7 @@ class CarrierRj extends Module
         }
     }
 
-    private function getCarriersCompany($shortname = null)
+    static function getCarriersCompany($shortname = null)
     {
         $where = '';
 
@@ -182,9 +174,33 @@ class CarrierRj extends Module
         }
 
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            'SELECT c.`name`, c.`shortname`  FROM '._DB_PREFIX_.'rj_carrier_company c '
+            'SELECT * FROM '._DB_PREFIX_.'rj_carrier_company c '
             .$where
         );
+    }
+
+    /**
+     * Devuelve shortname comapany a partir del id_refernce_carrier
+     *
+     * @param string $id_carrier
+     * @return string
+     */
+    static function getShortnameCompanyByIdReferenceCarrier($id_refernce_carrier)
+    {
+        $id_shop_group = Shop::getContextShopGroupID();
+		$id_shop = Shop::getContextShopID();
+        $array_carriers_company = [];
+
+        $carries_company = self::getCarriersCompany();
+
+        foreach ($carries_company as $company) {
+            $array_carriers_company = Tools::unSerialize(Configuration::get('RJ_'.$company['shortname'].'_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop));
+            if(in_array($id_refernce_carrier,$array_carriers_company)) {
+                return $company['shortname'];
+            }
+        }
+
+        return false;
     }
 
     public function renderFormConfig()

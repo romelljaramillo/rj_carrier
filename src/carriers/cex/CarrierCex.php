@@ -1,7 +1,8 @@
 <?php
-include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierRJ.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
+include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ApiCex.php');
 
-class CarrierCex extends CarrierRj
+class CarrierCex extends CarrierCompany
 {
     public function __construct()
     {
@@ -89,5 +90,10 @@ class CarrierCex extends CarrierRj
                 )
             ),
         );
+    }
+
+    public function createShipment($infoOrder)
+    {
+        
     }
 }
