@@ -32,7 +32,6 @@ Class DHLapi {
             $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->baseUrl = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
         }
-
     }
 
     public function postLogin()
@@ -264,14 +263,14 @@ Class DHLapi {
     }
 
     /**
-     * Undocumented function
+     * request DHL
      *
      * @param [type] $requestMethod
      * @param [type] $urlparam
      * @param [type] $body
      * @return void
      */
-    public function request($requestMethod, $urlparam, $body = null)
+    public function request($method, $urlparam, $body = null)
     {
         $header = $this->headerRequest();
         $url = $this->baseUrl . $urlparam;
@@ -287,7 +286,7 @@ Class DHLapi {
                 CURLOPT_MAXREDIRS      => 10,
                 CURLOPT_HTTPHEADER     => $header,
                 CURLOPT_TIMEOUT        => 30,
-                CURLOPT_CUSTOMREQUEST  => $requestMethod,
+                CURLOPT_CUSTOMREQUEST  => $method,
             )
         );
         

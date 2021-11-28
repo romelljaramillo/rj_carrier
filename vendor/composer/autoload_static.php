@@ -28,6 +28,10 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         array (
             'Ramsey\\Uuid\\' => 12,
         ),
+        'P' => 
+        array (
+            'PrestaShop\\Module\\Rjcarrier\\' => 28,
+        ),
     );
 
     public static $prefixDirsPsr4 = array (
@@ -47,6 +51,10 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         array (
             0 => __DIR__ . '/..' . '/ramsey/uuid/src',
         ),
+        'PrestaShop\\Module\\Rjcarrier\\' => 
+        array (
+            0 => '/src',
+        ),
     );
 
     public static $classMap = array (
@@ -56,6 +64,7 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'FPDF_TPL' => __DIR__ . '/..' . '/iio/libmergepdf/tcpdi/fpdf_tpl.php',
         'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
         'QRcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',
+        'Rj_Carrier' => __DIR__ . '/../..' . '/rj_carrier.php',
         'TCPDF' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf.php',
         'TCPDF2DBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_2d.php',
         'TCPDFBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_1d.php',

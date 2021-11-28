@@ -23,14 +23,18 @@
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
-require_once __DIR__ . '/vendor/autoload.php';
+declare(strict_types=1);
 
 if (!defined('_PS_VERSION_')) {
     exit;
 }
-use Ramsey\Uuid\Uuid;
 
-// use Classes\InfoShop as InfoShop;
+$autoloadPath = __DIR__ . '/vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+}
+
+// use Ramsey\Uuid\Uuid;
 
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierShipment.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
@@ -39,6 +43,9 @@ include_once(_PS_MODULE_DIR_.'rj_carrier/classes/InfoShop.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjInfoshop.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/api/DHLapi.php');
 
+include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierDhl.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCex.php');
+
 class Rj_Carrier extends Module
 {
     protected $config_form = false;
@@ -46,7 +53,6 @@ class Rj_Carrier extends Module
     public $shop;
     public $order;
     public $_html;
-
 
     /**
      * Default hook to install
@@ -95,30 +101,6 @@ class Rj_Carrier extends Module
         'AdminAjaxRJCarrier'
     ];
 
-    /**
-     * Names of fields config DHL carrier used
-     */
-    public $fields_config_dhl = [
-        'RJ_DHL_ACCOUNID',
-        'RJ_DHL_USERID',
-        'RJ_DHL_KEY',
-        'RJ_DHL_KEY_DEV',
-        'RJ_DHL_URL_PRO',
-        'RJ_DHL_URL_DEV',
-        'RJ_DHL_ID_REFERENCE_CARRIER',
-        'RJ_DHL_ENV'
-    ];
-    /**
-     * Names of fields config CEX carrier used
-     */
-    public $fields_config_cex = [
-        'RJ_CEX_COD_CLIENT',
-        'RJ_CEX_USER',
-        'RJ_CEX_PASS',
-        'RJ_CEX_WSURL',
-        'RJ_CEX_ACTIVE'
-    ];
-    
     /**
      * Names of fields config Info Extra carrier used
      */
@@ -240,22 +222,25 @@ class Rj_Carrier extends Module
 
     public function getContent()
     {
-        if (Tools::isSubmit('submitConfigDhl') 
-        || Tools::isSubmit('submitConfigCex')
-        || Tools::isSubmit('submitConfigExtraInfo')
+        if (Tools::isSubmit('submitConfigExtraInfo')
         || Tools::isSubmit('submitConfigInfoShop')
         ){
             $this->_postProcess();
         }
 
-        $this->context->smarty->assign('module_dir', $this->_path);
+        // $this->context->smarty->assign('module_dir', $this->_path);
 
         // $this->_html = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
+        $this->_html .= $this->renderFormInfoShop();
+        
+        $dhl = new CarrierDhl();
+        $this->_html .= $dhl->renderConfig();
 
-        $this->_html .= $this->renderFormInfoCompany();
-        $this->_html .= $this->renderFormConfigDhl();
-        $this->_html .= $this->renderFormConfigCex();
+        $cex = new CarrierCex();
+        $this->_html .= $cex->renderConfig();
+
         $this->_html .= $this->renderFormConfigInfoExtra();
+        
         return $this->_html;
     }
 
@@ -377,6 +362,9 @@ class Rj_Carrier extends Module
             case $dhl:
                 $this->dhlshipment($infoOrder);
                 break;
+            // case $cex:
+            //     $this->cexShipment($infoOrder);
+            //     break;
             default:
                 $this->errors[] = $this->l('No existe ese transportista.');
                 break;
@@ -384,6 +372,9 @@ class Rj_Carrier extends Module
 
     }
 
+    public function cexShipment($infoOrder){
+
+    }
     public function dhlshipment($infoOrder){
         $shipmentId = RjcarrierShipment::getShipmentIdByIdOrder($infoOrder['order_id']);
 
@@ -523,18 +514,14 @@ class Rj_Carrier extends Module
 
     protected function _postProcess()
 	{
-        if (Tools::isSubmit('submitConfigDhl')) {
-            $this->saveConfigFields($this->fields_config_dhl);
-        }elseif (Tools::isSubmit('submitConfigCex')) {
-            $this->saveConfigFields($this->fields_config_cex);
-        }elseif (Tools::isSubmit('submitConfigExtraInfo')) {
+        if (Tools::isSubmit('submitConfigExtraInfo')) {
             $this->saveConfigFields($this->fields_config_info_extra);
         } elseif (Tools::isSubmit('submitConfigInfoShop')) {
-            $this->saveInfoCompany();
+            $this->saveInfoShop();
         }
     }
 
-    public function saveInfoCompany()
+    public function saveInfoShop()
     {
         if (Tools::getValue('id_infoshop')) {
             $infoshop = new RjInfoshop((int)Tools::getValue('id_infoshop'));
@@ -575,8 +562,7 @@ class Rj_Carrier extends Module
 
     private function saveConfigFields($fields)
     {
-        $res = '';
-        $errors = array();
+        $res = true;
         $shop_context = Shop::getContext();
 
         $shop_groups_list = array();
@@ -589,7 +575,13 @@ class Rj_Carrier extends Module
                 $shop_groups_list[] = $shop_group_id;
             }
             foreach ($fields as $field) {
-                $res &=  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
+                if(in_array($field, $this->fields_multi_confi)){
+                    $toString_field =  serialize(Tools::getValue($field));
+                    $res &=  Configuration::updateValue($field, $toString_field, false, $shop_group_id, $shop_id);
+                } else {
+                    $res &=  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
+                }
+
             }
         }
 
@@ -597,13 +589,22 @@ class Rj_Carrier extends Module
         switch ($shop_context) {
             case Shop::CONTEXT_ALL:
                 foreach ($fields as $field) {
-                    $res &= Configuration::updateValue($field, Tools::getValue($field));
+                    if(in_array($field, $this->fields_multi_confi)){
+                        $toString_field =  serialize(Tools::getValue($field));
+                        $res &= Configuration::updateValue($field, $toString_field);
+                    } else {
+                        $res &= Configuration::updateValue($field, Tools::getValue($field));
+                    }
                 }
-
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
                         foreach ($fields as $field) {
-                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            if(in_array($field, $this->fields_multi_confi)){
+                                $toString_field =  serialize(Tools::getValue($field));
+                                $res &= Configuration::updateValue($field, $toString_field, false, $shop_group_id);
+                            } else {
+                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            }
                         }
                     }
                 }
@@ -612,26 +613,27 @@ class Rj_Carrier extends Module
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
                         foreach ($fields as $field) {
-                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            if(in_array($field, $this->fields_multi_confi)){
+                                $toString_field =  serialize(Tools::getValue($field));
+                                $res &= Configuration::updateValue($field, $toString_field, false, $shop_group_id);
+                            } else {
+                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            }
                         }
                     }
                 }
                 break;
         }
 
-        if (!$res) {
-            $errors[] = $this->displayError($this->l('The configuration could not be updated.'));
-        }
-
         /* Display errors if needed */
-		if (count($errors))
-            $this->_html .= $this->displayError(implode('<br />', $errors));
+		if (!$res)
+            $this->_html .= $this->displayError($this->l('The configuration could not be updated.'));
         else {
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=6&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
         }
     }
 
-    public function renderFormInfoCompany()
+    public function renderFormInfoShop()
     {
 
         $countries = Country::getCountries((int) $this->context->language->id);
@@ -769,205 +771,6 @@ class Rj_Carrier extends Module
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 		$helper->tpl_vars = array(
 			'fields_value' => InfoShop::getShopData(),
-			'languages' => $this->context->controller->getLanguages(),
-			'id_language' => $this->context->language->id
-		);
-
-		return $helper->generateForm(array($fields_form));
-    }
-
-    public function renderFormConfigDhl()
-    {
-        $carriers = Carrier::getCarriers((int) $this->context->language->id);
-        foreach ($carriers as $carrier) {
-            $carrier_array[] =  array(
-                'id' => $carrier['id_reference'],
-                'name' => $carrier['name']
-            );
-        }
-
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('DHL information'),
-                    'icon' => 'icon-cogs'
-                ),
-                'input' => array(
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('accountId'),
-                        'name' => 'RJ_DHL_ACCOUNID',
-                        'required' => true,
-                        'class' => 'fixed-width-lg'
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('user Id'),
-                        'name' => 'RJ_DHL_USERID',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Key PRO'),
-                        'name' => 'RJ_DHL_KEY',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Key DEV'),
-                        'name' => 'RJ_DHL_KEY_DEV',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url Production'),
-                        'name' => 'RJ_DHL_URL_PRO',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// .')
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url Develop'),
-                        'name' => 'RJ_DHL_URL_DEV',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// .')
-                    ),
-                    array(
-                        'type' => 'select',
-                        'label' => $this->l('Select carrier DHL'),
-                        'name' => 'RJ_DHL_ID_REFERENCE_CARRIER',
-                        'options' => array(
-                            'query' => $carrier_array,
-                            'id' => 'id',
-                            'name' => 'name'
-                        )
-                    ),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Modo producción'),
-						'name' => 'RJ_DHL_ENV',
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('Production')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('Develop')
-							)
-						),
-					)
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save'),
-                )
-            ),
-        );
-
-        $helper = new HelperForm();
-		$helper->show_toolbar = false;
-		$helper->table = $this->table;
-		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
-		$helper->default_form_language = $lang->id;
-		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-		$this->fields_form = array();
-
-		$helper->identifier = $this->identifier;
-		$helper->submit_action = 'submitConfigDhl';
-		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = array(
-			'fields_value' => $this->getConfigFieldsValues($this->fields_config_dhl),
-			'languages' => $this->context->controller->getLanguages(),
-			'id_language' => $this->context->language->id
-		);
-
-		return $helper->generateForm(array($fields_form));
-    }
-
-    public function renderFormConfigCex()
-    {
-        $carriers = Carrier::getCarriers((int) $this->context->language->id);
-        foreach ($carriers as $carrier) {
-            $carrier_array[] =  array(
-                'id' => $carrier['id_reference'],
-                'name' => $carrier['name']
-            );
-        }
-
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('Correo Express information'),
-                    'icon' => 'icon-cogs'
-                ),
-                'input' => array(
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Código cliente'),
-                        'name' => 'RJ_CEX_COD_CLIENT',
-                        'required' => true,
-                        'class' => 'fixed-width-lg'
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Usuario'),
-                        'name' => 'RJ_CEX_USER',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Contraseña'),
-                        'name' => 'RJ_CEX_PASS',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url servicio web'),
-                        'name' => 'RJ_CEX_WSURL',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.correosexpress.com/wpsc/services')
-                    ),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Activar'),
-						'name' => 'RJ_CEX_ACTIVE',
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('Production')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('Develop')
-							)
-						),
-					)
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save'),
-                )
-            ),
-        );
-
-        $helper = new HelperForm();
-		$helper->show_toolbar = false;
-		$helper->table = $this->table;
-		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
-		$helper->default_form_language = $lang->id;
-		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-		$this->fields_form = array();
-
-		$helper->identifier = $this->identifier;
-		$helper->submit_action = 'submitConfigCex';
-		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
-		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = array(
-			'fields_value' => $this->getConfigFieldsValues($this->fields_config_cex),
 			'languages' => $this->context->controller->getLanguages(),
 			'id_language' => $this->context->language->id
 		);
@@ -1120,26 +923,14 @@ class Rj_Carrier extends Module
         $arry_fields = [];
 
         foreach ($fields as $field) {
-            $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
+            if(in_array($field, $this->fields_multi_confi)){
+                $arry_fields[$field . '[]'] = Tools::getValue($field, Tools::unSerialize(Configuration::get($field, null, $id_shop_group, $id_shop)));
+            } else {
+                $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
+            }
         }
 
         return $arry_fields;
-	}
-
-    public function getConfigFieldsValuesExtraInfo()
-	{
-		$id_shop_group = Shop::getContextShopGroupID();
-		$id_shop = Shop::getContextShopID();
-
-		return array(
-			'RJ_ETIQUETA_TRANSP_PREFIX' => Tools::getValue('RJ_ETIQUETA_TRANSP_PREFIX', Configuration::get('RJ_ETIQUETA_TRANSP_PREFIX', null, $id_shop_group, $id_shop)),
-			'RJ_MODULE_CONTRAREEMBOLSO' => Tools::getValue('RJ_MODULE_CONTRAREEMBOLSO', Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop)),
-			'RJ_ENABLESHIPPINGTRACK' => Tools::getValue('RJ_ENABLESHIPPINGTRACK', Configuration::get('RJ_ENABLESHIPPINGTRACK', null, $id_shop_group, $id_shop)),
-			'RJ_LABELSENDER' => Tools::getValue('RJ_LABELSENDER', Configuration::get('RJ_LABELSENDER', null, $id_shop_group, $id_shop)),
-			'RJ_LABELSENDER_TEXT' => Tools::getValue('RJ_LABELSENDER_TEXT', Configuration::get('RJ_LABELSENDER_TEXT', null, $id_shop_group, $id_shop)),
-			'RJ_ENABLEWEIGHT' => Tools::getValue('RJ_ENABLEWEIGHT', Configuration::get('RJ_ENABLEWEIGHT', null, $id_shop_group, $id_shop)),
-			'RJ_DEFAULTKG' => Tools::getValue('RJ_DEFAULTKG', Configuration::get('RJ_DEFAULTKG', null, $id_shop_group, $id_shop)),
-        );
 	}
 
     public static function getModulesPay()

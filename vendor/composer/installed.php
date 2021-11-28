@@ -5,20 +5,11 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => '3d7811b3668c9977864ea3e3b20cbadf20bcbec6',
-        'name' => '__root__',
+        'reference' => 'c581b6f84e4e4ba8a98540473f0ad8287e99080e',
+        'name' => 'prestashop/rj_carrier',
         'dev' => true,
     ),
     'versions' => array(
-        '__root__' => array(
-            'pretty_version' => 'dev-master',
-            'version' => 'dev-master',
-            'type' => 'library',
-            'install_path' => __DIR__ . '/../../',
-            'aliases' => array(),
-            'reference' => '3d7811b3668c9977864ea3e3b20cbadf20bcbec6',
-            'dev_requirement' => false,
-        ),
         'iio/libmergepdf' => array(
             'pretty_version' => '4.0.4',
             'version' => '4.0.4.0',
@@ -35,6 +26,15 @@
             'install_path' => __DIR__ . '/../paragonie/random_compat',
             'aliases' => array(),
             'reference' => '84b4dfb120c6f9b4ff7b3685f9b8f1aa365a0c95',
+            'dev_requirement' => false,
+        ),
+        'prestashop/rj_carrier' => array(
+            'pretty_version' => 'dev-master',
+            'version' => 'dev-master',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../../',
+            'aliases' => array(),
+            'reference' => 'c581b6f84e4e4ba8a98540473f0ad8287e99080e',
             'dev_requirement' => false,
         ),
         'ramsey/uuid' => array(

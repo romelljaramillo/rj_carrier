@@ -10,4 +10,5 @@ return array(
     'iio\\libmergepdf\\' => array($vendorDir . '/iio/libmergepdf/src'),
     'Symfony\\Polyfill\\Ctype\\' => array($vendorDir . '/symfony/polyfill-ctype'),
     'Ramsey\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
+    'PrestaShop\\Module\\Rjcarrier\\' => array('/src'),
 );
