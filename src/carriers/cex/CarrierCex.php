@@ -1,6 +1,13 @@
 <?php
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
 include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ApiCex.php');
+include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
+
 
 class CarrierCex extends CarrierCompany
 {
@@ -21,6 +28,14 @@ class CarrierCex extends CarrierCompany
 
         // $this->fields_multi_confi = [ ];
 
+        $this->fields_config_info_extra = [
+            'RJ_ENABLESHIPPINGTRACK',
+            'RJ_LABELSENDER',
+            'RJ_LABELSENDER_TEXT',
+            'RJ_ENABLEWEIGHT',
+            'RJ_DEFAULTKG'
+        ];
+
         parent::__construct();
 
     }
@@ -29,6 +44,78 @@ class CarrierCex extends CarrierCompany
     {
         $this->setFieldsFormConfig();
         return parent::renderConfig();
+    }
+
+    public function getFieldsFormConfigExtra()
+    {
+        return  [
+            [
+                'type' => 'switch',
+                'label' => $this->l('Activar shipping track'),
+                'name' => 'RJ_ENABLESHIPPINGTRACK',
+                'desc' => $this->l('Activar enlace de seguimiento en el historial de compras del cliente'),
+                'values' => [
+                    [
+                        'id' => 'active_on',
+                        'value' => 1,
+                        'label' => $this->l('yes')
+                    ],
+                    [
+                        'id' => 'active_off',
+                        'value' => 0,
+                        'label' => $this->l('no')
+                    ]
+                ],
+            ],
+            [
+                'type' => 'switch',
+                'label' => $this->l('Activar quitar remitente'),
+                'name' => 'RJ_LABELSENDER',
+                'desc' => $this->l('Quitar remitente de las etiquetas'),
+                'values' => [
+                    [
+                        'id' => 'active_on',
+                        'value' => 1,
+                        'label' => $this->l('yes')
+                    ],
+                    [
+                        'id' => 'active_off',
+                        'value' => 0,
+                        'label' => $this->l('no')
+                    ]
+                ],
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Remitente alternativo'),
+                'name' => 'RJ_LABELSENDER_TEXT',
+            ],
+            [
+                'type' => 'switch',
+                'label' => $this->l('Activar peso'),
+                'name' => 'RJ_ENABLEWEIGHT',
+                'desc' => $this->l('Activar peso por defecto'),
+                'values' => [
+                    [
+                        'id' => 'active_on',
+                        'value' => 1,
+                        'label' => $this->l('yes')
+                    ],
+                    [
+                        'id' => 'active_off',
+                        'value' => 0,
+                        'label' => $this->l('no')
+                    ]
+                ],
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Peso por defecto'),
+                'name' => 'RJ_DEFAULTKG',
+                'suffix' => 'kg',
+                'class' => 'fixed-width-lg',
+            ]
+        ];
     }
 
     private function setFieldsFormConfig()
@@ -92,8 +179,32 @@ class CarrierCex extends CarrierCompany
         );
     }
 
-    public function createShipment($infoOrder)
+    public function createShipment($info_shipment)
     {
-        
+        $shipmentId = RjcarrierShipment::getShipmentIdByIdOrder($info_shipment['order_id']);
+
+        if (!$shipmentId) {
+            $apiCex = new ApiCex();
+
+            $info_shipment['info_config'] = $this->getConfigFieldsValues();
+            dump($info_shipment);
+            $data_shipment = $apiCex->postShipment($info_shipment);
+
+            if (!isset($data_shipment->shipmentId)) {
+                $this->errors[] = $this->l('Algo esta mal en la información del envío.');
+                return false;
+            }
+
+            $this->saveShipment($data_shipment, $info_shipment);
+            $idShipment = RjcarrierShipment::getIdShipmentByIdOrder($info_shipment['order_id']);
+            // $this->saveLabels($idShipment, $data_shipment);
+            // $data_shipment = $apidhl->getShipment($data_shipment->shipmentId);
+
+        } else {
+            $this->errors[] = $this->l('Ya existe un envío para este pedido.');
+            return false;
+        }
+        $this->success[] = $this->l('Envio realizado con exito.');
+        return true;
     }
 }

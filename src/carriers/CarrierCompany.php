@@ -1,4 +1,7 @@
 <?php
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
 
 class CarrierCompany extends Module
 {
@@ -15,8 +18,12 @@ class CarrierCompany extends Module
 
     public $fields_multi_confi = [];
 
+    public $fields_config_info_extra = [];
+
     /** @var array Campos del formulario configuración */
     public $fields_form;
+
+    public $fields_form_extra;
 
     public $context;
     public $_html;
@@ -39,6 +46,11 @@ class CarrierCompany extends Module
         $this->_html .= $this->renderFormConfig();
 
         return $this->_html;
+    }
+
+    public function getConfigFieldsExtra()
+    {
+        return $this->fields_config_info_extra;
     }
 
     /**
@@ -86,12 +98,6 @@ class CarrierCompany extends Module
         return true;
     }
 
-    private function addFieldsMultiConfi()
-    {
-        if($this->shortname)
-            $this->fields_multi_confi[] = 'RJ_'.$this->shortname.'_ID_REFERENCE_CARRIER';
-    }
-
     protected function _postProcess()
 	{
         $res = true;
@@ -100,7 +106,7 @@ class CarrierCompany extends Module
         $shop_groups_list = array();
         $shops = Shop::getContextListShopID();
 
-        $this->addFieldsMultiConfi();
+        $this->setFieldsMultiConfi();
 
         foreach ($shops as $shop_id) {
             $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
@@ -163,6 +169,12 @@ class CarrierCompany extends Module
         else {
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=6&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
         }
+    }
+
+    private function setFieldsMultiConfi()
+    {
+        if($this->shortname)
+            $this->fields_multi_confi[] = 'RJ_'.$this->shortname.'_ID_REFERENCE_CARRIER';
     }
 
     static function getCarriersCompany($shortname = null)
@@ -257,7 +269,7 @@ class CarrierCompany extends Module
 		$id_shop = Shop::getContextShopID();
         $arry_fields = [];
 
-        $this->addFieldsMultiConfi();
+        $this->setFieldsMultiConfi();
 
         foreach ($this->fields_config as $field) {
             if(in_array($field, $this->fields_multi_confi)){
@@ -273,5 +285,42 @@ class CarrierCompany extends Module
 
         return $arry_fields;
 	}
+
+    public function saveShipment($dataShipment, $infoOrder)
+    {
+        $shipment = new RjcarrierShipment();
+        $shipment->shipmentid = $dataShipment->shipmentId;
+        $shipment->id_infopackage = $infoOrder['info_package']['id'];
+        $shipment->id_order = $infoOrder['order_id'];
+        $shipment->product = $dataShipment->product;
+        $shipment->order_reference = $dataShipment->orderReference;
+
+        $shipment->add();
+        return true;
+    }
+
+    /* public function saveLabels($idShipment, $dataShipment)
+    {
+        $infoLabels = $dataShipment->pieces;
+        $apidhl = new ApiDhl();
+        foreach ($infoLabels as $label) {
+            $labelapi = $apidhl->getLabel($label->labelId);
+            $carrierLabel = new RjcarrierLabel();
+            $carrierLabel->id_shipment = $idShipment;
+            $carrierLabel->labelid = $labelapi->labelId;
+            $carrierLabel->label_type = $labelapi->labelType;
+            $carrierLabel->parcel_type = $labelapi->parcelType;
+            $carrierLabel->tracker_code = $labelapi->trackerCode;
+            $carrierLabel->piece_number = $labelapi->pieceNumber;
+            $carrierLabel->routing_code = $labelapi->routingCode;
+            $carrierLabel->userid = $labelapi->userId;
+            $carrierLabel->organizationid = $labelapi->organizationId;
+            $carrierLabel->order_reference = $labelapi->orderReference;
+            $carrierLabel->pdf = $labelapi->pdf;
+
+            $carrierLabel->add();
+        }
+        return true;
+    } */
 
 }

@@ -30,7 +30,6 @@ class InfoShop
     private  $id_shop;
     private  $shop;
     private  $id_shop_group;
-    private  $infoshop = array();
 
     public function __construct(){
         // $this->context = Context::getContext();
@@ -38,11 +37,6 @@ class InfoShop
         $this->id_shop_group = $this->context->shop->id_shop_group;
         $this->id_lang = $this->context->language->id;
         $this->setShopId();
-    }
-
-    public static function getShopData() {
-        $id_infoshop = RjInfoshop::getInfoShopID();
-        return self::getInfoShop($id_infoshop);
     }
 
     public function getShopName()
@@ -81,8 +75,14 @@ class InfoShop
         ];
     }
 
-    public static function getInfoShop($id_infoshop = null) 
+    /**
+     * Devuelve la información de la tienda (remitente)
+     *
+     * @return array
+     */
+    public static function getShopData() 
     {
+        $id_infoshop = RjInfoshop::getInfoShopID();
         $fields = array();
         
         if ($id_infoshop) {

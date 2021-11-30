@@ -24,11 +24,11 @@
         </td>
         <td style="width: 43%">
             <p>{l s='empresa' mod='rj_carrier'}</p>
-            <h4>{$infoShop.company|upper}</h4>
+            <h4>{$info_shop.company|upper}</h4>
         </td>
         <td style="width: 43%">
             <p>{l s='teléfonos' mod='rj_carrier'}</p>
-           <h4>{$infoShop.phone}</h4>
+           <h4>{$info_shop.phone}</h4>
         </td>
     </tr>
     <tr>
@@ -36,11 +36,11 @@
         </td>
         <td style="width: 43%">
             <p>{l s='dirección' mod='rj_carrier'}</p>
-            <h4>{$infoShop.street}</h4>
+            <h4>{$info_shop.street}</h4>
         </td>
         <td style="width: 43%">
             <p>{l s='email' mod='rj_carrier'}</p>
-            <h4>{$infoShop.email}</h4>
+            <h4>{$info_shop.email}</h4>
         </td>
     </tr>
     
@@ -52,11 +52,11 @@
         </td>
         <td style="width: 43%;">
             <p>{l s='Transportista' mod='rj_carrier'}cliente</p>
-            <h4>{$infoCustomer.firstname} {$infoCustomer.lastname}</h4>
+            <h4>{$info_customer.firstname} {$info_customer.lastname}</h4>
         </td>
         <td style="width: 43%; border-right: 5px solid #777;">
             <p>{l s='teléfonos' mod='rj_carrier'}</p>
-            <h4>{$infoCustomer.phone} - {$infoCustomer.phone_mobile}</h4>
+            <h4>{$info_customer.phone} - {$info_customer.phone_mobile}</h4>
         </td>
     </tr>
     <tr>
@@ -65,8 +65,8 @@
 
         <td colspan="2" style="border-right: 5px solid #777;">
             <p>{l s='dirección' mod='rj_carrier'}</p>
-            <h4>{$infoCustomer.address1}</h4>
-            <h4>{$infoCustomer.postcode} - {$infoCustomer.city} - {$infoCustomer.country}</h4>
+            <h4>{$info_customer.address1}</h4>
+            <h4>{$info_customer.postcode} - {$info_customer.city} - {$info_customer.country}</h4>
         </td>
     </tr>
     <tr>
@@ -74,7 +74,7 @@
         </td>
         <td colspan="2" style="border-right: 5px solid #777;">
             <p>{l s='mensaje' mod='rj_carrier'}</p>
-            <h4>{$infoPackage.message}</h4>
+            <h4>{$info_package.message}</h4>
             <br>
         </td>
     </tr>
@@ -88,15 +88,15 @@
         </td>
         <td style="width:25%; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-top: 1px solid #ccc;">
             <p>{l s='Weight' mod='rj_carrier'}</p>
-            <h4>{$infoPackage.weight|string_format:"%.2f"}</h4>
+            <h4>{$info_package.weight|string_format:"%.2f"}</h4>
         </td>
         <td style="width:25%; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-top: 1px solid #ccc;">
             <p>{l s='Packages' mod='rj_carrier'}</p>
-            <h4>{$count} / {$infoPackage.packages}</h4>
+            <h4>{$count} / {$info_package.packages}</h4>
         </td>
         <td style="width:25%; border-top: 1px solid #ccc;">
             <p>{l s='Contra reembolso' mod='rj_carrier'}</p>
-            <h4>{Tools::displayPrice($infoPackage.price_contrareembolso)}</h4>
+            <h4>{Tools::displayPrice($info_package.price_contrareembolso)}</h4>
         </td>
     </tr>
 </table>

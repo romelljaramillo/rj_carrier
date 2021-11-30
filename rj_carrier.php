@@ -102,15 +102,17 @@ class Rj_Carrier extends Module
     /**
      * Names of fields config Info Extra carrier used
      */
-    public $fields_config_info_extra = [
-        'RJ_ETIQUETA_TRANSP_PREFIX',
-        'RJ_MODULE_CONTRAREEMBOLSO',
-        'RJ_ENABLESHIPPINGTRACK',
-        'RJ_LABELSENDER',
-        'RJ_LABELSENDER_TEXT',
-        'RJ_ENABLEWEIGHT',
-        'RJ_DEFAULTKG'
-    ];
+    public $fields_config_info_extra = [];
+    //     'RJ_ETIQUETA_TRANSP_PREFIX',
+    //     'RJ_MODULE_CONTRAREEMBOLSO',
+    //     'RJ_ENABLESHIPPINGTRACK',
+    //     'RJ_LABELSENDER',
+    //     'RJ_LABELSENDER_TEXT',
+    //     'RJ_ENABLEWEIGHT',
+    //     'RJ_DEFAULTKG'
+    // ];
+
+    public $fields_form_config_info_extra = [];
 
     public $fields_multi_confi = [];
 
@@ -135,6 +137,8 @@ class Rj_Carrier extends Module
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall the module?');
 
         $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+
+        $this->setFieldsConfigExtraCarriers();
     }
 
     public function install()
@@ -223,13 +227,12 @@ class Rj_Carrier extends Module
     public function getContent()
     {
         if (Tools::isSubmit('submitConfigExtraInfo')
-        || Tools::isSubmit('submitConfigInfoShop')
+            || Tools::isSubmit('submitConfigInfoShop')
         ){
             $this->_postProcess();
         }
 
         // $this->context->smarty->assign('module_dir', $this->_path);
-
         // $this->_html = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
 
         $this->_html .= $this->renderFormInfoShop();
@@ -259,12 +262,38 @@ class Rj_Carrier extends Module
                 if (class_exists($class_name)) {
                     $class = new $class_name();
                     $html .= $class->renderConfig();
+                    $fields = $class->getFieldsFormConfigExtra();
+                    $this->fields_form_config_info_extra = array_merge($this->fields_form_config_info_extra, $fields);
+                    // array_merge($this->fields_form_config_info_extra, $fields);
                 }
             }
         }
         
         return $html;
     }
+
+    /**
+     * Setea la variable fields_config_info_extra con todos los campos extras de los Carries Company
+     *
+     * @return void
+     */
+    public function setFieldsConfigExtraCarriers() 
+    {
+        $carries_company = CarrierCompany::getCarriersCompany();
+        foreach ($carries_company as $company) {
+            $shortname = strtolower($company['shortname']);
+            $class_name = 'Carrier' . ucfirst($shortname);
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php')) {
+            include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
+                if (class_exists($class_name)) {
+                    $class = new $class_name();
+                    $fields = $class->getConfigFieldsExtra();
+                    $this->fields_config_info_extra = array_merge_recursive($this->fields_config_info_extra, $fields);
+                }
+            }
+        }
+    }
+
 
     public function hookBackOfficeHeader()
     {
@@ -283,33 +312,27 @@ class Rj_Carrier extends Module
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
 
-    public function hookDisplayAdminOrder($params)
+    /**
+     * Obtiene la información del package
+     *
+     * @param int $id_order
+     * @return array $info_package
+     */
+    public function getInfoPackage($id_order)
     {
         $this->context = Context::getContext();
         $id_shop = $this->context->shop->id;
         $id_shop_group = $this->context->shop->id_shop_group;
-
-        $id_lang = $this->context->language->id;
-        $infoShop = [];
-        $id_order = (int)$params['id_order'];
-        $name_carrier = '';
-        $generarEnvio = false;
-
-        $this->order = new Order($id_order);
-        $infoCustomer = new Address($this->order->id_address_delivery);
-
+        
         if (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) {
-            $infoPackage = $this->setPackCarrier($id_order);
-            if(Tools::isSubmit('submitSavePackSend')){
-                $generarEnvio = true;
-            }
+            $info_package = $this->setPackCarrier($id_order);
         }else {
-            $infoPackage = RjCarrierInfoPackage::getDataPackage($id_order);
+            $info_package = RjCarrierInfoPackage::getDataPackage($id_order);
         }
 
         // obtener contrareembolso
         $datosOrden = '';
-        if(!isset($infoPackage['price_contrareembolso'])){
+        if(!isset($info_package['price_contrareembolso'])){
             $contrareembolso = Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop);
             if(!$contrareembolso){
                 $this->warning[] = $this->l('Aun no esta configurado el contrareembolso, debe configurarlo en opciones del modulo!.');
@@ -317,57 +340,91 @@ class Rj_Carrier extends Module
             
             if($contrareembolso === 'codfee'){
                 $datosOrden = $this->order->getFields();
-                $infoPackage['price_contrareembolso'] = $datosOrden['total_paid_tax_incl'];
+                $info_package['price_contrareembolso'] = $datosOrden['total_paid_tax_incl'];
             }
         }
 
+        return $info_package;
+    }
+
+    /**
+     * Obtine los datos del customer
+     *
+     * @param int $id_order
+     * @return array $info_customer
+     */
+    public function getInfoCustomer($id_order)
+    {
+        $this->order = new Order($id_order);
+        $info_customer = new Address($this->order->id_address_delivery);
+        return (array)$info_customer;
+    }
+
+    public function hookDisplayAdminOrder($params)
+    {
+        $id_lang = $this->context->language->id;
+        $id_order = (int)$params['id_order'];
+        
         if (Tools::isSubmit('submitDeleteShipment')) {
-            $rjcarrierShipment = new RjcarrierShipment((int)Tools::getValue('id_shipment'));
-            if(!$rjcarrierShipment->delete()){
-                $this->errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
-            } else{
-                $this->success[] = $this->l('Se ha eliminado el envío.');
-            }
+            $this->deleteShipment(Tools::getValue('id_shipment'));
         }
 
-        $carriers = Carrier::getCarriers((int) $id_lang);
+        $info_package = $this->getInfoPackage($id_order);
+
         $company_carrier = false;
-        if($infoPackage['id_reference_carrier']){
-            $name_carrier = Carrier::getCarrierByReference((int)$infoPackage['id_reference_carrier'], $id_lang);
-
-            $company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($infoPackage['id_reference_carrier']);
+        $name_carrier = '';
+        if($info_package['id_reference_carrier']){
+            $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
+            $company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
         }
 
-        $infoShop = InfoShop::getShopData();
-
-        $infoOrder = array(
+        $info_shipment = [
             'link' => $this->context->link,
             'order_id' => $id_order,
-            'infoPackage' => $infoPackage,
-            'infoCustomer' => (array)$infoCustomer,
-            'infoShop' => $infoShop,
-            'carriers' => $carriers,
+            'info_package' => $info_package,
+            'info_customer' => $this->getInfoCustomer($id_order),
+            'info_shop' => InfoShop::getShopData(),
+            'carriers' => Carrier::getCarriers((int)$id_lang),
             'name_carrier' => $name_carrier->name,
             'company_carrier' => $company_carrier,
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
-        );
+        ];
 
-        if (Tools::isSubmit('submitShipment') || $generarEnvio){
-            $this->selectShipment($infoOrder);
+        if (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')){
+            $info_shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
+            $this->selectShipment($info_shipment);
         }
         
         $shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
         if($shipment){
-            $infoOrder['shipment'] = $shipment;
-            $infoOrder['labels'] = RjcarrierLabel::getLabelsByIdShipment($shipment['id_shipment']);
+            $info_shipment['shipment'] = $shipment;
+            $info_shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($shipment['id_shipment']);
+           
         }
 
-        $infoOrder['notifications'] = $this->prepareNotifications();
-        $this->context->smarty->assign($infoOrder);
+        $info_shipment['notifications'] = $this->prepareNotifications();
+        
+        $this->context->smarty->assign($info_shipment);
 
         $this->_html .= $this->display(__FILE__, 'admin-order.tpl');
-
+                   
         return $this->_html;
+    }
+
+    /**
+     * Procesa la eliminación del envío
+     *
+     * @param int $id_shipment
+     * @return void
+     */
+    private function deleteShipment($id_shipment)
+    {
+        $rjcarrierShipment = new RjcarrierShipment((int)$id_shipment);
+        if(!$rjcarrierShipment->delete()){
+            $this->errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
+        } else{
+            $this->success[] = $this->l('Se ha eliminado el envío.');
+        }
     }
 
     /**
@@ -376,11 +433,12 @@ class Rj_Carrier extends Module
      * @param array $infoOrder
      * @return void
      */
-    protected function selectShipment($infoOrder)
+    protected function selectShipment($info_shipment)
     {
-        $id_reference_carrier = $infoOrder['infoPackage']["id_reference_carrier"];
+        $id_reference_carrier = $info_shipment['info_package']["id_reference_carrier"];
 
         $shortname = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($id_reference_carrier);
+        
 
         if($shortname) {
             $shortname = strtolower($shortname);
@@ -389,7 +447,7 @@ class Rj_Carrier extends Module
                 include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
                 if (class_exists($class_name)) {
                     $class = new $class_name();
-                    $class->createShipment($infoOrder);
+                    $class->createShipment($info_shipment);
                 }
             }
         }
@@ -469,7 +527,7 @@ class Rj_Carrier extends Module
     protected function _postProcess()
 	{
         if (Tools::isSubmit('submitConfigExtraInfo')) {
-            $this->saveConfigFields($this->fields_config_info_extra);
+            $this->saveConfigExtraInfo();
         } elseif (Tools::isSubmit('submitConfigInfoShop')) {
             $this->saveInfoShop();
         }
@@ -514,7 +572,7 @@ class Rj_Carrier extends Module
         }
     }
 
-    private function saveConfigFields($fields)
+    private function saveConfigExtraInfo()
     {
         $res = true;
         $shop_context = Shop::getContext();
@@ -528,7 +586,8 @@ class Rj_Carrier extends Module
             if (!in_array($shop_group_id, $shop_groups_list)) {
                 $shop_groups_list[] = $shop_group_id;
             }
-            foreach ($fields as $field) {
+
+            foreach ($this->fields_config_info_extra as $field) {
                 if(in_array($field, $this->fields_multi_confi)){
                     $toString_field =  serialize(Tools::getValue($field));
                     $res &=  Configuration::updateValue($field, $toString_field, false, $shop_group_id, $shop_id);
@@ -732,111 +791,20 @@ class Rj_Carrier extends Module
 		return $helper->generateForm(array($fields_form));
     }
 
+    /**
+     * Genera el formulario de información extra obteniendo los inputs desde las clases carriers de companies
+     *
+     * @return void
+     */
     public function renderFormConfigInfoExtra()
     {
-        $this->l('No se puede eliminar el envío revisar su estado!.');
-        $modulesPay = self::getModulesPay();
-        $modules_array[] =  array(
-            'id' => '',
-            'name' => ''
-        );
-        foreach ($modulesPay as $module) {
-            $modules_array[] =  array(
-                'id' => $module['name'],
-                'name' => $module['name']
-            );
-        }
-
         $fields_form = array(
             'form' => array(
                 'legend' => array(
                     'title' => $this->l('Configuration extra information'),
                     'icon' => 'icon-cogs'
                 ),
-                'input' => array(
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Prefix etiqueta'),
-                        'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
-                        'class' => 'fixed-width-lg',
-                    ),
-                    array(
-                        'type' => 'select',
-                        'label' => $this->l('Module contrareembolso'),
-                        'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
-                        'options' => array(
-                            'query' => $modules_array,
-                            'id' => 'id',
-                            'name' => 'name'
-                        )
-                    ),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Activar shipping track'),
-						'name' => 'RJ_ENABLESHIPPINGTRACK',
-                        'desc' => $this->l('Activar enlace de seguimiento en el historial de compras del cliente'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('yes')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('no')
-							)
-						),
-					),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Activar quitar remitente'),
-						'name' => 'RJ_LABELSENDER',
-                        'desc' => $this->l('Quitar remitente de las etiquetas'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('yes')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('no')
-							)
-						),
-					),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Remitente alternativo'),
-                        'name' => 'RJ_LABELSENDER_TEXT',
-                    ),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Activar peso'),
-						'name' => 'RJ_ENABLEWEIGHT',
-                        'desc' => $this->l('Activar peso por defecto'),
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('yes')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('no')
-							)
-						),
-					),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Peso por defecto'),
-                        'name' => 'RJ_DEFAULTKG',
-                        'suffix' => 'kg',
-                        'class' => 'fixed-width-lg',
-                    )
-                ),
+                'input' => $this->fields_form_config_info_extra,
                 'submit' => array(
                     'title' => $this->l('Save'),
                 )
@@ -856,7 +824,7 @@ class Rj_Carrier extends Module
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
 		$helper->tpl_vars = array(
-			'fields_value' => $this->getConfigFieldsValues($this->fields_config_info_extra),
+			'fields_value' => $this->getConfigExtraFieldsValues(),
 			'languages' => $this->context->controller->getLanguages(),
 			'id_language' => $this->context->language->id
 		);
@@ -870,13 +838,13 @@ class Rj_Carrier extends Module
      * @param array $fields
      * @return array
      */
-    public function getConfigFieldsValues($fields)
+    public function getConfigExtraFieldsValues()
 	{
 		$id_shop_group = Shop::getContextShopGroupID();
 		$id_shop = Shop::getContextShopID();
         $arry_fields = [];
 
-        foreach ($fields as $field) {
+        foreach ($this->fields_config_info_extra as $field) {
             if(in_array($field, $this->fields_multi_confi)){
                 $arry_fields[$field . '[]'] = Tools::getValue($field, Tools::unSerialize(Configuration::get($field, null, $id_shop_group, $id_shop)));
             } else {
@@ -886,14 +854,4 @@ class Rj_Carrier extends Module
 
         return $arry_fields;
 	}
-
-    public static function getModulesPay()
-    {
-        $id_shop = Shop::getContextShopID();
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
-        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
-        WHERE mc.`id_shop` = ' . $id_shop . '
-        GROUP BY m.`id_module`');
-    }
 }

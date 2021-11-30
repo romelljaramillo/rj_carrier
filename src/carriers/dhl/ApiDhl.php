@@ -4,7 +4,7 @@ use Ramsey\Uuid\Uuid;
 Class ApiDhl {
     protected $userId;
     protected $key;
-    protected $baseUrl = 'https://api-gw.dhlparcel.nl';
+    protected $base_url = 'https://api-gw.dhlparcel.nl';
     protected $urllogin = '/authenticate/api-key';
     protected $urlShipments = '/shipments';
     protected $urlLabels = '/labels';
@@ -27,10 +27,10 @@ Class ApiDhl {
         $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
             $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
-            $this->baseUrl = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
+            $this->base_url = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
         } else {
             $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->baseUrl = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
+            $this->base_url = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
         }
     }
 
@@ -93,8 +93,16 @@ Class ApiDhl {
         return false;
     }
 
-    public function postShipment($body)
+    /**
+     * Crea envío y retorna respuesta de la API
+     *
+     * @param array $body
+     * @return obj
+     */
+    public function postShipment($info_shipment)
     {
+        $body = $this->generateBodyShipment($info_shipment);
+
         $body = json_encode($body);
         $resp = $this->request('POST', $this->urlShipments, $body);
         return $resp;
@@ -114,27 +122,27 @@ Class ApiDhl {
         return $resp;
     }
 
-    public function generateBodyShipment($infoShipment)
+    public function generateBodyShipment($info_shipment)
     {
-        $infoReceiver = $infoShipment['infoCustomer'];
-        $infoShipper = $infoShipment['infoShop'];
-        $infoPackage = $infoShipment['infoPackage'];
+        $infoReceiver = $info_shipment['info_customer'];
+        $infoShipper = $info_shipment['info_shop'];
+        $info_package = $info_shipment['info_package'];
 
-        $countryCode = Country::getIsoById($infoReceiver['id_country']);
+        $countrycode = Country::getIsoById($infoReceiver['id_country']);
+        $infoReceiver['countrycode'] = $countrycode;
         $customer = new Customer((int)$infoReceiver['id_customer']);
-        $infoReceiver['countryCode'] = $countryCode;
         $infoReceiver['email'] = $customer->email;
-        $infoReceiver['referenceClient'] = $infoPackage['message'];
+        $infoReceiver['referenceClient'] = $info_package['message'];
 
         $uuid = $this->generateUUID();
         $receiver = $this->getReceiver($infoReceiver);
         $shipper = $this->getShipper($infoShipper);
-        $pieces = $this->getPieces($infoPackage);
+        $pieces = $this->getPieces($info_package);
 
-        if($infoPackage['price_contrareembolso'] > 0){
+        if($info_package['price_contrareembolso'] > 0){
             $typeDelivery = [
                 "key"   => "COD_CASH",
-                "input" => $infoPackage['price_contrareembolso']
+                "input" => $info_package['price_contrareembolso']
             ];
         } else {
             $typeDelivery = [
@@ -144,14 +152,14 @@ Class ApiDhl {
 
         $options = [
             "key"   => "REFERENCE",
-            "input" => (string)$infoShipment['order_id']
+            "input" => (string)$info_shipment['order_id']
         ];
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
 
         return [
             "shipmentId" => $uuid,
-            "orderReference" => (string)$infoShipment['order_id'],
+            "orderReference" => (string)$info_shipment['order_id'],
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,
@@ -177,6 +185,7 @@ Class ApiDhl {
             ]
         ];
     }
+
     /**
      * Crea el formato de quien recibe
      *
@@ -195,7 +204,7 @@ Class ApiDhl {
                 "additionalName"=> $info['firstname']
             ],
             "address"=> [
-                "countryCode"=> $info['countryCode'],
+                "countryCode"=> $info['countrycode'],
                 "postalCode"=> $info['postcode'],
                 "city"=> $info['city'],
                 "street"=> $info['address1'],
@@ -265,15 +274,15 @@ Class ApiDhl {
     /**
      * request DHL
      *
-     * @param [type] $requestMethod
-     * @param [type] $urlparam
-     * @param [type] $body
-     * @return void
+     * @param string $requestMethod
+     * @param string $urlparam
+     * @param json $body
+     * @return array
      */
     public function request($method, $urlparam, $body = null)
     {
         $header = $this->headerRequest();
-        $url = $this->baseUrl . $urlparam;
+        $url = $this->base_url . $urlparam;
         $curl = curl_init();
 
         curl_setopt_array(
@@ -299,10 +308,7 @@ Class ApiDhl {
         $curlInfo = curl_getinfo($curl);
         $curlError = curl_errno($curl);
         
-        if (!in_array($curlInfo['http_code'], array(200, 201))) {
-            return false;
-        }
-        if ($curlError) {
+        if (!in_array($curlInfo['http_code'], array(200, 201)) || $curlError) {
             return false;
         }
 

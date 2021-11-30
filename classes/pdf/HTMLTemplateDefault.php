@@ -147,14 +147,14 @@ class HTMLTemplateDefault extends HTMLTemplate
 
         $activeDHL = false;
         $order = new Order($this->order->id);
-        $infoCustomer = new Address($order->id_address_delivery);
-        $infoShop = InfoShop::getShopData();
-        $infoPackage = RjCarrierInfoPackage::getDataPackage($this->order->id);
+        $info_customer = new Address($order->id_address_delivery);
+        $info_shop = InfoShop::getShopData();
+        $info_package = RjCarrierInfoPackage::getDataPackage($this->order->id);
         $carriers = Carrier::getCarriers((int) $id_lang);
 
-        if($infoPackage['id_reference_carrier']){
-            $name_carrier = Carrier::getCarrierByReference((int)$infoPackage['id_reference_carrier'], $id_lang);
-            if($infoPackage['id_reference_carrier'] == Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop)){
+        if($info_package['id_reference_carrier']){
+            $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
+            if($info_package['id_reference_carrier'] == Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop)){
                 $activeDHL = true;
             }
         }
@@ -162,10 +162,10 @@ class HTMLTemplateDefault extends HTMLTemplate
         $infoOrder = array(
             'link' => $this->context->link,
             'order_id' => $this->order->id,
-            'infoPackage' => $infoPackage,
+            'info_package' => $info_package,
             'count' => $this->count,
-            'infoCustomer' => (array)$infoCustomer,
-            'infoShop' => $infoShop,
+            'info_customer' => (array)$info_customer,
+            'info_shop' => $info_shop,
             'carriers' => $carriers,
             'name_carrier' => $name_carrier->name,
             'activeDHL' => $activeDHL

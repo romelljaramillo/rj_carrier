@@ -79,7 +79,7 @@
             <div class="card-footer">
                 <div class="row">
                     <div class="col-md-6">
-                        {if $infoPackage.print} 
+                        {if $info_package.print} 
                         <i class="material-icons text-success" data-toggle="pstooltip" data-placement="top" data-original-title="{l s='printed' mod='rj_carrier'}">print</i> 
                         {else} 
                         <i class="material-icons text-muted" data-toggle="pstooltip" data-placement="top" data-original-title="{l s='not printed' mod='rj_carrier'}">print_disabled</i> 
@@ -87,7 +87,7 @@
                     </div>
                     <div class="col-md-6 text-right">
                         <a class="btn btn-primary right-column _blank"
-                            href="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1],['action'=>'createEtiquetaPDF', 'id_infopackage'=>{$infoPackage.id}])|escape:'html':'UTF-8'}">
+                            href="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1],['action'=>'createEtiquetaPDF', 'id_infopackage'=>{$info_package.id}])|escape:'html':'UTF-8'}">
                             {l s='Print ticket' mod='rj_carrier'}
                             <i class="icon-external-link"></i>
                         </a>

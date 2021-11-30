@@ -8,15 +8,15 @@
             <h4>{l s='from' mod='rj_carrier'}.</h4>
         </div>
         <div class="col-md-6">
-            <h4>{$infoShop.company|upper}</h4>
+            <h4>{$info_shop.company|upper}</h4>
             <p class="rj-sub-title">{l s='empresa' mod='rj_carrier'}</p>
-            <h4>{$infoShop.street}</h4>
+            <h4>{$info_shop.street}</h4>
             <p class="rj-sub-title">{l s='dirección' mod='rj_carrier'}</p>
         </div>
         <div class="col-md-4">
-            <h4>{$infoShop.phone}</h4>
+            <h4>{$info_shop.phone}</h4>
             <p class="rj-sub-title">{l s='teléfonos' mod='rj_carrier'}</p>
-            <h4>{$infoShop.email}</h4>
+            <h4>{$info_shop.email}</h4>
             <p class="rj-sub-title">{l s='email' mod='rj_carrier'}</p>
         </div>
     </div>
@@ -25,16 +25,16 @@
             <h4>TO.</h4>
         </div>
         <div class="col-md-6">
-            <h4>{$infoCustomer.firstname} {$infoCustomer.lastname}</h4>
+            <h4>{$info_customer.firstname} {$info_customer.lastname}</h4>
             <p class="rj-sub-title">{l s='cliente' mod='rj_carrier'}</p>
-            <h4>{$infoCustomer.address1}</h4>
-            <h4>{$infoCustomer.postcode} - {$infoCustomer.city} - {$infoCustomer.country}</h4>
+            <h4>{$info_customer.address1}</h4>
+            <h4>{$info_customer.postcode} - {$info_customer.city} - {$info_customer.country}</h4>
             <p class="rj-sub-title">{l s='dirección' mod='rj_carrier'}</p>
         </div>
         <div class="col-md-4">
-            <h4>{$infoCustomer.phone} - {$infoCustomer.phone_mobile}</h4>
+            <h4>{$info_customer.phone} - {$info_customer.phone_mobile}</h4>
             <p class="rj-sub-title">{l s='teléfonos' mod='rj_carrier'}</p>
-            <h4>{$infoPackage.message}</h4>
+            <h4>{$info_package.message}</h4>
             <p class="rj-sub-title">{l s='message' mod='rj_carrier'}</p>
         </div>
     </div>
@@ -45,15 +45,15 @@
         </div>
         <div class="col-md-3 rj-weight">
             <p class="rj-sub-title">{l s='Weight' mod='rj_carrier'}</p>
-            <h4>{$infoPackage.weight|string_format:"%.2f"}</h4>
+            <h4>{$info_package.weight|string_format:"%.2f"}</h4>
         </div>
         <div class="col-md-3 rj-weight">
             <p class="rj-sub-title">{l s='Packages' mod='rj_carrier'}</p>
-            <h4>{$infoPackage.packages}</h4>
+            <h4>{$info_package.packages}</h4>
         </div>
         <div class="col-md-3">
             <p class="rj-sub-title">{l s='Contrareembolso' mod='rj_carrier'}</p>
-            <h4>{Tools::displayPrice($infoPackage.price_contrareembolso)}</h4>
+            <h4>{Tools::displayPrice($info_package.price_contrareembolso)}</h4>
         </div>
     </div>
 </div>

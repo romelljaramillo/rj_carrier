@@ -8,7 +8,7 @@
             <select class="custom-select" name="id_reference_carrier" id="id_reference_carrier">
                 <option value="0">-</option>
                 {foreach from=$carriers item=carrier}
-                <option value="{$carrier.id_reference}" {if $carrier.id_reference==$infoPackage.id_reference_carrier}
+                <option value="{$carrier.id_reference}" {if $carrier.id_reference == $info_package.id_reference_carrier}
                     selected="selected" {/if}>
                     {$carrier.name|escape:'html':'UTF-8'}
                 </option>
@@ -23,38 +23,38 @@
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <div class="input-group-text">
-                    <input type="checkbox" name="rj_contrareembolso" id="rj_contrareembolso" value="1" {if $infoPackage.price_contrareembolso > 0} checked {/if}>
+                    <input type="checkbox" name="rj_contrareembolso" id="rj_contrareembolso" value="1" {if $info_package.price_contrareembolso > 0} checked {/if}>
                     </div>
                 </div>
-                <input type="text" class="form-control" name="rj_price_contrareembolso" id="rj_price_contrareembolso" value="{$infoPackage.price_contrareembolso|string_format:"%.2f"}">
+                <input type="text" class="form-control" name="rj_price_contrareembolso" id="rj_price_contrareembolso" value="{$info_package.price_contrareembolso|string_format:"%.2f"}">
             </div>
         </div>
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='Packages'
                 mod='rj_carrier'}</label>
-            <input type="text" class="form-control" name="rj_packages" id="rj_packages" value="{$infoPackage.packages}">
+            <input type="text" class="form-control" name="rj_packages" id="rj_packages" value="{$info_package.packages}">
         </div>
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='Weight'
                 mod='rj_carrier'}</label>
-            <input type="text" class="form-control" name="rj_weight" id="rj_weight" value="{$infoPackage.weight|string_format:"%.2f"}">
+            <input type="text" class="form-control" name="rj_weight" id="rj_weight" value="{$info_package.weight|string_format:"%.2f"}">
         </div>
     </div>
     <div class="form-group row">
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='length'
                 mod='rj_carrier'}</label>
-            <input type="text" class="form-control" name="rj_length" id="rj_length" value="{$infoPackage.length|string_format:"%.2f"}">
+            <input type="text" class="form-control" name="rj_length" id="rj_length" value="{$info_package.length|string_format:"%.2f"}">
         </div>
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='width'
                 mod='rj_carrier'}</label>
-            <input type="text" class="form-control" name="rj_width" id="rj_width" value="{$infoPackage.width|string_format:"%.2f"}">
+            <input type="text" class="form-control" name="rj_width" id="rj_width" value="{$info_package.width|string_format:"%.2f"}">
         </div>
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='height'
                 mod='rj_carrier'}</label>
-            <input type="text" class="form-control" name="rj_height" id="rj_height" value="{$infoPackage.height|string_format:"%.2f"}">
+            <input type="text" class="form-control" name="rj_height" id="rj_height" value="{$info_package.height|string_format:"%.2f"}">
         </div>
     </div>
     <div class="form-group row">
@@ -62,11 +62,11 @@
             mod='rj_carrier'}</label>
         <div class="col-12">
             <textarea id="rj_message" cols="30" rows="3" class="js-countable-input form-control" data-max-length="1200"
-                maxlength="1200" name="rj_message">{$infoPackage.message}</textarea>
+                maxlength="1200" name="rj_message">{$info_package.message}</textarea>
         </div>
     </div>
-    <input type="hidden" name="id_order" id="rj_id_order" value="{$infoPackage.order_id}">
-    <input type="hidden" name="id_infopackage" value="{$infoPackage.id}">
+    <input type="hidden" name="id_order" id="rj_id_order" value="{$info_package.order_id}">
+    <input type="hidden" name="id_infopackage" value="{$info_package.id}">
     <div class="panel-footer">
         <button type="submit" id="formPackageCarrier" class="btn btn-primary pull-right" name="submitFormPackCarrier">
             {l s='Save'}
