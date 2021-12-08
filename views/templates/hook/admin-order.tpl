@@ -9,28 +9,28 @@
                     {l s='Info package' mod='rj_carrier'}
                 </h3>
             </div>
-            <div id="rj_packages" class="card-body">
+            <div id="rj_quantity" class="card-body">
                 {block name='package'}
                 {include file='./form-package.tpl'}
                 {/block}
             </div>
         </div>
-        {if $company_carrier}
-        {if !$shipment}
+        {if $info_company_carrier}
+        {if !$info_shipment.num_shipment}
         <div class="carrier card"  id="rjcarrierPanel">
             <div class="card-header">
                 <h3 class="card-header-title">
-                    {$company_carrier}
+                    {$info_company_carrier.shortname}
                 </h3>
             </div>
-            <div id="rj_packages" class="card-body">
+            <div id="rj_quantity" class="card-body">
                 {block name='create-shipment.tpl'}
                 {include file='./create-shipment.tpl'}
                 {/block}
             </div>
         </div>
         {/if}
-        {if $shipment}
+        {if $info_shipment.num_shipment}
         <div class="card" id="rjlistshipmentPanel">
             <div class="card-header">
                 <h3 class="card-header-title">
@@ -46,6 +46,8 @@
                 {/block}
             </div>
         </div>
+        {/if}
+        {if $labels}
         <div class="card" id="rjlistlabelsPanel">
             <div class="card-header">
                 <h3 class="card-header-title">
@@ -87,7 +89,7 @@
                     </div>
                     <div class="col-md-6 text-right">
                         <a class="btn btn-primary right-column _blank"
-                            href="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1],['action'=>'createEtiquetaPDF', 'id_infopackage'=>{$info_package.id}])|escape:'html':'UTF-8'}">
+                            href="{$link->getAdminLink('AdminRJLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1],['action'=>'create-etiqueta-custom', 'id_shipment'=>{$info_shipment.id_shipment}])|escape:'html':'UTF-8'}">
                             {l s='Print ticket' mod='rj_carrier'}
                             <i class="icon-external-link"></i>
                         </a>

@@ -23,8 +23,8 @@ class AdminAjaxRJCarrierController extends ModuleAdminController
 
     public function ajaxProcessContrareembolso()
     {
-        $order_id = (int) Tools::getValue('order_id');
-        $order          = new Order($order_id);
+        $id_order = (int) Tools::getValue('id_order');
+        $order          = new Order($id_order);
         $datosOrden     = $order->getFields();
         header('Content-Type: application/json');
         $this->ajaxRender(json_encode($datosOrden['total_paid_tax_incl']));

@@ -1,0 +1,21 @@
+{
+    "codigoRetorno": 0,
+    "mensajeRetorno": "",
+    "datosResultado": "3230004307319483",
+    "listaBultos": [
+        {
+            "orden": "01",
+            "codUnico": "32300043073194801152202"
+        },
+        {
+            "orden": "02",
+            "codUnico": "32300043073194802152201"
+        }
+    ],
+    "numRecogida": null,
+    "fechaRecogida": null,
+    "horaRecogidaDesde": null,
+    "horaRecogidaHasta": null,
+    "direccionRecogida": null,
+    "poblacionRecogida": null
+}

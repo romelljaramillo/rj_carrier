@@ -1,6 +1,6 @@
 <?php
 
-Class ApiCex {
+Class ServiceCex {
 
     protected $urlShipments = '/GrabacionEnvio?wsdl';
     protected $urlRecogida = '/GrabacionRecogida?wsdl';
@@ -237,8 +237,8 @@ Class ApiCex {
             "solicitante"   => $info_config['RJ_CEX_COD_CLIENT'],
             "canalEntrada"  => "",
             "numEnvio"      => "",
-            "ref"           => $info_shipment['order_id'],
-            "refCliente"    => $info_shipment['order_id'],
+            "ref"           => $info_shipment['id_order'],
+            "refCliente"    => $info_shipment['id_order'],
             "fecha"         => $fecha,
             "codRte"        => $info_config['RJ_CEX_COD_CLIENT'],
             "nomRte"        => $info_shop['firstname'] . ' ' . $info_shop['lastname'],
@@ -266,7 +266,7 @@ Class ApiCex {
             "telefOtrs"     => $info_customer['phone'],
             "emailOtrs"     => "",
             "observac"      => $info_package['other'],
-            "numBultos"     => $info_package['packages'],
+            "numBultos"     => $info_package['quantity'],
             "kilos"         => $info_package['weight'],
             "volumen"       => "",
             "alto"          => $info_package['height'],
@@ -317,8 +317,8 @@ Class ApiCex {
             $data['codPosIntDest'] = $info_customer['postcode'];
         }
 
-        if ($info_package['price_contrareembolso'] > 0) {
-            $data['reembolso'] = $info_package['price_contrareembolso'];
+        if ($info_package['cash_ondelivery'] > 0) {
+            $data['reembolso'] = $info_package['cash_ondelivery'];
         }
         if ($info_package['deliver_sat'] == 'true') {
             $data['entrSabado'] = 'S';
@@ -331,7 +331,7 @@ Class ApiCex {
 
 
         //Lista adicional de bultos
-        for ($i = 1; $i <= $info_package['packages']; $i++) {
+        for ($i = 1; $i <= $info_package['quantity']; $i++) {
             $interior = new stdClass();
             $interior->alto = "";
             $interior->ancho = "";
@@ -352,33 +352,35 @@ Class ApiCex {
         return json_encode($data);
     }
 
-    public function obtenerListaAdicional($datos, $esMasiva=false){
-        $fecha          = $datos['datepicker'];
-        $fechaformat    = explode('-', $fecha);
+    public function obtenerListaAdicional($info_shipment, $esMasiva=false)
+    {
+        $fecha          = date("d-m-Y");
+
+        $config_extra_info = $info_shipment['config_extra_info'];
         $lista = new stdClass(); 
-        $valorHideSender=$this->valorHideSender();
+
         if($esMasiva==true){
             $lista->tipoEtiqueta = "";
             $lista->posicionEtiqueta = "";
-            $lista->hideSender = $valorHideSender['hideSender'];
+            $lista->hideSender = $config_extra_info['RJ_LABELSENDER'];
             $lista->codificacionUnicaB64 = "1";
             $lista->logoCliente = codificarLogo();
-            $lista->idioma=$this->obtenerIdioma($datos);
-            $lista->textoRemiAlternativo = $valorHideSender['textoRemiAlternativo'];
+            $lista->idioma=$this->context->language->id;
+            $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
             $lista->creaRecogida = 'N';
            
         }else{
-            switch ($datos['tipoEtiqueta']) {
+            switch ($info_shipment['tipoEtiqueta']) {
             //ETIQUETA ADHESIVA
                 case '1':
                 $lista->tipoEtiqueta = "3";
-                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($datos['posicionEtiqueta']);
+                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($info_shipment['posicionEtiqueta']);
                 break;
             //ETIQUETA MEDIO FOLIO
                 case '2':
                 $lista->tipoEtiqueta = "4";
-                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($datos['posicionEtiqueta']);
+                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($info_shipment['posicionEtiqueta']);
                 break;
             //ETIQUETA TERMICA
                 case '3':
@@ -390,18 +392,18 @@ Class ApiCex {
                 break;
             }
 
-            $lista->hideSender = $valorHideSender['hideSender'];
+            $lista->hideSender = $config_extra_info['RJ_LABELSENDER'];
             $lista->codificacionUnicaB64 = "1";
             $lista->logoCliente = codificarLogo();
-            $lista->idioma= $this->obtenerIdioma($datos);
-            $lista->textoRemiAlternativo = $valorHideSender['textoRemiAlternativo'];
+            $lista->idioma= $this->context->language->id;
+            $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
-            if(strcmp('true', $datos['grabar_recogida'])==0){
+            if(strcmp('true', $info_shipment['grabar_recogida'])==0){
                 $lista->creaRecogida = 'S';
-                $lista->fechaRecogida = $fechaformat[2].$fechaformat[1].$fechaformat[0];
-                $lista->horaDesdeRecogida = $datos['fromHH_sender'].':'.$datos['fromMM_sender'];
-                $lista->horaHastaRecogida = $datos['toHH_sender'].':'.$datos['toMM_sender'];
-                $lista->referenciaRecogida = $datos['id'];
+                $lista->fechaRecogida = $fecha;
+                $lista->horaDesdeRecogida = $info_shipment['fromHH_sender'].':'.$info_shipment['fromMM_sender'];
+                $lista->horaHastaRecogida = $info_shipment['toHH_sender'].':'.$info_shipment['toMM_sender'];
+                $lista->referenciaRecogida = $info_shipment['id'];
             }else{
                 $lista->creaRecogida  = 'N';
             }

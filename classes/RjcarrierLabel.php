@@ -26,20 +26,17 @@
 
 class RjcarrierLabel extends ObjectModel
 {
+
     public $id_shipment;
-    public $labelid;
+    public $package_id;
     public $tracker_code;
-    public $parcel_type;
-    public $piece_number;
     public $label_type;
-    public $routing_code;
-    public $userid;
-    public $organizationid;
-    public $order_reference;
     public $pdf;
+    public $print;
     public $date_add;
     public $date_upd;
 
+                                                    
     /**
      * @see ObjectModel::$definition
      */
@@ -49,15 +46,9 @@ class RjcarrierLabel extends ObjectModel
         'multishop' => true,
         'fields' => array(
             'id_shipment'   => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'labelid'       => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'required' => true, 'size' => 50),
+            'package_id'    => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 50),
             'tracker_code'  => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
-            'parcel_type'   => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
-            'piece_number'  => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
             'label_type'    => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
-            'routing_code'  => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
-            'userid'        => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100),
-            'order_reference'  => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 50),
-            'userid'        => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 50),
             'pdf'           => array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml'),
             'print'         => array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
             'date_add'      => array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
@@ -74,7 +65,7 @@ class RjcarrierLabel extends ObjectModel
     public static function getLabelsByIdShipment($id_shipment)
     {
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-		SELECT l.*, s.shipmentid
+		SELECT l.*, s.num_shipment
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_label` l
 		LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_label_shop` ls ON (ls.`id_label`= l.`id_label`)
 		LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_shipment` s ON (s.`id_shipment`= l.`id_shipment`)

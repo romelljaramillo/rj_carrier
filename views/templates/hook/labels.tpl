@@ -1,10 +1,9 @@
-{if $shipment}
 <table class="table" id="rjShipmentTable">
     <thead>
         <tr>
             <th>{l s='id' mod='rj_carrier'}</th>
             <th>{l s='id shipment' mod='rj_carrier'}</th>
-            <th>{l s='labelid' mod='rj_carrier'}</th>
+            <th>{l s='package id' mod='rj_carrier'}</th>
             <th>{l s='tracker code' mod='rj_carrier'}</th>
             <th>{l s='Print' mod='rj_carrier'}</th>
             <th></th>
@@ -19,8 +18,8 @@
             <td class="cellIdShipmentLabel">
                 {$label.id_shipment}
             </td>
-             <td class="celllabelid">
-                {$label.labelid}
+             <td class="cell-package-id">
+                {$label.package_id}
             </td>
             <td class="cellTrackerCode">
                 {$label.tracker_code}
@@ -34,7 +33,7 @@
             </td>
             <td class="text-right cellShipmentActions">
                 <form name="order_rj_shipment"
-                    action="{$link->getAdminLink('AdminRJCarrier', true, ['id_order' => $order_id|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
+                    action="{$link->getAdminLink('AdminRJLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                     method="post" class="form-horizontal">
                     <input type="hidden" name="id_label" value="{$label.id_label}">
                     <button type="submit" id="btnCreateLabel" name="submitCreateLabel" formtarget="_blank"
@@ -47,4 +46,3 @@
         {/foreach}
     </tbody>
 </table>
-{/if}

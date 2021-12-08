@@ -34,27 +34,31 @@ class RjPDF
 {
     public $filename;
     public $pdf_renderer;
-    public $object;
+    public $shipment;
     public $template;
     public $send_bulk_flag = false;
-    public $num_print;
+    public $quantity;
 
     const TEMPLATE_TAG_TD = 'Default';
 
     /**
-     * @param $objects
+     * @param $shipment
      * @param $template
      * @param $smarty
      * @param string $orientation
      */
-    public function __construct($object, $template, $smarty, $orientation = 'P')
+    public function __construct($shipment, $template, $smarty, $orientation = 'P')
     {
         $this->pdf_renderer = new RjPDFGenerator((bool)Configuration::get('PS_PDF_USE_CACHE'), $orientation);
         $this->template = $template;
-        $this->smarty = $smarty;
+        // $this->smarty = $smarty;
+       
+        $this->shipment = $shipment;
+        // $this->quantity = $shipment['info_package']['quantity'];
 
-        $this->object = $object;
-        $this->num_print = (int)$object->packages;
+        // $this->smarty = $smarty;
+        $this->smarty = clone $smarty;
+        $this->smarty->escape_html = false;
     }
 
     /**
@@ -64,7 +68,7 @@ class RjPDF
      * @return mixed
      * @throws PrestaShopException
      */
-    public function render($display = true)
+    public function render($display = 'I')
     {
         $render = false;
         $this->pdf_renderer->setFontForLang(Context::getContext()->language->iso_code);
@@ -75,25 +79,29 @@ class RjPDF
             $this->filename = $template->getFilename();
         }
 
-        for ($i=0; $i < $this->num_print; $i++) { 
-            $template->setCounter($i+1);
-            $this->pdf_renderer->createContent($template->getContent());
+        // for ($i=1; $i < $this->quantity; $i++) { 
+        //     $template->setCounter($i);
+
+            // $this->pdf_renderer->createPagination($template->getPagination());
+            // $this->pdf_renderer->createHeader(false);
+            // $this->pdf_renderer->createFooter(false);
+            $html = $template->getContent();
+            $this->pdf_renderer->createContent($html);
             $this->pdf_renderer->writePage();
-        }
+            $this->pdf_renderer->lastPage();
+            $render = true;
+            // }
+            unset($template);
 
-        $render = true;
+        
+        // if ($render) {
+        //     // clean the output buffer
+        //     if (ob_get_level() && ob_get_length() > 0) {
+        //         ob_clean();
+        //     }
 
-        unset($template);
-        $this->object->print = true;
-        $this->object->update();
-
-        if ($render) {
-            // clean the output buffer
-            if (ob_get_level() && ob_get_length() > 0) {
-                ob_clean();
-            }
             return $this->pdf_renderer->render($this->filename, $display);
-        }
+        // }
     }
 
     /**
@@ -110,9 +118,9 @@ class RjPDF
         if (class_exists($class_name)) {
             // Some HTMLTemplateXYZ implementations won't use the third param but this is not a problem (no warning in PHP),
             // the third param is then ignored if not added to the method signature.
-            $class = new $class_name($this->object, $this->smarty, $this->send_bulk_flag);
+            $class = new $class_name($this->shipment, $this->smarty, $this->send_bulk_flag);
 
-            if (!($class instanceof HTMLTemplate)) {
+            if (!($class instanceof HTMLTemplateLabel)) {
                 throw new PrestaShopException('Invalid class. It should be an instance of HTMLTemplate');
             }
         }

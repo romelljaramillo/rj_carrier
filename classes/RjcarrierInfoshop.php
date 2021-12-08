@@ -24,15 +24,15 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class RjInfoshop extends ObjectModel
+class RjcarrierInfoshop extends ObjectModel
 {
     public $firstname;
     public $lastname;
     public $company;
     public $additionalname;
-    public $countrycode;
-    public $city;
+    public $id_country;
     public $state;
+    public $city;
     public $street;
     public $number;
     public $postcode;
@@ -42,7 +42,6 @@ class RjInfoshop extends ObjectModel
     public $email;
     public $phone;
     public $vatnumber;
-    public $eorinumber;
     public $date_add;
     public $date_upd;
     public $id_shop;
@@ -51,7 +50,7 @@ class RjInfoshop extends ObjectModel
      * @see ObjectModel::$definition
      */
     public static $definition = array(
-        'table' => 'rj_infoshop',
+        'table' => 'rj_carrier_infoshop',
         'primary' => 'id_infoshop',
         'multishop' => true,
         'fields' => array(
@@ -59,9 +58,9 @@ class RjInfoshop extends ObjectModel
             'lastname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'company' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'additionalname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'countrycode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'city' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'state' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'id_country' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'state' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
+            'city' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
             'street' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'number' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'postcode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
@@ -71,7 +70,6 @@ class RjInfoshop extends ObjectModel
             'email' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'phone' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'vatnumber' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'eorinumber' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat']
         )
@@ -79,17 +77,56 @@ class RjInfoshop extends ObjectModel
 
     public function __construct($id_infoshop = null, $id_lang = null, $id_shop = null, Context $context = null)
 	{
-        Shop::addTableAssociation('rj_infoshop', array('type' => 'shop'));
+        Shop::addTableAssociation('rj_carrier_infoshop', array('type' => 'shop'));
 		parent::__construct($id_infoshop, $id_lang, $id_shop);
 	}
 
     public static function getInfoShopID()
     {
         $sql = 'SELECT hs.`id_infoshop`
-        FROM `'._DB_PREFIX_.'rj_infoshop` hs';
+        FROM `'._DB_PREFIX_.'rj_carrier_infoshop` hs';
         $row = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
 
         return ($row);
     }
 
+    /**
+     * Devuelve la información de la tienda (remitente)
+     *
+     * @return array
+     */
+    public static function getShopData() 
+    {
+        $id_infoshop = RjcarrierInfoshop::getInfoShopID();
+        $fields = array();
+        
+        if ($id_infoshop) {
+            $infoshop = new RjcarrierInfoshop((int)$id_infoshop);
+        } else {
+            $infoshop = new RjcarrierInfoshop();
+        }
+
+        if($id_infoshop){
+            $fields['id_infoshop'] = Tools::getValue('id_infoshop', $infoshop->id);
+        }
+
+        $fields['firstname'] = Tools::getValue('firstname', $infoshop->firstname);
+        $fields['lastname'] = Tools::getValue('lastname', $infoshop->lastname);
+        $fields['company'] = Tools::getValue('company', $infoshop->company);
+        $fields['additionalname'] = Tools::getValue('additionalname', $infoshop->additionalname);
+        $fields['id_country'] = Tools::getValue('id_country', $infoshop->id_country);
+        $fields['state'] = Tools::getValue('state', $infoshop->state);
+        $fields['city'] = Tools::getValue('city', $infoshop->city);
+        $fields['street'] = Tools::getValue('street', $infoshop->street);
+        $fields['number'] = Tools::getValue('number', $infoshop->number);
+        $fields['postcode'] = Tools::getValue('postcode', $infoshop->postcode);
+        $fields['additionaladdress'] = Tools::getValue('additionaladdress', $infoshop->additionaladdress);
+        $fields['isbusiness'] = Tools::getValue('isbusiness', $infoshop->isbusiness);
+        $fields['addition'] = Tools::getValue('addition', $infoshop->addition);
+        $fields['email'] = Tools::getValue('email', $infoshop->email);
+        $fields['phone'] = Tools::getValue('phone', $infoshop->phone);
+        $fields['vatnumber'] = Tools::getValue('vatnumber', $infoshop->vatnumber);
+
+        return $fields;
+    }
 }

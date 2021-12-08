@@ -30,8 +30,8 @@
  * but does not want to loose all of the data associated to the module.
  */
 $sql = array();
-$sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_infoshop`';
-$sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_infoshop_shop`';
+$sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_infoshop`';
+$sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_infoshop_shop`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_infopackage`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_infopackage_shop`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_shipment`';

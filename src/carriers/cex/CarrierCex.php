@@ -33,7 +33,9 @@ class CarrierCex extends CarrierCompany
             'RJ_LABELSENDER',
             'RJ_LABELSENDER_TEXT',
             'RJ_ENABLEWEIGHT',
-            'RJ_DEFAULTKG'
+            'RJ_DEFAULTKG',
+            'RJ_HOUR_FROM',
+            'RJ_HOUR_UNTIL'
         ];
 
         parent::__construct();
@@ -114,6 +116,22 @@ class CarrierCex extends CarrierCompany
                 'name' => 'RJ_DEFAULTKG',
                 'suffix' => 'kg',
                 'class' => 'fixed-width-lg',
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Hour from'),
+                'name' => 'RJ_HOUR_FROM',
+                'class' => 'fixed-width-lg',
+                'suffix' => '<',
+                'desc' => $this->l('format 09:00'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('hour until'),
+                'name' => 'RJ_HOUR_UNTIL',
+                'class' => 'fixed-width-lg',
+                'suffix' => '>',
+                'desc' => $this->l('format 18:00'),
             ]
         ];
     }
@@ -181,24 +199,24 @@ class CarrierCex extends CarrierCompany
 
     public function createShipment($info_shipment)
     {
-        $shipmentId = RjcarrierShipment::getShipmentIdByIdOrder($info_shipment['order_id']);
+        $num_shipment = RjcarrierShipment::getNumShipmentByIdOrder($info_shipment['id_order']);
 
-        if (!$shipmentId) {
+        if (!$num_shipment) {
             $apiCex = new ApiCex();
 
             $info_shipment['info_config'] = $this->getConfigFieldsValues();
             dump($info_shipment);
             $data_shipment = $apiCex->postShipment($info_shipment);
 
-            if (!isset($data_shipment->shipmentId)) {
+            if (!isset($data_shipment->num_shipment)) {
                 $this->errors[] = $this->l('Algo esta mal en la información del envío.');
                 return false;
             }
 
-            $this->saveShipment($data_shipment, $info_shipment);
-            $idShipment = RjcarrierShipment::getIdShipmentByIdOrder($info_shipment['order_id']);
+            // $this->saveShipment($data_shipment, $info_shipment);
+            // $idShipment = RjcarrierShipment::getIdShipmentByIdOrder($info_shipment['id_order']);
             // $this->saveLabels($idShipment, $data_shipment);
-            // $data_shipment = $apidhl->getShipment($data_shipment->shipmentId);
+            // $data_shipment = $apidhl->getShipment($data_shipment->num_shipment);
 
         } else {
             $this->errors[] = $this->l('Ya existe un envío para este pedido.');

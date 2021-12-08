@@ -27,7 +27,7 @@
 /**
  * @since 1.5
  */
-abstract class HTMLTemplate
+abstract class HTMLTemplateLabel
 {
     public $title;
     public $date;
@@ -46,9 +46,10 @@ abstract class HTMLTemplate
      */
     public function getHeader()
     {
-        $this->assignCommonHeaderData();
+        // $this->assignCommonHeaderData();
 
-        return $this->smarty->fetch($this->getTemplate('header'));
+        // return $this->smarty->fetch($this->getTemplate('header'));
+        return '<h1> Header</h1>';
     }
 
     /**
@@ -58,20 +59,23 @@ abstract class HTMLTemplate
      */
     public function getFooter()
     {
-        $shop_address = $this->getShopAddress();
+        // $shop_address = $this->getShopAddress();
 
-        $id_shop = (int)$this->shop->id;
+        // $id_shop = (int)$this->shop->id;
 
-        $this->smarty->assign(array(
-            'available_in_your_account' => $this->available_in_your_account,
-            'shop_address' => $shop_address,
-            'shop_fax' => Configuration::get('PS_SHOP_FAX', null, null, $id_shop),
-            'shop_phone' => Configuration::get('PS_SHOP_PHONE', null, null, $id_shop),
-            'shop_email' => Configuration::get('PS_SHOP_EMAIL', null, null, $id_shop),
-            'free_text' => Configuration::get('PS_INVOICE_FREE_TEXT', (int)Context::getContext()->language->id, null, $id_shop)
-        ));
+        // $this->smarty->assign(array(
+        //     'available_in_your_account' => $this->available_in_your_account,
+        //     'shop_address' => $shop_address,
+        //     'shop_fax' => Configuration::get('PS_SHOP_FAX', null, null, $id_shop),
+        //     'shop_phone' => Configuration::get('PS_SHOP_PHONE', null, null, $id_shop),
+        //     'shop_email' => Configuration::get('PS_SHOP_EMAIL', null, null, $id_shop),
+        //     'free_text' => Configuration::get('PS_INVOICE_FREE_TEXT', (int)Context::getContext()->language->id, null, $id_shop)
+        // ));
 
-        return $this->smarty->fetch($this->getTemplate('footer'));
+        // return $this->smarty->fetch($this->getTemplate('footer'));
+
+        return '<h1> Header</h1>';
+
     }
 
     /**

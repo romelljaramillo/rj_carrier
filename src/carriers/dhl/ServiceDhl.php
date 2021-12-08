@@ -1,7 +1,7 @@
 <?php
-use Ramsey\Uuid\Uuid;
 
-Class ApiDhl {
+
+Class ServiceDhl {
     protected $userId;
     protected $key;
     protected $base_url = 'https://api-gw.dhlparcel.nl';
@@ -99,11 +99,8 @@ Class ApiDhl {
      * @param array $body
      * @return obj
      */
-    public function postShipment($info_shipment)
+    public function postShipment($body)
     {
-        $body = $this->generateBodyShipment($info_shipment);
-
-        $body = json_encode($body);
         $resp = $this->request('POST', $this->urlShipments, $body);
         return $resp;
     }
@@ -111,38 +108,38 @@ Class ApiDhl {
     public function getShipment($shipmentId)
     {
         $urlShipments = $this->urlShipments . '/' . $shipmentId;
-        $resp = $this->request('GET', $urlShipments);
-        return $resp;
+        return $this->request('GET', $urlShipments);
     }
 
+    /**
+     * Devuelve la respuesta de las etiquetas del servicio DHL
+     *
+     * @param string $labelId
+     * @return obj
+     */
     public function getLabel($labelId)
     {
         $urlLabel = $this->urlLabels . '/' . $labelId;
-        $resp = $this->request('GET', $urlLabel);
-        return $resp;
+        return $this->request('GET', $urlLabel);
     }
 
-    public function generateBodyShipment($info_shipment)
+    public function getBodyShipment($info_shipment)
     {
-        $infoReceiver = $info_shipment['info_customer'];
-        $infoShipper = $info_shipment['info_shop'];
+        $num_shipment = $info_shipment['info_shipment']['num_shipment'];
+        $id_order = (string)$info_shipment['id_order'];
+        $info_receiver = $info_shipment['info_customer'];
+        $info_shipper = $info_shipment['info_shop'];
         $info_package = $info_shipment['info_package'];
+        $info_receiver['referenceClient'] = $info_package['message'];
 
-        $countrycode = Country::getIsoById($infoReceiver['id_country']);
-        $infoReceiver['countrycode'] = $countrycode;
-        $customer = new Customer((int)$infoReceiver['id_customer']);
-        $infoReceiver['email'] = $customer->email;
-        $infoReceiver['referenceClient'] = $info_package['message'];
-
-        $uuid = $this->generateUUID();
-        $receiver = $this->getReceiver($infoReceiver);
-        $shipper = $this->getShipper($infoShipper);
+        $receiver = $this->getReceiver($info_receiver);
+        $shipper = $this->getShipper($info_shipper);
         $pieces = $this->getPieces($info_package);
 
-        if($info_package['price_contrareembolso'] > 0){
+        if($info_shipper['cash_ondelivery'] > 0){
             $typeDelivery = [
                 "key"   => "COD_CASH",
-                "input" => $info_package['price_contrareembolso']
+                "input" => $info_shipper['cash_ondelivery']
             ];
         } else {
             $typeDelivery = [
@@ -152,14 +149,14 @@ Class ApiDhl {
 
         $options = [
             "key"   => "REFERENCE",
-            "input" => (string)$info_shipment['order_id']
+            "input" => $id_order
         ];
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
 
         return [
-            "shipmentId" => $uuid,
-            "orderReference" => (string)$info_shipment['order_id'],
+            "shipmentId" => $num_shipment,
+            "orderReference" => $id_order,
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,
@@ -171,11 +168,11 @@ Class ApiDhl {
 
     public function getPieces($info)
     {
-        $weight = (float)$info['weight'] / (float)$info['packages'];
+        $weight = (float)$info['weight'] / (float)$info['quantity'];
         return [
             [
                 "parcelType" => "SMALL",
-                "quantity" => (int)$info['packages'],
+                "quantity" => (int)$info['quantity'],
                 "weight" => (float)$weight,
                 "dimensions" => [
                     "length" => (float)$info['length'],
@@ -194,6 +191,9 @@ Class ApiDhl {
      */
     public function getReceiver($info)
     {
+        $countrycode = Country::getIsoById($info['id_country']);
+        $customer = new Customer((int)$info['id_customer']);
+        $email = $customer->email;
         $phone = ($info['phone']) ? $info['phone_mobile'] .' | '. $info['phone'] : $info['phone_mobile'];
 
         return [
@@ -204,7 +204,7 @@ Class ApiDhl {
                 "additionalName"=> $info['firstname']
             ],
             "address"=> [
-                "countryCode"=> $info['countrycode'],
+                "countryCode"=> $countrycode,
                 "postalCode"=> $info['postcode'],
                 "city"=> $info['city'],
                 "street"=> $info['address1'],
@@ -213,7 +213,7 @@ Class ApiDhl {
                 "isBusiness"=> ($info['company'])?true:false,
                 "addition"=> $info['other']
             ],
-            "email"=> $info['email'],
+            "email"=> $email,
             "phoneNumber"=> $phone,
             "vatNumber"=> $info['vat_number'],
             "eoriNumber"=> $info['dni'],
@@ -229,6 +229,7 @@ Class ApiDhl {
      */
     public function getShipper($info)
     {
+        $countrycode = Country::getIsoById($info['id_country']);
         return [
             "name" => [
                 "firstName"=> $info['firstname'],
@@ -237,10 +238,10 @@ Class ApiDhl {
                 "additionalName"=> $info['additionalname']
             ],
             "address"=> [
-                "countryCode"=> $info['countrycode'],
+                "countryCode"=> $countrycode,
                 "postalCode"=> $info['postcode'],
-                "city"=> $info['city'],
-                "street"=> $info['street'],
+                "city"=> $info['state'],
+                "street"=> $info['street'] . ' ' . $info['city'],
                 "additionalAddressLine"=> $info['additionaladdress'],
                 "number"=> $info['number'],
                 "isBusiness"=> ($info['company'])?true:false,
@@ -251,11 +252,6 @@ Class ApiDhl {
             "vatNumber"=> $info['vatnumber'],
             "eoriNumber"=> $info['eorinumber']
         ];
-    }
-
-    public function generateUUID(){
-        $uuid = Uuid::uuid4();
-        return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
     }
 
     private function headerRequest()
@@ -281,6 +277,7 @@ Class ApiDhl {
      */
     public function request($method, $urlparam, $body = null)
     {
+
         $header = $this->headerRequest();
         $url = $this->base_url . $urlparam;
         $curl = curl_init();
@@ -312,10 +309,10 @@ Class ApiDhl {
             return false;
         }
 
-        $responseJson = json_decode($response);
+        $responses = json_decode($response);
 
-        if ($responseJson) {
-            return $responseJson;
+        if ($responses) {
+            return $responses;
         } else {
             return false;
         }

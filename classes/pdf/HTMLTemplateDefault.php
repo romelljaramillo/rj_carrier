@@ -27,108 +27,31 @@
 /**
  * @since 1.5
  */
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/HTMLTemplate.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/HTMLTemplateLabel.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/rj_carrier.php');
 
-class HTMLTemplateDefault extends HTMLTemplate
+class HTMLTemplateDefault extends HTMLTemplateLabel
 {
     public $order;
     public $order_invoice;
     public $available_in_your_account = false;
-    public $rjtransport;
+    public $shipment;
     public $count;
+    /** @var Smarty */
+    public $smarty;
+    public $id_shop_group;
+    public $id_shop;
+    public $id_lang;
+    public $context;
 
-
-    /**
-     * @param OrderInvoice $order_invoice
-     * @param $smarty
-     * @throws PrestaShopException
-     */
-    public function __construct($rjtransport, $smarty, $bulk_mode = false)
+    public function __construct($shipment, $smarty, $bulk_mode = false)
     {
-        $this->rjtransport = $rjtransport;
-        $this->order = new Order((int)$this->rjtransport->id_order);
+        $this->shipment = $shipment;
         $this->smarty = $smarty;
-
-        $id_lang = Context::getContext()->language->id;
-        // $this->title = $order_invoice->getInvoiceNumberFormatted($id_lang,(int)$this->order->id_shop);
-
-        $this->shop = new Shop((int)$this->order->id_shop);
     }
 
     public function setCounter($count){
         $this->count = $count;
-    }
-    /**
-     * Returns the template's HTML header
-     *
-     * @return string HTML header
-     */
-    public function getHeader()
-    {
-        $this->assignCommonHeaderData();
-        $this->smarty->assign(array('header' => HTMLTemplateInvoice::l('Invoice')));
-
-        return $this->smarty->fetch($this->getTemplate('header'));
-    }
-
-    /**
-     * Compute layout elements size
-     *
-     * @param $params Array Layout elements
-     *
-     * @return Array Layout elements columns size
-     */
-    protected function computeLayout($params)
-    {
-        $layout = array(
-            'reference' => array(
-                'width' => 15,
-            ),
-            'product' => array(
-                'width' => 40,
-            ),
-            'quantity' => array(
-                'width' => 8,
-            ),
-            'tax_code' => array(
-                'width' => 8,
-            ),
-            'unit_price_tax_excl' => array(
-                'width' => 0,
-            ),
-            'total_tax_excl' => array(
-                'width' => 0,
-            )
-        );
-
-        if (isset($params['has_discount']) && $params['has_discount']) {
-            $layout['before_discount'] = array('width' => 0);
-            $layout['product']['width'] -= 7;
-            $layout['reference']['width'] -= 3;
-        }
-
-        $total_width = 0;
-        $free_columns_count = 0;
-        foreach ($layout as $data) {
-            if ($data['width'] === 0) {
-                ++$free_columns_count;
-            }
-
-            $total_width += $data['width'];
-        }
-
-        $delta = 100 - $total_width;
-
-        foreach ($layout as $row => $data) {
-            if ($data['width'] === 0) {
-                $layout[$row]['width'] = $delta / $free_columns_count;
-            }
-        }
-
-        $layout['_colCount'] = count($layout);
-
-        return $layout;
     }
 
     /**
@@ -138,41 +61,13 @@ class HTMLTemplateDefault extends HTMLTemplate
      */
     public function getContent()
     {
-        $this->context = Context::getContext();
-        $id_shop_group = Shop::getContextShopGroupID();
-		$id_shop = Shop::getContextShopID();
-        $id_lang = $this->context->language->id;
-
-        $rj_carrier = new Rj_Carrier();
-
-        $activeDHL = false;
-        $order = new Order($this->order->id);
-        $info_customer = new Address($order->id_address_delivery);
-        $info_shop = InfoShop::getShopData();
-        $info_package = RjCarrierInfoPackage::getDataPackage($this->order->id);
-        $carriers = Carrier::getCarriers((int) $id_lang);
-
-        if($info_package['id_reference_carrier']){
-            $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
-            if($info_package['id_reference_carrier'] == Configuration::get('RJ_DHL_ID_REFERENCE_CARRIER', null, $id_shop_group, $id_shop)){
-                $activeDHL = true;
-            }
+        if (Tools::getValue('debug')) {
+            die(json_encode($this->shipment));
         }
 
-        $infoOrder = array(
-            'link' => $this->context->link,
-            'order_id' => $this->order->id,
-            'info_package' => $info_package,
-            'count' => $this->count,
-            'info_customer' => (array)$info_customer,
-            'info_shop' => $info_shop,
-            'carriers' => $carriers,
-            'name_carrier' => $name_carrier->name,
-            'activeDHL' => $activeDHL
-        );
-
-        $this->context->smarty->assign($infoOrder);
-        return $this->smarty->fetch($this->getTemplate('tag-defauld-pdf'));
+        $this->shipment['count'] = $this->count;
+        $this->smarty->assign($this->shipment);
+        return $this->smarty->fetch($this->getTemplate('tagdefauldpdf'));
     }
 
     /**
@@ -182,7 +77,7 @@ class HTMLTemplateDefault extends HTMLTemplate
      */
     public function getBulkFilename()
     {
-        return 'invoices.pdf';
+        return 'rjcarrier.pdf';
     }
 
     /**
@@ -192,16 +87,19 @@ class HTMLTemplateDefault extends HTMLTemplate
      */
     public function getFilename()
     {
-        $id_lang = Context::getContext()->language->id;
+        // $this->context = Context::getContext();
         $id_shop_group = Shop::getContextShopGroupID();
-        $id_shop = (int)$this->order->id_shop;
-        // $orderId = (int)$this->order->id;
+		$id_shop = Shop::getContextShopID();
         $format = '%1$s%2$06d';
+
+        if (Configuration::get('PS_INVOICE_USE_YEAR')) {
+            $format = Configuration::get('PS_INVOICE_YEAR_POS') ? '%1$s%3$s-%2$06d' : '%1$s%2$06d-%3$s';
+        }
 
         return sprintf(
             $format,
             Configuration::get('RJ_ETIQUETA_TRANSP_PREFIX', null, $id_shop_group, $id_shop),
-            $this->order->id,
+           $this->shipment['id_order'],
             date('Y')
         ).'.pdf';
     }

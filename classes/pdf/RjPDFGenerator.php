@@ -197,6 +197,8 @@ class RjPDFGenerator extends TCPDF
             $output = 'S';
         } elseif ($display == 'D') {
             $output = 'D';
+        } elseif ($display == 'E') {
+            $output = 'E';
         } elseif ($display == 'S') {
             $output = 'S';
         } elseif ($display == 'F') {

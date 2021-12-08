@@ -25,40 +25,15 @@
 */
 $sql = array();
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
-    `id_infopackage` int(11) NOT NULL AUTO_INCREMENT,
-    `id_order` int(10) NOT NULL,
-    `id_reference_carrier` int(10) NOT NULL,
-    `packages` int(10) unsigned NOT NULL DEFAULT \'1\',
-    `price_contrareembolso` DECIMAL(20,6) NULL,
-    `weight` decimal(20,6) NULL,
-    `length` decimal(20,6) NULL,
-    `width` decimal(20,6) NULL,
-    `height` decimal(20,6) NULL,
-    `message` varchar(255) NULL,
-    `print` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
-    `date_add` datetime NOT NULL,
-	`date_upd` datetime NOT NULL,
-    PRIMARY KEY  (`id_infopackage`),
-    INDEX `id_order` (`id_order`) USING BTREE,
-    INDEX `id_reference_carrier` (`id_reference_carrier`) USING BTREE
-) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
-
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
-    `id_infopackage` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `id_shop` int(10) unsigned NOT NULL,
-    PRIMARY KEY (`id_infopackage`, `id_shop`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
-
-$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_infoshop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
     `id_infoshop` int(11) NOT NULL AUTO_INCREMENT,
     `firstname` varchar(100) NOT NULL,
     `lastname` varchar(100) NULL,
     `company` varchar(100) NULL,
     `additionalname` varchar(100) NULL,
-    `countrycode` varchar(5) NULL,
-    `city` varchar(255) NOT NULL,
-    `state` varchar(255) NOT NULL,
+    `id_country` INT(10) UNSIGNED NOT NULL,
+	`state` varchar(255) NULL,
+	`city` varchar(255) NULL,
     `street` varchar(255) NOT NULL,
     `number` varchar(10) NULL,
     `postcode` varchar(10) NULL,
@@ -68,29 +43,58 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_infoshop` (
     `addition` varchar(100) NULL,
     `phone` varchar(20) NULL,
     `vatnumber` varchar(20) NULL,
-    `eorinumber` varchar(20) NULL,
     `date_add` datetime NOT NULL,
 	`date_upd` datetime NOT NULL,
-    PRIMARY KEY  (`id_infoshop`)
+    PRIMARY KEY  (`id_infoshop`),
+    INDEX `id_country` (`id_country`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_infoshop_shop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infoshop_shop` (
     `id_infoshop` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) unsigned NOT NULL,
     PRIMARY KEY (`id_infoshop`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
+    `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
+	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT \'1\',
+	`weight` DECIMAL(20,6) NULL DEFAULT NULL,
+	`length` DECIMAL(20,6) NULL DEFAULT NULL,
+	`width` DECIMAL(20,6) NULL DEFAULT NULL,
+	`height` DECIMAL(20,6) NULL DEFAULT NULL,
+	`parcel_type` VARCHAR(100) NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
+    PRIMARY KEY  (`id_infopackage`)
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
+    `id_infopackage` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) unsigned NOT NULL,
+    PRIMARY KEY (`id_infopackage`, `id_shop`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
-    `id_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `shipmentid` CHAR(36) NOT NULL,
-    `id_infopackage` int(10) NOT NULL,
-    `id_order` int(10) NOT NULL,
-    `product` varchar(100) NOT NULL,
-    `order_reference` varchar(100) NOT NULL,
-    `delete` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
-    `date_add` datetime NOT NULL,
-	`date_upd` datetime NOT NULL,
-    INDEX ( `id_shipment` , `id_order`, `id_infopackage`, `shipmentid`)
+    `id_shipment` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`id_order` INT(10) NOT NULL,
+	`reference_order` VARCHAR(100) NOT NULL,
+	`num_shipment` CHAR(36) NOT NULL,
+	`id_carrier_company` INT(10) NOT NULL,
+	`id_infopackage` INT(10) NOT NULL,
+	`id_reference_carrier` INT(10) NOT NULL,
+	`account` VARCHAR(100) NOT NULL,
+	`product` VARCHAR(100) NOT NULL,
+	`cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
+	`message` VARCHAR(255) NULL DEFAULT \'0\',
+	`request` TEXT NULL DEFAULT NULL,
+	`response` TEXT NULL DEFAULT NULL,
+	`delete` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
+	`hour_from` TIME NULL DEFAULT NULL,
+	`hour_until` TIME NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
+    PRIMARY KEY (`id_shipment`),
+	INDEX `id_shipment` (`id_shipment`, `id_order`, `id_infopackage`, `num_shipment`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shipment_shop` (
@@ -100,22 +104,17 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shipment_shop` (
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
-    `id_label` int(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    `id_shipment` INT(11) UNSIGNED NOT NULL,
-    `labelid` CHAR(36) NOT NULL,
-    `tracker_code` varchar(100) NOT NULL,
-    `parcel_type` varchar(100) NOT NULL,
-    `piece_number` int(10) NOT NULL,
-    `label_type` varchar(100) NOT NULL,
-    `routing_code` varchar(100) NOT NULL,
-    `userid` CHAR(36) NOT NULL,
-    `organizationid` CHAR(36) NOT NULL,
-    `order_reference` varchar(100) NOT NULL,
-    `pdf` BLOB,
-    `print` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
-    `date_add` datetime NOT NULL,
-	`date_upd` datetime NOT NULL,
-    INDEX ( `id_shipment` , `labelid`, `tracker_code`)
+    `id_label` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`id_shipment` INT(11) UNSIGNED NOT NULL,
+	`package_id` VARCHAR(100) NOT NULL,
+	`tracker_code` VARCHAR(100) NOT NULL,
+	`label_type` VARCHAR(100) NOT NULL,
+	`pdf` BLOB NULL DEFAULT NULL,
+	`print` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
+	`date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
+    PRIMARY KEY (`id_label`),
+	INDEX `id_shipment` (`id_shipment`, `package_id`, `tracker_code`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
@@ -129,8 +128,10 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
     `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
     `shortname` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
     `icon` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+    `date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_carrier_company`)
-  ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
 	(1, \'DHL\', \'DHL\', NULL),

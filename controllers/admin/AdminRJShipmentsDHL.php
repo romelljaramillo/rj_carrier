@@ -10,11 +10,11 @@
 * @copyright 2021 Roanja.com
 * @license   https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
 */
-include_once _PS_MODULE_DIR_ . 'rj_carrier/controllers/admin/AdminRJCarrierController.php';
+include_once _PS_MODULE_DIR_ . 'rj_carrier/controllers/admin/AdminRJLabelController.php';
 class AdminRJShipmentsDHLController extends ModuleAdminController
 {
     protected $statuses_array = array();
-    protected $nameInforme = 'shipments_dhl';
+    protected $nameInforme = 'shipments';
 
     public function __construct()
     {
@@ -75,7 +75,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         }
 
         if (Tools::isSubmit('printlabel' . $this->table)) {
-            $resp = AdminRJCarrierController::printLabelsShipment(Tools::getValue($this->identifier));
+            $resp = AdminRJLabelController::printLabelsShipment(Tools::getValue($this->identifier));
         }
 
         if (Tools::isSubmit('updatestatus' . $this->table)) {
@@ -90,7 +90,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
 
         if ($shipments = Tools::getValue('rj_carrier_shipmentBox')) {
             foreach ($shipments as $id_shipment) {
-                $res = AdminRJCarrierController::downloadLabelsShipment($id_shipment);
+                $res = AdminRJLabelController::downloadLabelsShipment($id_shipment);
                 if(!$res)
                     return $res;
                     
@@ -99,13 +99,13 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
     }
 
     protected function querySql(){
-        $this->_select = "a.id_order,
-                            a.id_shipment,
-                            a.shipmentid,
+        $this->_select = "a.id_shipment,
+                            a.id_order,
+                            a.reference_order,
+                            a.num_shipment,
                             a.product,
-                            a.order_reference,
-                            pk.price_contrareembolso,
-                            pk.packages,
+                            a.cash_ondelivery,
+                            pk.quantity,
                             pk.weight,
                             a.date_add";
         $this->_join = " INNER JOIN `"._DB_PREFIX_."rj_carrier_infopackage` pk ON a.id_infopackage = pk.id_infopackage";
@@ -124,6 +124,11 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
                 'havingFilter' => true,
                 'filter_key' => 'a!id_order'
             ),
+            'reference_order' => array(
+                'title' => $this->l('order reference DHL'),
+                'havingFilter' => true,
+                'search' =>false,
+            ),
             'id_shipment' => array(
                 'title' => $this->l('id Envío'),
                 'align' => 'text-center',
@@ -131,7 +136,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
                 'havingFilter' => true,
                 'search' =>false,
             ),
-            'shipmentid' => array(
+            'num_shipment' => array(
                 'title' => $this->l('Id DHL'),
                 'havingFilter' => true,
                 'search' =>false,
@@ -141,13 +146,13 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
                 'havingFilter' => true,
                 'search' =>false,
             ),
-            'price_contrareembolso' => array(
+            'cash_ondelivery' => array(
                 'title' => $this->l('Contrareembolso'),
                 'havingFilter' => true,
                 'type' => 'price',
-                'filter_key' => 'pk!price_contrareembolso',
+                'filter_key' => 'pk!cashOndelivery',
             ),
-            'packages' => array(
+            'quantity' => array(
                 'title' => $this->l('Packages'),
                 'havingFilter' => true,
                 'search' =>false,
@@ -156,11 +161,6 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
                 'title' => $this->l('Weight'),
                 'havingFilter' => true,
                 'type' => 'decimal',
-                'search' =>false,
-            ),
-            'order_reference' => array(
-                'title' => $this->l('order reference DHL'),
-                'havingFilter' => true,
                 'search' =>false,
             ),
             'date_add' => array(
@@ -172,18 +172,18 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         );
     }
 
-    public function getInfopackContrareembolso($echo, $tr)
+    public function getInfopackCashOndelivery($echo, $tr)
     {
-        $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)$tr['id_infopackage']);
+        $rjcarrierInfoPackage = new RjcarrierShipment((int)$tr['id_infopackage']);
 
-        return Tools::displayPrice($rjCarrierInfoPackage->price_contrareembolso);
+        return Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
     }
 
     public function getInfopackPackcage($echo, $tr)
     {
-        $rjCarrierInfoPackage = new RjCarrierInfoPackage((int)$tr['id_infopackage']);
+        $rjCarrierInfoPackage = new RjcarrierInfoPackage((int)$tr['id_infopackage']);
 
-        return $rjCarrierInfoPackage->packages;
+        return $rjCarrierInfoPackage->quantity;
     }
 
     public function renderList()

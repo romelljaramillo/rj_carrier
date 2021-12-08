@@ -34,14 +34,14 @@
         <div class="col-md-4">
             <h4>{$info_customer.phone} - {$info_customer.phone_mobile}</h4>
             <p class="rj-sub-title">{l s='teléfonos' mod='rj_carrier'}</p>
-            <h4>{$info_package.message}</h4>
+            <h4>{$info_shipment.message}</h4>
             <p class="rj-sub-title">{l s='message' mod='rj_carrier'}</p>
         </div>
     </div>
     <div class="rj-data-package row">
         <div class="col-md-3">
             <p class="rj-sub-title">{l s='Nº pedido' mod='rj_carrier'}</p>
-            <h4>{$order_id}</h4>
+            <h4>{$id_order}</h4>
         </div>
         <div class="col-md-3 rj-weight">
             <p class="rj-sub-title">{l s='Weight' mod='rj_carrier'}</p>
@@ -49,11 +49,11 @@
         </div>
         <div class="col-md-3 rj-weight">
             <p class="rj-sub-title">{l s='Packages' mod='rj_carrier'}</p>
-            <h4>{$info_package.packages}</h4>
+            <h4>{$info_package.quantity}</h4>
         </div>
         <div class="col-md-3">
-            <p class="rj-sub-title">{l s='Contrareembolso' mod='rj_carrier'}</p>
-            <h4>{Tools::displayPrice($info_package.price_contrareembolso)}</h4>
+            <p class="rj-sub-title">{l s='Cash on delivery' mod='rj_carrier'}</p>
+            <h4>{Tools::displayPrice($info_shipment.cash_ondelivery)}</h4>
         </div>
     </div>
 </div>

@@ -1,3 +1,4 @@
+<?php
 /**
 * 2007-2021 PrestaShop
 *
@@ -21,38 +22,13 @@
 *  @copyright 2007-2021 PrestaShop SA
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
-*
-* Don't forget to prefix your containers with your own identifier
-* to avoid any conflicts with others containers.
 */
+header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
 
-function saveRjTransport(){
-    var data = {
-        "rj_carrier" : $("#rj_carrier").val(),
-        "rj_quantity" : $("#rj_quantity").val(),
-        "rj_weight" : $("#rj_weight").val(),
-        "rj_message" : $("#rj_message").val(),
-        "action"	: "submitFormPackageCarrier"
-    }
-	// v"ar noteContent = $('#noteContent').val();
-	// var data = 'token=' + 
-    // token_admin_customers + 
-    // '&tab=AdminCustomers&ajax=1&action=updateCustomerNote&id_customer=' + 
-    // customerId + 
-    // '&note=' + 
-    // encodeURIComponent(noteContent);
-	$.ajax({
-		type: "POST",
-		url: "index.php",
-		data: data,
-		async : true,
-		success: function(r) {
-
-			if (r == 'ok') {
-				// $('#submitCustomerNote').attr('disabled', true);
-			}
-			showSuccessMessage(update_success_msg);
-		}
-	});
-}
+header('Location: ../');
+exit;

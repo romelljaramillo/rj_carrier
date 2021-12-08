@@ -25,12 +25,12 @@
 */
 require_once(_PS_MODULE_DIR_.'rj_carrier/vendor/autoload.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/RjPDF.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjCarrierInfoPackage.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierInfoPackage.php');
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
 
 use iio\libmergepdf\Merger;
 
-class AdminRJCarrierController extends ModuleAdminController
+class AdminRJLabelController extends ModuleAdminController
 {
     const NAME_ETIQUETA = "ETIQUETA_TRANS";
     
@@ -45,30 +45,24 @@ class AdminRJCarrierController extends ModuleAdminController
 
     public function initProcess()
     {
-        // $action = Tools::getValue('submitAction');
         parent::initProcess();
         $this->checkCacheFolder();
         $access = Profile::getProfileAccess($this->context->employee->id_profile, (int)Tab::getIdFromClassName('AdminOrders'));
-        $_GET;
         $this->action = Tools::getValue('action');
         
-        if ($access['view'] === '1' && $this->action === 'createEtiquetaPDF') {
-            $this->processEtiquetaPDF();
+        if ($access['view'] === '1' && $this->action === 'create-etiqueta-custom') {
+            $this->generateLabelPdf('mensaje');
         } elseif (Tools::isSubmit('submitCreateLabel')) {
             if(Tools::getValue('id_label')){
                 $this->printLabel(Tools::getValue('id_label'));
-                
             }
         } elseif (Tools::isSubmit('submitCreateLabelsShipment')) {
             if(Tools::getValue('id_shipment')){
                 self::printLabelsShipment(Tools::getValue('id_shipment'));
             }
-        
         } else {
             $this->errors[] = Tools::displayError('You do not have permission to view this.');
-
         }
-        
     }
     public function updatePrintedLabel($id_label)
     {
@@ -86,6 +80,17 @@ class AdminRJCarrierController extends ModuleAdminController
         header('Cache-Control: no-store, no-cache');
         echo $pdf;
         $this->updatePrintedLabel($id_label);
+    }
+
+    public static function printLabel2($pdf64)
+    {
+        // $label = new RjcarrierLabel($id_label);
+        $pdf = base64_decode($pdf64);
+
+        header('Content-Type: application/pdf; charset=utf-8');
+        header('Cache-Control: no-store, no-cache');
+        return $pdf;
+        // $this->updatePrintedLabel($id_label);
     }
 
     public static function printLabelsShipment($id_shipment)
@@ -146,7 +151,6 @@ class AdminRJCarrierController extends ModuleAdminController
 
     }
 
-
     public function mergePDF($arrayPDF)
     {
         $merger = new Merger;
@@ -161,28 +165,10 @@ class AdminRJCarrierController extends ModuleAdminController
         }
     }
 
-    public function processEtiquetaPDF()
+    public static function generateLabelPdf($shipment)
     {
-        if (Tools::isSubmit('id_infopackage')) {
-            $this->generateEtiquetaPDFByIdOrder(Tools::getValue('id_infopackage'));
-        } 
-    }
-
-    public function generateEtiquetaPDFByIdOrder($id_infopackage)
-    {
-        $RjCarrierInfoPackage = new RjCarrierInfoPackage((int)$id_infopackage);
-
-        if (!Validate::isLoadedObject($RjCarrierInfoPackage)) {
-            die(Tools::displayError('The order cannot be found within your database.'));
-        }
-
-        $this->generatePDF($RjCarrierInfoPackage, RjPDF::TEMPLATE_TAG_TD);
-    }
-
-    public function generatePDF($object, $template)
-    {
-        $pdf = new RjPDF($object, $template, Context::getContext()->smarty);
-        $pdf->render();
+        $pdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty);
+        return $pdf->render();
     }
 
 }

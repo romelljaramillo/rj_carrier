@@ -24,18 +24,13 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class RjCarrierInfoPackage extends ObjectModel
+class RjcarrierInfoPackage extends ObjectModel
 {
-    public $id_order;
-    public $id_carrier;
-    public $packages;
-    public $price_contrareembolso;
+    public $quantity;
     public $weight;
     public $length;
     public $width;
     public $height;
-    public $message;
-    public $print;
     public $id_shop;
     public $date_add;
     public $date_upd;
@@ -48,16 +43,11 @@ class RjCarrierInfoPackage extends ObjectModel
         'primary' => 'id_infopackage',
         'multishop' => true,
         'fields' => array(
-            'id_order' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'id_reference_carrier' => array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'packages' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'price_contrareembolso' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
+            'quantity' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
             'weight' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true),
             'length' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
             'width' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
             'height' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
-            'message' =>	array('type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255),
-			'print' =>		array('type' => self::TYPE_BOOL, 'validate' => 'isBool'),
             'date_add' =>   array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
             'date_upd' =>   array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
         )
@@ -69,22 +59,11 @@ class RjCarrierInfoPackage extends ObjectModel
 		parent::__construct($id_infopackage, $id_lang, $id_shop);
 	}
 
-    public static function getDataPackage($id_order)
-	{
-        $resul = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-                SELECT tr.`id_infopackage` as id, 
-                tr.`id_reference_carrier`,
-                tr.`packages`,
-                tr.`price_contrareembolso`,
-                tr.`weight`,
-                tr.`length`,
-                tr.`width`,
-                tr.`weight`,
-                tr.`height`,
-                tr.`message`,
-                tr.`print`
-				FROM `'._DB_PREFIX_.'rj_carrier_infopackage` tr
-				WHERE tr.`id_order` = '.(int)$id_order);
-		return $resul;
-	}
+    public static function getQuantityById($id_infopackage)
+    {
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue('
+		SELECT c.quantity
+		FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` c
+		WHERE c.`id_infopackage` = ' . (int)$id_infopackage);
+    }
 }
