@@ -32,11 +32,9 @@ include_once(_PS_MODULE_DIR_.'rj_carrier/rj_carrier.php');
 
 class HTMLTemplateDefault extends HTMLTemplateLabel
 {
-    public $order;
-    public $order_invoice;
     public $available_in_your_account = false;
     public $shipment;
-    public $count;
+    public $num_package;
     /** @var Smarty */
     public $smarty;
     public $id_shop_group;
@@ -50,8 +48,8 @@ class HTMLTemplateDefault extends HTMLTemplateLabel
         $this->smarty = $smarty;
     }
 
-    public function setCounter($count){
-        $this->count = $count;
+    public function setCounterPackage($num_package){
+        $this->num_package = $num_package;
     }
 
     /**
@@ -61,13 +59,9 @@ class HTMLTemplateDefault extends HTMLTemplateLabel
      */
     public function getContent()
     {
-        if (Tools::getValue('debug')) {
-            die(json_encode($this->shipment));
-        }
-
-        $this->shipment['count'] = $this->count;
+        $this->shipment['count'] = $this->num_package;
         $this->smarty->assign($this->shipment);
-        return $this->smarty->fetch($this->getTemplate('tagdefauldpdf'));
+        return $this->smarty->fetch($this->getTemplate('label-defauld-pdf'));
     }
 
     /**
@@ -87,7 +81,6 @@ class HTMLTemplateDefault extends HTMLTemplateLabel
      */
     public function getFilename()
     {
-        // $this->context = Context::getContext();
         $id_shop_group = Shop::getContextShopGroupID();
 		$id_shop = Shop::getContextShopID();
         $format = '%1$s%2$06d';

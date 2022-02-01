@@ -28,13 +28,17 @@
             <h4>{$info_customer.firstname} {$info_customer.lastname}</h4>
             <p class="rj-sub-title">{l s='cliente' mod='rj_carrier'}</p>
             <h4>{$info_customer.address1}</h4>
-            <h4>{$info_customer.postcode} - {$info_customer.city} - {$info_customer.country}</h4>
+            <h4>{$info_customer.postcode}
+                {if $info_customer.city} - {$info_customer.city}{/if}
+                {if $info_customer.state} - {$info_customer.state}{/if}
+                {if $info_customer.country} - {$info_customer.country}{/if}
+            </h4>
             <p class="rj-sub-title">{l s='dirección' mod='rj_carrier'}</p>
         </div>
         <div class="col-md-4">
             <h4>{$info_customer.phone} - {$info_customer.phone_mobile}</h4>
             <p class="rj-sub-title">{l s='teléfonos' mod='rj_carrier'}</p>
-            <h4>{$info_shipment.message}</h4>
+            <h4>{$info_package.message}</h4>
             <p class="rj-sub-title">{l s='message' mod='rj_carrier'}</p>
         </div>
     </div>
@@ -53,7 +57,7 @@
         </div>
         <div class="col-md-3">
             <p class="rj-sub-title">{l s='Cash on delivery' mod='rj_carrier'}</p>
-            <h4>{Tools::displayPrice($info_shipment.cash_ondelivery)}</h4>
+            <h4>{Tools::displayPrice($info_package.cash_ondelivery)}</h4>
         </div>
     </div>
 </div>

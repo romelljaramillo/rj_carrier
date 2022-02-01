@@ -1,13 +1,15 @@
 <form name="order_rj_packages"
     action="{$link->getAdminLink('AdminOrders', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}#block-rj-carrier"
     method="post" class="form-horizontal">
+    <input type="hidden" name="id_order" id="rj_id_order" value="{$id_order}">
+    <input type="hidden" name="id_infopackage" value="{$info_package.id_infopackage}">
     <div class="form-group row">
         <label class="form-control-label label-on-top col-12">{l s='Select Carrier' mod='rj_carrier'}</label>
         <div class="col-12">
             <select class="custom-select" name="id_reference_carrier" id="id_reference_carrier">
                 <option value="0">-</option>
                 {foreach from=$carriers item=carrier}
-                <option value="{$carrier.id_reference}" {if $carrier.id_reference == $info_shipment.id_reference_carrier}
+                <option value="{$carrier.id_reference}" {if $carrier.id_reference == $info_package.id_reference_carrier}
                     selected="selected" {/if}>
                     {$carrier.name|escape:'html':'UTF-8'}
                 </option>
@@ -22,10 +24,10 @@
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <div class="input-group-text">
-                    <input type="checkbox" name="rj_contrareembolso" id="rj_contrareembolso" value="1" {if $info_shipment.cash_ondelivery > 0} checked {/if}>
+                    <input type="checkbox" name="rj_contrareembolso" id="rj_contrareembolso" value="1" {if $info_package.cash_ondelivery > 0} checked {/if}>
                     </div>
                 </div>
-                <input type="text" class="form-control" name="rj_cash_ondelivery" id="rj_cash_ondelivery" value="{$info_shipment.cash_ondelivery|string_format:"%.2f"}">
+                <input type="text" class="form-control" name="rj_cash_ondelivery" id="rj_cash_ondelivery" value="{$info_package.cash_ondelivery|string_format:"%.2f"}">
             </div>
         </div>
         <div class="col-4">
@@ -54,22 +56,20 @@
     <div class="form-group row">
         <div class="col">
             <label class="form-control-label label-on-top col-12">{l s='hour from' mod='rj_carrier'}</label>
-            <input type="time" class="form-control" name="rj_hour_from" id="rj_hour_from" value="{$info_shipment.hour_from|substr:0:-3}">
+            <input type="time" class="form-control" name="rj_hour_from" id="rj_hour_from" value="{$info_package.hour_from|substr:0:-3}">
         </div>
         <div class="col">
             <label class="form-control-label label-on-top col-12">{l s='hour until' mod='rj_carrier'}</label>
-            <input type="time" class="form-control" name="rj_hour_until" id="rj_hour_until" value="{$info_shipment.hour_until|substr:0:-3}">
+            <input type="time" class="form-control" name="rj_hour_until" id="rj_hour_until" value="{$info_package.hour_until|substr:0:-3}">
         </div>
     </div>
     <div class="form-group row">
         <label class="form-control-label label-on-top col-12">{l s='Carrier message' mod='rj_carrier'}</label>
         <div class="col-12">
             <textarea id="rj_message" cols="30" rows="3" class="js-countable-input form-control" data-max-length="1200"
-                maxlength="1200" name="rj_message">{$info_shipment.message}</textarea>
+                maxlength="1200" name="rj_message">{$info_package.message}</textarea>
         </div>
     </div>
-    <input type="hidden" name="id_order" id="rj_id_order" value="{$info_shipment.id_order}">
-    <input type="hidden" name="id_infopackage" value="{$info_package.id_infopackage}">
     <div class="panel-footer">
         <button type="submit" id="formPackageCarrier" class="btn btn-primary pull-right" name="submitFormPackCarrier">
             {l s='Save'}

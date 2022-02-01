@@ -254,7 +254,6 @@ class Rj_Carrier extends Module
                     $html .= $class->renderConfig();
                     $fields = $class->getFieldsFormConfigExtra();
                     $this->fields_form_config_info_extra = array_merge($this->fields_form_config_info_extra, $fields);
-                    // array_merge($this->fields_form_config_info_extra, $fields);
                 }
             }
         }
@@ -284,7 +283,6 @@ class Rj_Carrier extends Module
         }
     }
 
-
     public function hookBackOfficeHeader()
     {
         // if (Tools::getValue('module_name') == $this->name) {
@@ -311,32 +309,25 @@ class Rj_Carrier extends Module
     public function getInfoCustomer($id_order)
     {
         $order = new Order($id_order);
-        $info_customer = new Address($order->id_address_delivery);
-        return $info_customer->getFields();
+        $address = new Address($order->id_address_delivery);
+        $info_customer = $address->getFields();
+        $info_customer['state'] = State::getNameById($address->id_state);
+        $info_customer['country'] = $address->country;
+        return $info_customer;
     }
 
-    /**
-     * Obtiene la información del package
-     *
-     * @param int $id_order
-     * @return array $info_package
-     */
-    public function getInfoShipment($id_order)
+    public function getInfoPackage($id_order)
     {
         $this->context = Context::getContext();
         $id_shop = $this->context->shop->id;
         $id_shop_group = $this->context->shop->id_shop_group;
-        
-        $rj_carrier_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
 
-        if(!$rj_carrier_shipment){
-            return false;
-        }
+        $rj_carrier_infopackage = RjcarrierInfoPackage::getPackageByIdOrder($id_order, $id_shop);
 
         // obtener contrareembolso
         $datos_orden = '';
 
-        if(!isset($rj_carrier_shipment['cash_ondelivery'])){
+        if(!isset($rj_carrier_infopackage['cash_ondelivery'])){
             
             $contrareembolso = Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop);
             
@@ -346,11 +337,54 @@ class Rj_Carrier extends Module
             
             if($contrareembolso === 'codfee'){
                 $datos_orden = $this->order->getFields();
-                $rj_carrier_shipment['cash_ondelivery'] = $datos_orden['total_paid_tax_incl'];
+                $rj_carrier_infopackage['cash_ondelivery'] = $datos_orden['total_paid_tax_incl'];
             }
         }
 
-        return $rj_carrier_shipment;
+        return $rj_carrier_infopackage;
+    }
+
+    /**
+     * Procesa la eliminación del envío
+     *
+     * @param int $id_shipment
+     * @return void
+     */
+    private function deleteShipment($id_shipment)
+    {
+        $rjcarrierShipment = new RjcarrierShipment((int)$id_shipment);
+        
+        if(!$rjcarrierShipment->delete()){
+            $this->errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
+            return false;
+        }
+            
+        $this->success[] = $this->l('Se ha eliminado el envío.');
+        return true;
+    }
+
+    /**
+     * Valida el cambio de transportista de la orden y elimina el envío si ha cambiado 
+     *
+     * @param int $id_order
+     * @param int $new_id_reference_carrier
+     * @return void
+     */
+    public function deleteShitmentChangeCarrier($id_order, $id_shipment_old, $new_id_reference_carrier)
+    {
+        $id_shop = Context::getContext()->shop->id;
+        $info_package_old = RjcarrierInfoPackage::getPackageByIdOrder($id_order, $id_shop);
+
+        if ($info_package_old['id_reference_carrier'] != (int) $new_id_reference_carrier) {
+            $info_company_carrier_old = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_package_old['id_reference_carrier']);
+            $info_company_carrier_new = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($new_id_reference_carrier);
+            if ($info_company_carrier_old != $info_company_carrier_new) {
+                $this->deleteShipment($id_shipment_old);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function hookDisplayAdminOrder($params)
@@ -360,33 +394,29 @@ class Rj_Carrier extends Module
         $info_package = [];
         $info_company_carrier = [];
 
+        $info_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
+
         if (Tools::isSubmit('submitDeleteShipment')) {
-
             $this->deleteShipment(Tools::getValue('id_shipment'));
-
-        }elseif (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')){
+            $info_package = $this->getInfoPackage($id_order);
+            $info_shipment = [];
+        } elseif (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')){
             
-            $info_package = $this->saveInfoPackage();
-            $info_shipment = $this->saveInfoShipment($id_order, $info_package['id_infopackage']);
+            if(Tools::getValue('id_reference_carrier') && $info_shipment['id_shipment']){
+                if($this->deleteShitmentChangeCarrier($id_order, $info_shipment['id_shipment'], Tools::getValue('id_reference_carrier')))
+                    $info_shipment = [];
+            }
+
+            $info_package = CarrierCompany::saveInfoPackage($id_order);
 
         } else {
-           
-            $info_shipment = $this->getInfoShipment($id_order);
-            
-            if($info_shipment){
-                $rj_carrier_info_package = new RjcarrierInfoPackage((int)$info_shipment['id_infopackage']);
-                
-                if($rj_carrier_info_package->id){
-                    $info_package = $rj_carrier_info_package->getFields();
-                }
-            }
+            $info_package = $this->getInfoPackage($id_order);
         }
         
         $name_carrier = '';
-
-        if($info_shipment['id_reference_carrier']){
-            $name_carrier = Carrier::getCarrierByReference((int)$info_shipment['id_reference_carrier'], $id_lang);
-            $info_company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_shipment['id_reference_carrier']);
+        if($info_package['id_reference_carrier']){
+            $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
+            $info_company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
         }
 
         $shipment = [
@@ -402,12 +432,16 @@ class Rj_Carrier extends Module
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
         ];
 
-        if (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')){
-            $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
-            
-            $this->selectShipment($shipment);
-            
-            $shipment['info_shipment'] = $this->getInfoShipment($id_order);
+        if(!$info_shipment['id_shipment']){
+            if (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')){
+                $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
+                
+                $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
+
+                $info_shipment = $shipment['info_shipment'];
+
+                $this->selectShipment($shipment);
+            }
         }
         
         if($info_shipment['id_shipment']){
@@ -421,115 +455,6 @@ class Rj_Carrier extends Module
         $this->_html .= $this->display(__FILE__, 'admin-order.tpl');
                    
         return $this->_html;
-    }
-
-    /**
-     * save data db table rj_carrier_shipment
-     *
-     * @return obj
-     */
-    private function saveInfoShipment($id_order, $id_infopackage)
-    {
-        if (!$id_order) {
-            return false;
-        }
-        
-        $id_shipment = RjcarrierShipment::getIdByIdOrder((int)$id_order);
-        $order = new Order((int)$id_order);
-
-        if($id_shipment){
-            $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-            
-            if($rj_carrier_shipment->id_reference_carrier != Tools::getValue('id_reference_carrier')){
-                // OJO si cambia el transportista hay que modificar los datos del envío
-                // PENDIENTE
-            }
-
-        } else {
-            $rj_carrier_shipment = new RjcarrierShipment();
-        }
-
-        $configExtraFiels = $this->getConfigExtraFieldsValues();
-
-        $hour_from = (Tools::getValue('rj_hour_from'))? Tools::getValue('rj_hour_from') . ':00' : $configExtraFiels['RJ_HOUR_FROM'] . ':00';
-        $hour_until = (Tools::getValue('rj_hour_until'))? Tools::getValue('rj_hour_until') . ':00': $configExtraFiels['RJ_HOUR_UNTIL'] . ':00';
-
-        $rj_carrier_shipment->id_order = (int)$id_order;
-        $rj_carrier_shipment->reference_order = $order->reference;
-        $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
-        $rj_carrier_shipment->id_reference_carrier = Tools::getValue('id_reference_carrier');
-        $rj_carrier_shipment->cash_ondelivery = Tools::getValue('rj_cash_ondelivery');
-        $rj_carrier_shipment->message = Tools::getValue('rj_message');
-        $rj_carrier_shipment->hour_from = ($this->validateFormatTime($hour_from))?$hour_from:'00:00:00';
-        $rj_carrier_shipment->hour_until = ($this->validateFormatTime($hour_until))?$hour_until:'00:00:00';
-
-        if (!$id_shipment)
-        {
-            if (!$rj_carrier_shipment->add())
-            $this->errors[] = $this->l('The transport could not be added.');
-        }elseif (!$rj_carrier_shipment->update()){
-            $this->errors[] = $this->l('The transport could not be updated.');
-        } 
-        $this->success[] = $this->l('Information successfully updated.');
-
-        return $rj_carrier_shipment->getFields();
-    }
-
-    /**
-     * save data db table rj_carrier_infopackage - data del paquete order
-     *
-     * @return obj
-     */
-    private function saveInfoPackage()
-    {
-        if (Tools::getValue('id_infopackage')) {
-            $rj_carrier_infopackage = new RjcarrierInfoPackage((int)Tools::getValue('id_infopackage'));
-
-            if (!Validate::isLoadedObject($rj_carrier_infopackage))
-            {
-                $this->_html .= $this->displayError($this->l('Invalid slide ID'));
-                return false;
-            }
-        } else {
-            $rj_carrier_infopackage = new RjcarrierInfoPackage();
-        }
-
-        $rj_carrier_infopackage->quantity = (int)Tools::getValue('rj_quantity');
-        $rj_carrier_infopackage->weight = Tools::getValue('rj_weight');
-        $rj_carrier_infopackage->length = Tools::getValue('rj_length');
-        $rj_carrier_infopackage->width = Tools::getValue('rj_width');
-        $rj_carrier_infopackage->height = Tools::getValue('rj_height');
-
-        if (!Tools::getValue('id_infopackage'))
-        {
-            if (!$rj_carrier_infopackage->add()){
-                $this->errors[] = $this->l('The transport could not be added.');
-                return false;
-            }
-        }elseif (!$rj_carrier_infopackage->update()){
-            $this->errors[] = $this->l('The transport could not be updated.');
-            return false;
-        } 
-
-        $this->success[] = $this->l('Information successfully updated.');
-
-        return $rj_carrier_infopackage->getFields();
-    }
-
-    /**
-     * Procesa la eliminación del envío
-     *
-     * @param int $id_shipment
-     * @return void
-     */
-    private function deleteShipment($id_shipment)
-    {
-        $rjcarrierShipment = new RjcarrierShipment((int)$id_shipment);
-        if(!$rjcarrierShipment->delete()){
-            $this->errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
-        } else{
-            $this->success[] = $this->l('Se ha eliminado el envío.');
-        }
     }
 
     /**
@@ -551,6 +476,9 @@ class Rj_Carrier extends Module
                     $class = new $class_name();
                     $class->createShipment($shipment);
                 }
+            } else {
+                $carrier_company = new CarrierCompany();
+                $carrier_company->createShipment($shipment);
             }
         } else {
             $carrier_company = new CarrierCompany();
@@ -914,11 +842,5 @@ class Rj_Carrier extends Module
         return $arry_fields;
 	}
 
-    public function validateFormatTime($time)
-    {
-        if(preg_match("/(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)/",$time)){
-            return true;
-        }
-        return false;
-    }
+
 }

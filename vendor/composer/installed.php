@@ -5,7 +5,7 @@
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
-        'reference' => 'c581b6f84e4e4ba8a98540473f0ad8287e99080e',
+        'reference' => '37b0a88398efe97250a4b546283b871c7ca3d200',
         'name' => 'prestashop/rj_carrier',
         'dev' => true,
     ),
@@ -34,7 +34,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
-            'reference' => 'c581b6f84e4e4ba8a98540473f0ad8287e99080e',
+            'reference' => '37b0a88398efe97250a4b546283b871c7ca3d200',
             'dev_requirement' => false,
         ),
         'ramsey/uuid' => array(

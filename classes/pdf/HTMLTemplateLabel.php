@@ -74,7 +74,7 @@ abstract class HTMLTemplateLabel
 
         // return $this->smarty->fetch($this->getTemplate('footer'));
 
-        return '<h1> Header</h1>';
+        return '<h1> Footer</h1>';
 
     }
 

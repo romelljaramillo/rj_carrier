@@ -8,6 +8,7 @@ use Ramsey\Uuid\Uuid;
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierCompany.php');
 include_once _PS_MODULE_DIR_ . 'rj_carrier/controllers/admin/AdminRJLabelController.php';
 include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/RjPDF.php');
+include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierShipment.php');
 
 class CarrierCompany extends Module
 {
@@ -18,6 +19,8 @@ class CarrierCompany extends Module
     
     /** @var string Nombre corto del transportista siglas ejemp: CEX Correo Express */
     public $shortname = 'rjcarrier';
+    public $display_pdf = 'S';
+    public $label_type = 'B2X_Generic_A4_Third';
 
     /** @var array Campos de configuración */
     public $fields_config = [];
@@ -218,7 +221,7 @@ class CarrierCompany extends Module
             }
         }
 
-        return false;
+        return $carries_company[0];
     }
 
     public function renderFormConfig()
@@ -294,71 +297,178 @@ class CarrierCompany extends Module
 
     public function createShipment($shipment)
     {
-        if(!$shipment['info_company_carrier']){
-            $id_carrier_company = $shipment['info_shipment']['id_carrier_company'];
-            $rj_carrier_company = new RjcarrierCompany((int)$id_carrier_company);
+        $id_shipment = $shipment['info_shipment']['id_shipment'];
+        
+        $this->saveRequestShipment($id_shipment, $shipment);
 
-            if($rj_carrier_company->shortname != $this->shortname){
+        if($id_shipment){
+            $packages_qty = $shipment['info_package']['quantity'];
+            
+            for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
+                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty);
+                $pdf = $rjpdf->render($this->display_pdf, $num_package);
 
+                if ($pdf) {
+                    $this->saveLabels($id_shipment, $pdf, $num_package);
+                }
             }
+            return true;
         }
+
+        return false;
     }
+
+    public function saveLabels($id_shipment, $pdf, $num_package = 1)
+    {
+        $uuid = self::getUUID();
+
+        $rj_carrier_label = new RjcarrierLabel();
+        $rj_carrier_label->id_shipment = $id_shipment;
+        $rj_carrier_label->package_id = $uuid;
+        $rj_carrier_label->label_type = $this->label_type;
+        $rj_carrier_label->tracker_code = 'TC' .$uuid . '-' . $num_package;;
+        $rj_carrier_label->pdf = base64_encode($pdf);
+
+        if (!$rj_carrier_label->add())
+            return false;
+
+        return true;
+    }
+
+    public function saveRequestShipment($id_shipment, $request)
+    {
+        $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
+        
+        $rj_carrier_shipment->request = json_encode($request);
+
+        if (!$id_shipment){
+            if (!$rj_carrier_shipment->add())
+                return false;
+        }elseif (!$rj_carrier_shipment->update()){
+            return false;
+        } 
+
+        return true;
+    }
+
+    public function saveResponseShipment($id_shipment, $response)
+    {
+        $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
+
+        $rj_carrier_shipment->request = json_encode($response);
+
+        if (!$id_shipment){
+            if (!$rj_carrier_shipment->add())
+                return false;
+        }elseif (!$rj_carrier_shipment->update()){
+            return false;
+        } 
+
+        return true;
+    }
+
 
 
     /**
-     * Undocumented function
+     * save data db table rj_carrier_shipment
      *
-     * @param array $shipment
-     * @param json $request
-     * @param json $response
-     * @return void
+     * @param array $info_shipment
+     * @return obj || boolean
      */
-    public function saveShipment($shipment, $request = null, $response = null)
+    public static function saveShipment($info_shipment)
     {
-        // $id_shipment = $shipment['info_shipment']['id_shioment'];
-        // if($id_shipment){
-        //     $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-        // } else {
-        //     $rj_carrier_shipment = new RjcarrierShipment();
-        // }
-        // $rj_carrier_shipment = new RjcarrierShipment();
-        // $rj_carrier_shipment->num_shipment = $response->shipmentId;
-        // $rj_carrier_shipment->id_infopackage = $shipment['info_package']['id'];
-        // $rj_carrier_shipment->id_order = $shipment['id_order'];
-        // $rj_carrier_shipment->product = $response->product;
-        // $rj_carrier_shipment->reference_order = $response->orderReference;
+        $id_order = $info_shipment['id_order'];
+        $id_infopackage = $info_shipment['info_package']['id_infopackage'];
+        $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
 
-        // if (!$id_shipment){
-        //     if (!$rj_carrier_shipment->add())
-        //     $this->errors[] = $this->l('The transport could not be added.');
-        // }elseif (!$rj_carrier_shipment->update()){
-        //     $this->errors[] = $this->l('The transport could not be updated.');
-        // } 
+        if (!$id_order) {
+            return false;
+        }
+        
+        $id_shipment = RjcarrierShipment::getIdByIdOrder((int)$id_order);
+        $order = new Order((int)$id_order);
 
-        // return true;
+        if($id_shipment){
+            $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
+        } else {
+            $rj_carrier_shipment = new RjcarrierShipment();
+        }
+
+        $rj_carrier_shipment->id_order = (int)$id_order;
+        $rj_carrier_shipment->reference_order = $order->reference;
+        $rj_carrier_shipment->num_shipment = self::getUUID();
+        $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
+        $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
+
+        if (!$id_shipment)
+        {
+            if (!$rj_carrier_shipment->add())
+                return false;
+        }elseif (!$rj_carrier_shipment->update()){
+            return false;
+        } 
+
+        return $rj_carrier_shipment->getFields();
     }
 
-    public function saveLabels($shipment, $pdf)
+    /**
+     * save data db table rj_carrier_infopackage - data del paquete order
+     *
+     * @return obj
+     */
+    public static function saveInfoPackage()
     {
-        // $info_labels = $response->pieces;
-        // $api_dhl = new ServiceDhl();
-        // foreach ($info_labels as $label) {
-        //     $label_api = $api_dhl->getLabel($label->package_id);
-        //     $rj_carrier_label = new RjcarrierLabel();
-        //     $rj_carrier_label->id_shipment = $id_shipment;
-        //     $rj_carrier_label->package_id = $label_api->labelId;
-        //     $rj_carrier_label->tracker_code = $label_api->trackerCode;
-        //     $rj_carrier_label->label_type = $label_api->labelType;
-        //     $rj_carrier_label->pdf = $label_api->pdf;
-        //     $rj_carrier_label->add();
-        // }
-        // return true;
+        $id_shop_group = Shop::getContextShopGroupID();
+		$id_shop = Shop::getContextShopID();
+
+        if (Tools::getValue('id_infopackage')) {
+            $rj_carrier_infopackage = new RjcarrierInfoPackage((int)Tools::getValue('id_infopackage'));
+
+            if (!Validate::isLoadedObject($rj_carrier_infopackage))
+                return false;
+        } else {
+            $rj_carrier_infopackage = new RjcarrierInfoPackage();
+        }
+
+        $hour_from = (Tools::getValue('rj_hour_from')) ? Tools::getValue('rj_hour_from') . ':00' : Configuration::get('RJ_HOUR_FROM', null, $id_shop_group, $id_shop) . ':00';
+        $hour_until = (Tools::getValue('rj_hour_until')) ? Tools::getValue('rj_hour_until') . ':00': Configuration::get('RJ_HOUR_UNTIL', null, $id_shop_group, $id_shop) . ':00';
+
+        $rj_carrier_infopackage->id_order = (int)Tools::getValue('id_order');
+        $rj_carrier_infopackage->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
+        $rj_carrier_infopackage->quantity = (int)Tools::getValue('rj_quantity');
+        $rj_carrier_infopackage->weight = Tools::getValue('rj_weight');
+        $rj_carrier_infopackage->length = Tools::getValue('rj_length');
+        $rj_carrier_infopackage->cash_ondelivery = Tools::getValue('rj_cash_ondelivery');
+        $rj_carrier_infopackage->message = Tools::getValue('rj_message');
+        $rj_carrier_infopackage->hour_from = (self::validateFormatTime($hour_from))?$hour_from:'00:00:00';
+        $rj_carrier_infopackage->hour_until = (self::validateFormatTime($hour_until))?$hour_until:'00:00:00';
+        $rj_carrier_infopackage->width = Tools::getValue('rj_width');
+        $rj_carrier_infopackage->height = Tools::getValue('rj_height');
+
+        if (!Tools::getValue('id_infopackage'))
+        {
+            if (!$rj_carrier_infopackage->add()){
+                return false;
+            }
+        }elseif (!$rj_carrier_infopackage->update()){
+            return false;
+        } 
+
+        return $rj_carrier_infopackage->getFields();
     }
 
     public static function getUUID()
     {
         $uuid = Uuid::uuid4();
         return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
+    }
+
+    public static function validateFormatTime($time)
+    {
+        if(preg_match("/(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)/",$time)){
+            return true;
+        }
+        return false;
     }
 
 }

@@ -151,8 +151,8 @@ class RjPDFGenerator extends TCPDF
             $this->font = 'dejavusans';
         }
 
-        $this->setHeaderFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
-        $this->setFooterFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
+        // $this->setHeaderFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
+        // $this->setFooterFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
 
         $this->setFont($this->font, '', PDF_FONT_SIZE_MAIN, '', false);
     }
@@ -189,7 +189,7 @@ class RjPDFGenerator extends TCPDF
             throw new PrestaShopException('Missing filename.');
         }
 
-        $this->lastPage();
+        // $this->lastPage();
 
         if ($display === true) {
             $output = 'D';
@@ -215,11 +215,12 @@ class RjPDFGenerator extends TCPDF
      */
     public function writePage()
     {
-        $this->SetHeaderMargin(5);
-        $this->SetFooterMargin(21);
-        $this->setMargins(10, 40, 10);
+        $this->SetHeaderMargin(10);
+        $this->SetFooterMargin(10);
+        $this->setMargins(10, 10, 10);
         $this->AddPage();
         $this->writeHTML($this->content, true, false, true, false, '');
+        $this->lastPage();
     }
 
     /**

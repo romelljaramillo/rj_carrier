@@ -5,7 +5,7 @@ if (!defined('_PS_VERSION_')) {
 }
 
 include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
-include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ApiCex.php');
+include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ServiceCex.php');
 include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
 
 
@@ -197,32 +197,24 @@ class CarrierCex extends CarrierCompany
         );
     }
 
-    public function createShipment($info_shipment)
+    public function createShipment($shipment)
     {
-        $num_shipment = RjcarrierShipment::getNumShipmentByIdOrder($info_shipment['id_order']);
+        $id_shipment = $shipment['info_shipment']['id_shipment'];
 
-        if (!$num_shipment) {
-            $apiCex = new ApiCex();
+        $service_cex = new ServiceCex();
 
-            $info_shipment['info_config'] = $this->getConfigFieldsValues();
-            dump($info_shipment);
-            $data_shipment = $apiCex->postShipment($info_shipment);
+        $info_shipment['info_config'] = $this->getConfigFieldsValues();
 
-            if (!isset($data_shipment->num_shipment)) {
-                $this->errors[] = $this->l('Algo esta mal en la información del envío.');
-                return false;
-            }
+        $response = $service_cex->postShipment($info_shipment);
 
-            // $this->saveShipment($data_shipment, $info_shipment);
-            // $idShipment = RjcarrierShipment::getIdShipmentByIdOrder($info_shipment['id_order']);
-            // $this->saveLabels($idShipment, $data_shipment);
-            // $data_shipment = $apidhl->getShipment($data_shipment->num_shipment);
-
-        } else {
-            $this->errors[] = $this->l('Ya existe un envío para este pedido.');
+        if(!isset($response->shipmentId)) {
             return false;
         }
-        $this->success[] = $this->l('Envio realizado con exito.');
-        return true;
+
+        if($id_shipment){
+            return $this->saveLabels($id_shipment, $response);
+        } 
+
+        return false;
     }
 }

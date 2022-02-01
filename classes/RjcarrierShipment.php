@@ -31,16 +31,11 @@ class RjcarrierShipment extends ObjectModel
     public $reference_order;
     public $id_carrier_company;
     public $id_infopackage;
-    public $id_reference_carrier;
     public $account;
     public $product;
-    public $cash_ondelivery;
-    public $message;
     public $request;
     public $response;
     public $delete;
-    public $hour_from;
-    public $hour_until;
     public $date_add;
     public $date_upd;
 
@@ -57,16 +52,11 @@ class RjcarrierShipment extends ObjectModel
             'num_shipment'    => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'id_carrier_company' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt'],
             'id_infopackage'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'id_reference_carrier'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
             'account'       => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'product'       => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'cash_ondelivery' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
-            'message' =>	['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
             'request' =>	['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],
             'response' =>	['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],
             'delete'         => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
-            'hour_from' =>   ['type' => self::TYPE_NOTHING],
-            'hour_until' =>   ['type' => self::TYPE_NOTHING],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
         ]
@@ -81,9 +71,8 @@ class RjcarrierShipment extends ObjectModel
     public static function getShipmentByIdOrder($id_order)
     {
         $res = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-		SELECT cs.*, ca.name as name_carrier
+		SELECT cs.*
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_shipment` cs
-		INNER JOIN `' . _DB_PREFIX_ . 'carrier` ca ON cs.`id_reference_carrier`= ca.`id_reference`
 		WHERE cs.`id_order` = ' . (int) $id_order . ' 
         AND cs.`delete` = 0' );
 

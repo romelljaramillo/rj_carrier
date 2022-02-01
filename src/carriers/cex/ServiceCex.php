@@ -212,7 +212,7 @@ Class ServiceCex {
     private function generateBodyShipment($info_shipment)
     {
 
-        $fecha          = date("dmY");
+        $fecha = date("dmY");
 
         $info_shop = $info_shipment['info_shop'];
         $info_customer = $info_shipment['info_customer'];
@@ -354,7 +354,7 @@ Class ServiceCex {
 
     public function obtenerListaAdicional($info_shipment, $esMasiva=false)
     {
-        $fecha          = date("d-m-Y");
+        $fecha = date("d-m-Y");
 
         $config_extra_info = $info_shipment['config_extra_info'];
         $lista = new stdClass(); 

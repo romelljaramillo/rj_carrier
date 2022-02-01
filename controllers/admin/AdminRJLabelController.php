@@ -54,7 +54,7 @@ class AdminRJLabelController extends ModuleAdminController
             $this->generateLabelPdf('mensaje');
         } elseif (Tools::isSubmit('submitCreateLabel')) {
             if(Tools::getValue('id_label')){
-                $this->printLabel(Tools::getValue('id_label'));
+                $this->printLabel2(Tools::getValue('id_label'));
             }
         } elseif (Tools::isSubmit('submitCreateLabelsShipment')) {
             if(Tools::getValue('id_shipment')){
@@ -82,15 +82,22 @@ class AdminRJLabelController extends ModuleAdminController
         $this->updatePrintedLabel($id_label);
     }
 
-    public static function printLabel2($pdf64)
+    public function printLabel2($id_label)
     {
-        // $label = new RjcarrierLabel($id_label);
-        $pdf = base64_decode($pdf64);
+        $label = new RjcarrierLabel($id_label);
+        $pdf = base64_decode($label->pdf);
+        // $pdf = $label->pdf;
 
-        header('Content-Type: application/pdf; charset=utf-8');
-        header('Cache-Control: no-store, no-cache');
-        return $pdf;
-        // $this->updatePrintedLabel($id_label);
+        header('Content-Type: application/pdf');
+        header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0, max-age=1');
+        header('Cache-Control: public, must-revalidate, max-age=0'); // HTTP/1.1
+        header('Pragma: public');
+        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+        header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
+        header('Content-Disposition: inline; filename="'.basename($id_label.".pdf").'"');
+
+        echo $pdf;
+        $this->updatePrintedLabel($id_label);
     }
 
     public static function printLabelsShipment($id_shipment)

@@ -166,75 +166,37 @@ class CarrierDhl extends CarrierCompany
     /**
      * Crea envío DHL
      *
-     * @param [type] $infoOrder
+     * @param array $infoOrder
      * @return void
      */
     public function createShipment($shipment)
     {
-        $num_shipment = $shipment['info_shipment']['num_shipment'];
-        if (!$num_shipment) {
-            $service_dhl = new ServiceDhl();
 
-            $shipment['info_shipment']['num_shipment'] = self::getUUID();
+        $id_shipment = $shipment['info_shipment']['id_shipment'];
 
-            $body = $service_dhl->getBodyShipment($shipment);
-            
-            $request = json_encode($body);
+        $service_dhl = new ServiceDhl();
+        $body_shipment = $service_dhl->getBodyShipment($shipment);
+        
+        $this->saveRequestShipment($id_shipment, $body_shipment);
+        
+        $body_shipment = json_encode($body_shipment);
 
-            $response = $service_dhl->postShipment($request);
+        $response = $service_dhl->postShipment($body_shipment);
 
-            if(!isset($response->shipmentId)) {
-                return false;
-            }
-
-            $id_shipment = $this->saveShipment($shipment, $request, $response);
-            
-            if($id_shipment){
-                return $this->saveLabels($id_shipment, $response);
-            } else {
-                return false;
-            }
+        if(!isset($response->shipmentId)) {
+            return false;
         }
+
+        $this->saveResponseShipment($shipment, $response);
+        
+        if($id_shipment){
+            return $this->saveLabels($id_shipment, $response);
+        } 
 
         return false;
     }
 
-    /**
-     * Guarda en db datos del envío
-     *
-     * @param array $shipment
-     * @param json $request
-     * @param json $response
-     * @return boolean
-     */
-    public function saveShipment($shipment, $request=null, $response=null)
-    {
-        $id_shipment = $shipment['info_shipment']['id_shipment'];
-       
-        if($id_shipment){
-            $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-        } else {
-            $rj_carrier_shipment = new RjcarrierShipment();
-        }
-
-        $rj_carrier_shipment->num_shipment = $shipment['info_shipment']['num_shipment'];
-        $rj_carrier_shipment->id_infopackage = $shipment['info_package']['id_infopackage'];
-        $rj_carrier_shipment->id_order = $shipment['id_order'];
-        $rj_carrier_shipment->product = $response->product;
-        $rj_carrier_shipment->request = $request;
-        $rj_carrier_shipment->response = json_encode($response);
-        
-        if (!$id_shipment){
-            if (!$rj_carrier_shipment->add())
-                return false;
-        }elseif (!$rj_carrier_shipment->update()){
-            return false;
-        } 
-
-        return $id_shipment;
-    }
-
-    public function saveLabels($id_shipment, $response)
+    public function saveLabels($id_shipment, $response, $num_package = 1)
     {
         $info_labels = $response->pieces;
         $service_dhl = new ServiceDhl();

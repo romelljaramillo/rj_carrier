@@ -99,9 +99,9 @@ Class ServiceDhl {
      * @param array $body
      * @return obj
      */
-    public function postShipment($body)
+    public function postShipment($body_shipment)
     {
-        $resp = $this->request('POST', $this->urlShipments, $body);
+        $resp = $this->request('POST', $this->urlShipments, $body_shipment);
         return $resp;
     }
 

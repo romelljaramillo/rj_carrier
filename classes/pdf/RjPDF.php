@@ -37,7 +37,6 @@ class RjPDF
     public $shipment;
     public $template;
     public $send_bulk_flag = false;
-    public $quantity;
 
     const TEMPLATE_TAG_TD = 'Default';
 
@@ -51,12 +50,8 @@ class RjPDF
     {
         $this->pdf_renderer = new RjPDFGenerator((bool)Configuration::get('PS_PDF_USE_CACHE'), $orientation);
         $this->template = $template;
-        // $this->smarty = $smarty;
        
         $this->shipment = $shipment;
-        // $this->quantity = $shipment['info_package']['quantity'];
-
-        // $this->smarty = $smarty;
         $this->smarty = clone $smarty;
         $this->smarty->escape_html = false;
     }
@@ -68,40 +63,32 @@ class RjPDF
      * @return mixed
      * @throws PrestaShopException
      */
-    public function render($display = 'I')
+    public function render($display, $num_package)
     {
-        $render = false;
         $this->pdf_renderer->setFontForLang(Context::getContext()->language->iso_code);
         $this->pdf_renderer->startPageGroup();
+
         $template = $this->getTemplateObject();
 
         if (empty($this->filename)) {
             $this->filename = $template->getFilename();
         }
 
-        // for ($i=1; $i < $this->quantity; $i++) { 
-        //     $template->setCounter($i);
+        $template->setCounterPackage($num_package);
 
-            // $this->pdf_renderer->createPagination($template->getPagination());
-            // $this->pdf_renderer->createHeader(false);
-            // $this->pdf_renderer->createFooter(false);
-            $html = $template->getContent();
-            $this->pdf_renderer->createContent($html);
-            $this->pdf_renderer->writePage();
-            $this->pdf_renderer->lastPage();
-            $render = true;
-            // }
-            unset($template);
-
+        $this->pdf_renderer->SetPrintHeader(false);
+        $this->pdf_renderer->SetPrintFooter(false);
+        $html = $template->getContent();
+        $this->pdf_renderer->createContent($html);
+        $this->pdf_renderer->writePage();
+        unset($template);
         
-        // if ($render) {
-        //     // clean the output buffer
-        //     if (ob_get_level() && ob_get_length() > 0) {
-        //         ob_clean();
-        //     }
+        // clean the output buffer
+        if (ob_get_level() && ob_get_length() > 0) {
+            ob_clean();
+        }
 
-            return $this->pdf_renderer->render($this->filename, $display);
-        // }
+        return $this->pdf_renderer->render($this->filename, $display);
     }
 
     /**

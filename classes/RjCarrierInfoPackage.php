@@ -26,36 +26,48 @@
 
 class RjcarrierInfoPackage extends ObjectModel
 {
+    public $id_order;
+    public $id_reference_carrier;
     public $quantity;
     public $weight;
     public $length;
     public $width;
     public $height;
     public $id_shop;
+    public $cash_ondelivery;
+    public $message;
+    public $hour_from;
+    public $hour_until;
     public $date_add;
     public $date_upd;
 
     /**
      * @see ObjectModel::$definition
      */
-    public static $definition = array(
+    public static $definition = [
         'table' => 'rj_carrier_infopackage',
         'primary' => 'id_infopackage',
         'multishop' => true,
-        'fields' => array(
-            'quantity' =>	array('type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true),
-            'weight' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true),
-            'length' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
-            'width' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
-            'height' =>		array('type' => self::TYPE_FLOAT, 'validate' => 'isFloat'),
-            'date_add' =>   array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
-            'date_upd' =>   array('type' => self::TYPE_DATE, 'validate' => 'isDateFormat'),
-        )
-    );
+        'fields' => [
+            'id_order'   => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'id_reference_carrier'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'quantity' =>	['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'weight' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
+            'length' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'width' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'height' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'cash_ondelivery' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'message' =>	['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
+            'hour_from' =>  ['type' => self::TYPE_NOTHING],
+            'hour_until' => ['type' => self::TYPE_NOTHING],
+            'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+        ]
+    ];
 
     public	function __construct($id_infopackage = null, $id_lang = null, $id_shop = null, Context $context = null)
 	{
-        Shop::addTableAssociation('rj_carrier_infopackage', array('type' => 'shop'));
+        Shop::addTableAssociation('rj_carrier_infopackage', ['type' => 'shop']);
 		parent::__construct($id_infopackage, $id_lang, $id_shop);
 	}
 
@@ -66,4 +78,16 @@ class RjcarrierInfoPackage extends ObjectModel
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` c
 		WHERE c.`id_infopackage` = ' . (int)$id_infopackage);
     }
+
+    public static function getPackageByIdOrder($id_order, $id_shop)
+    {
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
+		SELECT *
+		FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` p
+        LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_infopackage_shop` ps
+        ON p.`id_infopackage` = ps.`id_infopackage`
+		WHERE p.`id_order` = ' . (int)$id_order .'
+        AND ps.`id_shop` = ' . (int)$id_shop);
+    }
+
 }

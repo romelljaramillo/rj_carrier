@@ -57,15 +57,22 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infoshop_shop` (
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
     `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
+    `id_order` INT(10) NOT NULL,
+    `id_reference_carrier` INT(10) NOT NULL,
 	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT \'1\',
 	`weight` DECIMAL(20,6) NULL DEFAULT NULL,
 	`length` DECIMAL(20,6) NULL DEFAULT NULL,
 	`width` DECIMAL(20,6) NULL DEFAULT NULL,
 	`height` DECIMAL(20,6) NULL DEFAULT NULL,
 	`parcel_type` VARCHAR(100) NULL DEFAULT NULL,
+    `cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
+	`message` VARCHAR(255) NULL DEFAULT \'0\',
+    `hour_from` TIME NULL DEFAULT NULL,
+	`hour_until` TIME NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
-    PRIMARY KEY  (`id_infopackage`)
+    PRIMARY KEY  (`id_infopackage`),
+    INDEX `id_infopackage` (`id_infopackage`, `id_order`, `id_reference_carrier`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
@@ -81,16 +88,11 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
 	`num_shipment` CHAR(36) NOT NULL,
 	`id_carrier_company` INT(10) NOT NULL,
 	`id_infopackage` INT(10) NOT NULL,
-	`id_reference_carrier` INT(10) NOT NULL,
 	`account` VARCHAR(100) NOT NULL,
 	`product` VARCHAR(100) NOT NULL,
-	`cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
-	`message` VARCHAR(255) NULL DEFAULT \'0\',
 	`request` TEXT NULL DEFAULT NULL,
 	`response` TEXT NULL DEFAULT NULL,
 	`delete` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
-	`hour_from` TIME NULL DEFAULT NULL,
-	`hour_until` TIME NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_shipment`),
@@ -109,7 +111,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
 	`package_id` VARCHAR(100) NOT NULL,
 	`tracker_code` VARCHAR(100) NOT NULL,
 	`label_type` VARCHAR(100) NOT NULL,
-	`pdf` BLOB NULL DEFAULT NULL,
+	`pdf` MEDIUMBLOB NULL DEFAULT NULL,
 	`print` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
@@ -134,8 +136,9 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
-	(1, \'DHL\', \'DHL\', NULL),
-	(2, \'Correo Express\', \'CEX\', NULL);';
+	(1, \'Default Carrier\', \'DEF\', NULL),
+	(2, \'DHL\', \'DHL\', NULL),
+	(3, \'Correo Express\', \'CEX\', NULL);';
     
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {

@@ -75,7 +75,7 @@
             </div>
             <div class="card-body">
                 {block name='etiqueta'}
-                {include file='./tag-defauld.tpl'}
+                {include file='./label-defauld.tpl'}
                 {/block}
             </div>
             <div class="card-footer">
@@ -86,13 +86,6 @@
                         {else} 
                         <i class="material-icons text-muted" data-toggle="pstooltip" data-placement="top" data-original-title="{l s='not printed' mod='rj_carrier'}">print_disabled</i> 
                         {/if}
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <a class="btn btn-primary right-column _blank"
-                            href="{$link->getAdminLink('AdminRJLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1],['action'=>'create-etiqueta-custom', 'id_shipment'=>{$info_shipment.id_shipment}])|escape:'html':'UTF-8'}">
-                            {l s='Print ticket' mod='rj_carrier'}
-                            <i class="icon-external-link"></i>
-                        </a>
                     </div>
                 </div>
             </div>
