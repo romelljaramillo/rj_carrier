@@ -70,7 +70,7 @@
         <div class="etiqueta card">
             <div class="card-header">
                 <h3 class="card-header-title">
-                    <i class="icon-envelope"></i> {l s='Info tag' mod='rj_carrier'}
+                    <i class="icon-envelope"></i> {l s='Info label' mod='rj_carrier'}
                 </h3>
             </div>
             <div class="card-body">

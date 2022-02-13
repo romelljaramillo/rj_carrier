@@ -136,10 +136,10 @@ Class ServiceDhl {
         $shipper = $this->getShipper($info_shipper);
         $pieces = $this->getPieces($info_package);
 
-        if($info_shipper['cash_ondelivery'] > 0){
+        if($info_package['cash_ondelivery'] > 0){
             $typeDelivery = [
                 "key"   => "COD_CASH",
-                "input" => $info_shipper['cash_ondelivery']
+                "input" => $info_package['cash_ondelivery']
             ];
         } else {
             $typeDelivery = [
@@ -154,7 +154,7 @@ Class ServiceDhl {
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
 
-        return [
+        $data = [
             "shipmentId" => $num_shipment,
             "orderReference" => $id_order,
             "receiver" => $receiver,
@@ -164,6 +164,8 @@ Class ServiceDhl {
             "returnLabel" => false,
             "pieces" => $pieces
         ];
+
+        return json_encode($data);
     }
 
     public function getPieces($info)
@@ -191,10 +193,13 @@ Class ServiceDhl {
      */
     public function getReceiver($info)
     {
-        $countrycode = Country::getIsoById($info['id_country']);
-        $customer = new Customer((int)$info['id_customer']);
-        $email = $customer->email;
-        $phone = ($info['phone']) ? $info['phone_mobile'] .' | '. $info['phone'] : $info['phone_mobile'];
+        $phone = '';
+
+        if($info['phone_mobile']) {
+            $phone = $info['phone_mobile'];
+        } elseif($info['phone']){
+            $phone = $info['phone'];
+        }
 
         return [
             "name" => [
@@ -204,7 +209,7 @@ Class ServiceDhl {
                 "additionalName"=> $info['firstname']
             ],
             "address"=> [
-                "countryCode"=> $countrycode,
+                "countryCode"=> $info['countrycode'],
                 "postalCode"=> $info['postcode'],
                 "city"=> $info['city'],
                 "street"=> $info['address1'],
@@ -213,7 +218,7 @@ Class ServiceDhl {
                 "isBusiness"=> ($info['company'])?true:false,
                 "addition"=> $info['other']
             ],
-            "email"=> $email,
+            "email"=> $info['email'],
             "phoneNumber"=> $phone,
             "vatNumber"=> $info['vat_number'],
             "eoriNumber"=> $info['dni'],

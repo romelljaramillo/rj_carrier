@@ -179,8 +179,6 @@ class CarrierDhl extends CarrierCompany
         
         $this->saveRequestShipment($id_shipment, $body_shipment);
         
-        $body_shipment = json_encode($body_shipment);
-
         $response = $service_dhl->postShipment($body_shipment);
 
         if(!isset($response->shipmentId)) {

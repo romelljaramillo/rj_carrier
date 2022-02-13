@@ -22,8 +22,11 @@ class CarrierCex extends CarrierCompany
             'RJ_CEX_COD_CLIENT',
             'RJ_CEX_USER',
             'RJ_CEX_PASS',
-            'RJ_CEX_WSURL',
             'RJ_CEX_ACTIVE',
+            'RJ_CEX_WSURL',
+            'RJ_CEX_WSURLSEG',
+            'RJ_CEX_WSURLMOD',
+            'RJ_CEX_WSURLANUL'
         ];
 
         // $this->fields_multi_confi = [ ];
@@ -170,7 +173,28 @@ class CarrierCex extends CarrierCompany
                         'label' => $this->l('Url servicio web'),
                         'name' => 'RJ_CEX_WSURL',
                         'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.correosexpress.com/wpsc/services')
+                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionEnviok8s/json/grabacionEnvio')
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Url servicio web'),
+                        'name' => 'RJ_CEX_WSURLSEG',
+                        'required' => true,
+                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestListaEnvios/json/listaEnvios')
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Url servicio web'),
+                        'name' => 'RJ_CEX_WSURLMOD',
+                        'required' => true,
+                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionRecogidaEnviok8s/json/modificarRecogida')
+                    ),
+                    array(
+                        'type' => 'text',
+                        'label' => $this->l('Url servicio web'),
+                        'name' => 'RJ_CEX_WSURLANUL',
+                        'required' => true,
+                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionRecogidaEnviok8s/json/anularRecogida')
                     ),
                     array(
 						'type' => 'switch',
@@ -200,20 +224,34 @@ class CarrierCex extends CarrierCompany
     public function createShipment($shipment)
     {
         $id_shipment = $shipment['info_shipment']['id_shipment'];
+        $shipment['info_config'] = $this->getConfigFieldsValues();
 
         $service_cex = new ServiceCex();
-
-        $info_shipment['info_config'] = $this->getConfigFieldsValues();
-
-        $response = $service_cex->postShipment($info_shipment);
+        $body_shipment = $service_cex->getBodyShipment($shipment);
+        dump($body_shipment);
+        die();
+        $this->saveRequestShipment($id_shipment, $body_shipment);
+        $response = $service_cex->postShipment($body_shipment);
 
         if(!isset($response->shipmentId)) {
             return false;
         }
 
+        $this->saveResponseShipment($shipment, $response);
+        
         if($id_shipment){
-            return $this->saveLabels($id_shipment, $response);
-        } 
+            $packages_qty = $shipment['info_package']['quantity'];
+            
+            for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
+                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty);
+                $pdf = $rjpdf->render($this->display_pdf, $num_package);
+
+                if ($pdf) {
+                    $this->saveLabels($id_shipment, $pdf, $num_package);
+                }
+            }
+            return true;
+        }
 
         return false;
     }

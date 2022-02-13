@@ -313,6 +313,11 @@ class Rj_Carrier extends Module
         $info_customer = $address->getFields();
         $info_customer['state'] = State::getNameById($address->id_state);
         $info_customer['country'] = $address->country;
+        $info_customer['countrycode'] = Country::getIsoById($info_customer['id_country']);
+
+        $customer = new Customer((int)$info_customer['id_customer']);
+        $info_customer['email'] = $customer->email;
+        
         return $info_customer;
     }
 

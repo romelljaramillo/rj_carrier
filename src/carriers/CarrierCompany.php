@@ -339,7 +339,7 @@ class CarrierCompany extends Module
     {
         $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
         
-        $rj_carrier_shipment->request = json_encode($request);
+        $rj_carrier_shipment->request = $request;
 
         if (!$id_shipment){
             if (!$rj_carrier_shipment->add())
@@ -366,8 +366,6 @@ class CarrierCompany extends Module
 
         return true;
     }
-
-
 
     /**
      * save data db table rj_carrier_shipment
@@ -461,6 +459,26 @@ class CarrierCompany extends Module
     {
         $uuid = Uuid::uuid4();
         return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
+    }
+
+    public function getPosicionLabel($posicionLabel)
+    {
+        switch ($posicionLabel) {
+            case '1':
+                return '0';
+                break;
+            case '2':
+                return '1';
+                break;
+            case '3':
+                return '2';
+                break;
+
+            default:
+                return '0';
+                break;
+        }
+
     }
 
     public static function validateFormatTime($time)

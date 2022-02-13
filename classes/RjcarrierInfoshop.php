@@ -95,7 +95,7 @@ class RjcarrierInfoshop extends ObjectModel
      *
      * @return array
      */
-    public static function getShopData() 
+    public static function getShopData($id_infoshop = null) 
     {
         $id_infoshop = RjcarrierInfoshop::getInfoShopID();
         $fields = array();

@@ -83,255 +83,118 @@ Class ServiceCex {
         return $res;
     }
 
-    public function generateBodyShipmentSoap($info_shipment)
+    public function transformCodeClient($cod_client)
     {
-        $fecha          = date("d-m-Y");
-
-        $info_shop = $info_shipment['info_shop'];
-        $info_customer = $info_shipment['info_customer'];
-        $info_package = $info_shipment['info_package'];
-        $info_config = $info_shipment['info_config'];
-
-        $countryCode = Country::getIsoById($info_customer['id_country']);
-        $info_customer['countrycode'] = $countryCode;
-
-        // rellenamos los codigos postales con 0 a la izquierda en caso de ser necesario
-        if ($info_shipment['countrycode'] == 'ES') {
-            $info_shop_postcode = rellenarCeros($info_shop['postcode'], 5);
-        } else {
-            $info_shop_postcode = $info_shop['postcode'];
-        }
-
-        $soap_request   = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:mes="messages.envios.ws.chx.es" xmlns:xsd="http://pojo.envios.ws.chx.es/xsd">
-        <soapenv:Header/>
-        <soapenv:Body>';
-
-        if ($info_shipment['entrega_oficina']=='true') {
-            $soap_request .= '<mes:grabarEnvioEntregaOficina>';
-        } else {
-            $soap_request .= '<mes:grabarEnvio>';
-        }
-        
-        $soap_request .='<mes:solicitante>'.$info_shipment['codigo_solicitante'].'</mes:solicitante>
-        <mes:canalEntrada></mes:canalEntrada>
-        <mes:ref>'.$info_shipment['ref_ship'].'</mes:ref>
-        <mes:refCli></mes:refCli>
-        <mes:fecha>'.$fecha.'</mes:fecha>
-        <mes:codRte>'.$info_shipment['codigo_cliente'].'</mes:codRte>
-        <mes:nomRte>'.$info_shipment['name_sender'].'</mes:nomRte>
-        <mes:dirRte>'.$info_shipment['address_sender'].'</mes:dirRte>
-        <mes:pobRte>'.$info_shipment['city_sender'].'</mes:pobRte>';
-
-        if ($info_shipment['iso_code_remitente'] == 'ES') {
-            // envios a portugal
-            $soap_request .= '<mes:codPosNacRte>'.$info_shop_postcode.'</mes:codPosNacRte>';
-            $soap_request .= '<mes:paisISORte>'.$info_shipment['iso_code_remitente'].'</mes:paisISORte>';
-            $soap_request .= '<mes:codPosIntRte></mes:codPosIntRte>';
-        } elseif ($info_shipment['iso_code_remitente'] == 'PT') {
-            // envios a portugal
-            $soap_request .= '<mes:codPosNacRte></mes:codPosNacRte>';
-            $soap_request .= '<mes:paisISORte>'.$info_shipment['iso_code_remitente'].'</mes:paisISORte>';
-            $soap_request .= '<mes:codPosIntRte>'.$info_shop_postcode.'</mes:codPosIntRte>';
-        } else {
-            // internacionales
-            $soap_request .= '<mes:codPosIntRte>'.$info_shop_postcode.'</mes:codPosIntRte>';
-            $soap_request .= '<mes:paisISORte>'.$info_shipment['iso_code_remitente'].'</mes:paisISORte>';
-        }
-
-        $soap_request .= '<mes:contacRte>'.$info_shipment['contact_sender'].'</mes:contacRte>
-        <mes:telefRte>'.$info_shipment['phone_sender'].'</mes:telefRte>
-        <mes:emailRte>'.$info_shipment['email_sender'].'</mes:emailRte>
-        <mes:nomDest>'.$info_shipment['name_receiver'].'</mes:nomDest>
-        <mes:dirDest>'.$info_shipment['address_receiver'].'</mes:dirDest>
-        <mes:pobDest>'.$info_shipment['city_receiver'].'</mes:pobDest>';
-
-        // envios a españa
-        if ($info_customer['iso_code'] == 'ES') {
-            $soap_request .= '<mes:codPosNacDest>'.rellenarCeros($info_customer['postcode'], 5).'</mes:codPosNacDest>';
-            $soap_request .= '<mes:paisISODest>'.$info_customer['countrycode'].'</mes:paisISODest>';
-            $soap_request .= '<mes:codPosIntDest></mes:codPosIntDest>';
-            // envios a portugal
-        } elseif ($info_customer['iso_code'] == 'PT') {
-            $soap_request .= '<mes:codPosNacDest></mes:codPosNacDest>';
-            $soap_request .= '<mes:paisISODest>'.$info_customer['countrycode'].'</mes:paisISODest>';
-            $soap_request .= '<mes:codPosIntDest>'.rellenarCeros($info_customer['postcode'], 4).'</mes:codPosIntDest>';
-        } else {
-            $soap_request .= '<mes:codPosNacDest></mes:codPosNacDest>';
-            $soap_request .= '<mes:paisISODest>'.$info_customer['countrycode'].'</mes:paisISODest>';
-            $soap_request .= '<mes:codPosIntDest>'.$info_customer['postcode'].'</mes:codPosIntDest>';
-        }
-
-        $soap_request .= '<mes:contacDest>'.$info_shipment['contact_receiver'].'</mes:contacDest>
-        <mes:telefDest>'.$info_shipment['phone_receiver1'].'</mes:telefDest>
-        <mes:emailDest>'.$info_shipment['email_receiver'].'</mes:emailDest>
-        <mes:telefOtrs>'.$info_shipment['phone_receiver2'].'</mes:telefOtrs>
-        <mes:observac>'.$info_shipment['note_deliver'].'</mes:observac>
-        <mes:numBultos>'.$info_shipment['bultos'].'</mes:numBultos>
-        <mes:kilos>'.retornarPesoPedido($info_shipment['id'], $info_shipment['kilos']).'</mes:kilos>
-        <mes:producto>'.$info_shipment['selCarrier'].'</mes:producto>
-        <mes:portes>P</mes:portes>';
-
-        if (!empty($info_shipment['payback_val'])) {
-            $soap_request .= '<mes:reembolso>'.$info_shipment['payback_val'].'</mes:reembolso>';
-        }
-
-        if ($info_shipment['deliver_sat']=='true') {
-            $soap_request .= '<mes:entrSabado>S</mes:entrSabado>';
-        }
-
-        // Valor Asegurado
-        $soap_request .='<mes:seguro>'.$info_shipment['insured_value'].'</mes:seguro>';
-
-        for ($i=1; $i<=$info_shipment['bultos']; $i++) {
-            $soap_request .= '<mes:listaBultos>
-                <xsd:alto></xsd:alto>
-                <xsd:ancho></xsd:ancho>
-                <xsd:codBultoCli>'.$i.'</xsd:codBultoCli>
-                <xsd:codUnico></xsd:codUnico>
-                <xsd:descripcion></xsd:descripcion>
-                <xsd:kilos></xsd:kilos>
-                <xsd:largo></xsd:largo>
-                <xsd:observaciones></xsd:observaciones>
-                <xsd:orden>'.$i.'</xsd:orden>
-                <xsd:referencia></xsd:referencia>
-                <xsd:volumen></xsd:volumen>
-                </mes:listaBultos>';
-        }
-
-        if ($info_shipment['entrega_oficina']=='true') {
-            $soap_request .= '<mes:coddirecDestino>'.$info_shipment['codigo_oficina'].'</mes:coddirecDestino>';
-            $soap_request .= '</mes:grabarEnvioEntregaOficina></soapenv:Body></soapenv:Envelope>';
-        } else {
-            $soap_request .= '</mes:grabarEnvio></soapenv:Body></soapenv:Envelope>';
-        }
-
-        $soap_request   =  $this->sanearString($soap_request);
-        return $soap_request;
+        return 'P' . $cod_client;
     }
 
-    private function generateBodyShipment($info_shipment)
+    public function getBodyShipment($info_shipment)
     {
-
-        $fecha = date("dmY");
-
-        $info_shop = $info_shipment['info_shop'];
-        $info_customer = $info_shipment['info_customer'];
-        $info_package = $info_shipment['info_package'];
         $info_config = $info_shipment['info_config'];
 
-
-        // rellenamos los codigos postales con 0 a la izquierda en caso de ser necesario
-        $countryCode = Country::getIsoById($info_customer['id_country']);
-        $info_customer['countrycode'] = $countryCode;
-
-        // rellenamos los codigos postales con 0 a la izquierda en caso de ser necesario
-        if ($info_shop['countrycode'] == 'ES') {
-            $info_shop_postcode = rellenarCeros($info_shop['postcode'], 5);
-        } else {
-            $info_shop_postcode = $info_shop['postcode'];
-        }
-
-        $postcode_receiver  = '';
-
-        $data = array(
-            "solicitante"   => $info_config['RJ_CEX_COD_CLIENT'],
+        $data = [
+            "solicitante"   => $this->transformCodeClient($info_config['RJ_CEX_COD_CLIENT']),
             "canalEntrada"  => "",
             "numEnvio"      => "",
-            "ref"           => $info_shipment['id_order'],
-            "refCliente"    => $info_shipment['id_order'],
-            "fecha"         => $fecha,
-            "codRte"        => $info_config['RJ_CEX_COD_CLIENT'],
-            "nomRte"        => $info_shop['firstname'] . ' ' . $info_shop['lastname'],
-            "nifRte"        => $info_shop['vatnumber'],
-            "dirRte"        => $info_shop['street'] . ' ' . $info_shop['number'] . ' ' . $info_shop['state'],
-            "pobRte"        => $info_shop['city'],
-            "codPosNacRte"  => $info_shop_postcode,
-            "paisISORte"    => $info_shop['countrycode'],
-            "codPosIntRte"  => "",
-            "contacRte"     => $info_shop['firstname'],
-            "telefRte"      => $info_shop['phone'],
-            "emailRte"      => $info_shop['email'],
+            "ref"           => (string)$info_shipment['id_order'],
+            "refCliente"    => (string)$info_shipment['id_order'],
+            "fecha"         => date("dmY"),
+            "codRte"        => $info_config['RJ_CEX_COD_CLIENT']
+        ];
+
+        $shipper = $this->getShipper($info_shipment['info_shop']);
+        $receiver = $this->getReceiver($info_shipment['info_customer']);
+        $pieces = $this->getPieces($info_shipment['info_package']);
+        $informacionAdicional["listaInformacionAdicional"][] = $this->obtenerListaAdicional($info_shipment);
+
+        $data = array_merge($data, $shipper, $receiver, $pieces, $informacionAdicional);
+
+        return json_encode($data);
+    }
+
+
+
+    /**
+     * Crea el formato de quien envia
+     *
+     * @param [array] $infoReceiver nota: hacer una interface
+     * @return void
+     */
+    public function getShipper($info)
+    {
+        $countrycode = Country::getIsoById($info['id_country']);
+
+        // rellenamos los codigos postales con 0 a la izquierda en caso de ser necesario
+        if ($countrycode == 'ES') {
+            $codPosNacRte = $this->rellenarCeros($info['postcode'], 5);
+            $codPosIntRte = '';
+        } else {
+            $codPosNacRte = '';
+            $codPosIntRte = $info['postcode'];
+        }
+
+        return [
+            "nomRte" => $info['firstname'] . ' ' . $info['lastname'],
+            "nifRte" => $info['vatnumber'],
+            "dirRte" => $info['street'] . ' ' . $info['city'],
+            "pobRte" => $info['city'],
+            "codPosNacRte" => $codPosNacRte,
+            "paisISORte" => $countrycode,
+            "codPosIntRte" => $codPosIntRte,
+            "contacRte" => $info['firstname'] . ' ' . $info['lastname'],
+            "telefRte" => $info['phone'],
+            "emailRte" => $info['email']
+        ];
+    }
+
+    /**
+     * Crea el formato de quien recibe
+     *
+     * @param [array] $infoReceiver nota: hacer una interface
+     * @return void
+     */
+    public function getReceiver($info)
+    {
+        $phone = '';
+
+        if($info['phone_mobile']) {
+            $phone = $info['phone_mobile'];
+        } elseif($info['phone']){
+            $phone = $info['phone'];
+        }
+
+        if ($info['countrycode'] == 'ES') {
+            $codPosNacDest = $this->rellenarCeros($info['postcode'], 5);
+            $codPosIntDest = '';
+        } else {
+            $codPosNacDest = '';
+            $codPosIntDest = $info['postcode'];
+        }
+
+        return [
             "codDest"       => "",
-            "nomDest"       => $info_customer['firstname'] . ' ' . $info_customer['lastname'],
-            "nifDest"       => $info_customer['vat_number'],
-            "dirDest"       => $info_customer['address1'],
-            "pobDest"       => $info_customer['city'],
-            "codPosNacDest" => $info_customer['postcode'],
-            "paisISODest"   => $info_customer['countrycode'],
-            "codPosIntDest" => "",
-            "contacDest"    => $info_customer['lastname'],
-            "telefDest"     => $info_customer['phone_mobile'],
-            "emailDest"     => $info_customer['email'],
+            "nomDest"       => $info['firstname'] . ' ' . $info['lastname'],
+            "nifDest"       => $info['vat_number'],
+            "dirDest"       => $info['address1'],
+            "pobDest"       => $info['city'],
+            "codPosNacDest" => $codPosNacDest,
+            "paisISODest"   => $info['countrycode'],
+            "codPosIntDest" => $codPosIntDest,
+            "contacDest"    => $info['firstname'] . ' ' . $info['lastname'],
+            "telefDest"     => $phone,
+            "emailDest"     => $info['email'],
             "contacOtrs"    => "",
-            "telefOtrs"     => $info_customer['phone'],
+            "telefOtrs"     => $info['phone'],
             "emailOtrs"     => "",
-            "observac"      => $info_package['other'],
-            "numBultos"     => $info_package['quantity'],
-            "kilos"         => $info_package['weight'],
-            "volumen"       => "",
-            "alto"          => $info_package['height'],
-            "largo"         => $info_package['length'],
-            "ancho"         => $info_package['width'],
-            "producto"      => $info_package['type_delivery'],
-            "portes"        => "P",
-            "reembolso"     => "",
-            "entrSabado"    => "",
-            "seguro"        => $info_package['insured_value'],
-            "numEnvioVuelta" => "",
-            "listaBultos"   => [],
-            "codDirecDestino" => "",
-            "password"      => "",
-            "listaInformacionAdicional" => []
-        );
+        ];
+    }
 
-        //CP e iso_code Remitentes
-        if ($info_shop['countrycode'] == 'ES') {
-            $data['codPosNacRte'] = $info_shop_postcode;
-            $data['paisISORte'] = $info_shop['countrycode'];
-            $data['codPosIntRte'] = "";
-        } elseif ($info_shop['countrycode'] == 'PT') {
-            // envios a portugal
-            $data['codPosNacRte'] = "";
-            $data['paisISORte'] = $info_shop['countrycode'];
-            $data['codPosIntRte'] = $info_shop_postcode;
-        } else {
-            // internacionales
-            $data['codPosNacRte'] = "";
-            $data['paisISORte'] = $info_shop['countrycode'];
-            $data['codPosIntRte'] = $info_shop_postcode;
-        }
-        //CP e iso_code Destinatarios
-        if ($info_customer['countrycode'] == 'ES') {
-            $data['codPosNacDest'] = $info_customer['postcode'];
-            $data['paisISODest'] = $info_customer['countrycode'];
-            $data['codPosIntDest'] = "";
-        } elseif ($info_customer['countrycode'] == 'PT') {
-            // envios a portugal
-            $data['codPosNacDest'] = "";
-            $data['paisISODest'] = $info_customer['countrycode'];
-            $data['codPosIntDest'] = $info_customer['postcode'];
-        } else {
-            // internacionales
-            $data['codPosNacDest'] = "";
-            $data['paisISODest'] = $info_customer['countrycode'];
-            $data['codPosIntDest'] = $info_customer['postcode'];
-        }
-
-        if ($info_package['cash_ondelivery'] > 0) {
-            $data['reembolso'] = $info_package['cash_ondelivery'];
-        }
-        if ($info_package['deliver_sat'] == 'true') {
-            $data['entrSabado'] = 'S';
-        }
-
-        //if recogida en oficina
-        if ($info_package['delivery_office'] == 'true') {
-            $data['codDirecDestino'] = $info_package['cod_office'];
-        }
-
-
+    public function getPieces($info)
+    {
+        $weight = (string)$info['weight'] / (float)$info['quantity'];
+        
         //Lista adicional de bultos
-        for ($i = 1; $i <= $info_package['quantity']; $i++) {
+        for ($i = 1; $i <= $info['quantity']; $i++) {
             $interior = new stdClass();
             $interior->alto = "";
             $interior->ancho = "";
@@ -344,17 +207,36 @@ Class ServiceCex {
             $interior->orden = $i;
             $interior->referencia = "";
             $interior->volumen = "";
-            $data["listaBultos"][] = $interior;
+            $list_packages[] = $interior;
         }
 
-        $data["listaInformacionAdicional"][] = $this->obtenerListaAdicional($info_shipment);
+        return [
+            "observac"      => $info['message'],
+            "numBultos"     => (string)$info['quantity'],
+            "kilos"         => (string)round($weight,2),
+            "volumen"       => "",
+            "alto"          => (string)round($info['height'],2),
+            "largo"         => (string)round($info['length'],2),
+            "ancho"         => (string)round($info['width'],2),
+            "producto"      => (string)$info['type_delivery'],
+            "portes"        => "P",
+            "reembolso"     => (string)round($info['cash_ondelivery'],2),
+            "entrSabado"    => ($info['deliver_sat'])?"S":"",
+            "seguro"        => (string)$info['insured_value'],
+            "numEnvioVuelta" => "",
+            "listaBultos"   => $list_packages,
+            "codDirecDestino" => ($info['delivery_office'])?$info['cod_office']:"",
+            "password"      => "",
+        ];
 
-        return json_encode($data);
     }
 
     public function obtenerListaAdicional($info_shipment, $esMasiva=false)
     {
         $fecha = date("d-m-Y");
+
+        $iso_lang = Context::getContext()->language->iso_code;
+        $lang = $this->obtenerIdioma($iso_lang);
 
         $config_extra_info = $info_shipment['config_extra_info'];
         $lista = new stdClass(); 
@@ -364,8 +246,8 @@ Class ServiceCex {
             $lista->posicionEtiqueta = "";
             $lista->hideSender = $config_extra_info['RJ_LABELSENDER'];
             $lista->codificacionUnicaB64 = "1";
-            $lista->logoCliente = codificarLogo();
-            $lista->idioma=$this->context->language->id;
+            $lista->logoCliente = '';
+            $lista->idioma=$lang;
             $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
             $lista->creaRecogida = 'N';
@@ -375,12 +257,12 @@ Class ServiceCex {
             //ETIQUETA ADHESIVA
                 case '1':
                 $lista->tipoEtiqueta = "3";
-                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($info_shipment['posicionEtiqueta']);
+                $lista->posicionEtiqueta = "0";
                 break;
             //ETIQUETA MEDIO FOLIO
                 case '2':
                 $lista->tipoEtiqueta = "4";
-                $lista->posicionEtiqueta = $this->obtenerPosicionEtiqueta($info_shipment['posicionEtiqueta']);
+                $lista->posicionEtiqueta = "0";
                 break;
             //ETIQUETA TERMICA
                 case '3':
@@ -394,8 +276,8 @@ Class ServiceCex {
 
             $lista->hideSender = $config_extra_info['RJ_LABELSENDER'];
             $lista->codificacionUnicaB64 = "1";
-            $lista->logoCliente = codificarLogo();
-            $lista->idioma= $this->context->language->id;
+            $lista->logoCliente = '';
+            $lista->idioma= $lang;
             $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
             if(strcmp('true', $info_shipment['grabar_recogida'])==0){
@@ -411,15 +293,24 @@ Class ServiceCex {
         return $lista;
     }
 
+    public function obtenerIdioma($iso_lang)
+    {
+        if (strcmp($iso_lang, 'pt') == 0) {
+            return 'PT';
+        }
+
+        return 'ES';
+    }
+
     /**
      * Undocumented function
      *
      * @param array $body
      * @return obj
      */
-    public function postShipment($info_shipment)
+    public function postShipment($body_shipment)
     {
-        $info_config = $info_shipment['info_config'];
+        $info_config = $body_shipment['info_config'];
         $url_ws = $info_config['RJ_CEX_WSURL'];
         $url = $url_ws . $this->urlShipments;
         // $body = $this->generateBodyShipment($info_shipment);
@@ -448,18 +339,18 @@ Class ServiceCex {
         // iniciamos y componemos la peticion curl
         $header = $this->headerRequest($url);
 
-        $ch         = curl_init();
-        $options    = array(
-                        CURLOPT_RETURNTRANSFER  => true,
-                        CURLOPT_SSL_VERIFYHOST  => false,
-                        CURLOPT_SSL_VERIFYPEER  => false,
-                        CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0)',
-                        CURLOPT_URL             => $url ,
-                        CURLOPT_USERPWD         => $credenciales['user'].":".$credenciales['password'],
-                        CURLOPT_CUSTOMREQUEST  => $method,
-                        CURLOPT_POSTFIELDS      => mb_convert_encoding($body, mb_detect_encoding($body), "UTF-8"),
-                        CURLOPT_HTTPHEADER      => $header,
-                    );
+        $ch = curl_init();
+        $options = array(
+                    CURLOPT_RETURNTRANSFER  => true,
+                    CURLOPT_SSL_VERIFYHOST  => false,
+                    CURLOPT_SSL_VERIFYPEER  => false,
+                    CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0)',
+                    CURLOPT_URL             => $url ,
+                    CURLOPT_USERPWD         => $credenciales['user'].":".$credenciales['password'],
+                    CURLOPT_CUSTOMREQUEST  => $method,
+                    CURLOPT_POSTFIELDS      => mb_convert_encoding($body, mb_detect_encoding($body), "UTF-8"),
+                    CURLOPT_HTTPHEADER      => $header,
+                );
 
         curl_setopt_array($ch, $options);
 
