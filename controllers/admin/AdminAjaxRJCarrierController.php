@@ -30,4 +30,16 @@ class AdminAjaxRJCarrierController extends ModuleAdminController
         $this->ajaxRender(json_encode($datosOrden['total_paid_tax_incl']));
         exit;
     }
+
+    public function ajaxProcessTypeShipment()
+    {
+        if(Tools::getValue('id_reference_carrier')){
+            $info_company_carrier = CarrierCompany::getInfoCompanyByIdReferenceCarrier((int)Tools::getValue('id_reference_carrier'));
+            $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdCarrierCompany($info_company_carrier['id_carrier_company']);
+        }
+
+        header('Content-Type: application/json');
+        $this->ajaxRender(json_encode($info_type_shipment));
+        exit;
+    }
 }

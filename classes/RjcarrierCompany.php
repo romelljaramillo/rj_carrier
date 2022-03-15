@@ -39,12 +39,19 @@ class RjcarrierCompany extends ObjectModel
         'table' => 'rj_carrier_company',
         'primary' => 'id_carrier_company',
         'fields' => [
-            'id_order'      => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'name' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
-            'shortname'    => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
-            'icon'       => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'name' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 50, 'required' => true],
+            'shortname'    => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 4, 'required' => true],
+            'icon'       => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 250],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
         ]
     ];
+
+    public static function getCarrierCompanyByShortname($shortname)
+    {
+        $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'rj_carrier_company` cc
+		WHERE cc.`shortname` ="' . $shortname .'"';
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
+    }
 }

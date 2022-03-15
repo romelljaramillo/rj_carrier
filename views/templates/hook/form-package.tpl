@@ -6,7 +6,7 @@
     <div class="form-group row">
         <label class="form-control-label label-on-top col-12">{l s='Select Carrier' mod='rj_carrier'}</label>
         <div class="col-12">
-            <select class="custom-select" name="id_reference_carrier" id="id_reference_carrier">
+            <select class="custom-select form-control" name="id_reference_carrier" id="id_reference_carrier">
                 <option value="0">-</option>
                 {foreach from=$carriers item=carrier}
                 <option value="{$carrier.id_reference}" {if $carrier.id_reference == $info_package.id_reference_carrier}
@@ -16,6 +16,7 @@
                 {/foreach}
             </select>
         </div>
+        
     </div>
 
     <div class="form-group row">
@@ -62,6 +63,20 @@
             <label class="form-control-label label-on-top col-12">{l s='hour until' mod='rj_carrier'}</label>
             <input type="time" class="form-control" name="rj_hour_until" id="rj_hour_until" value="{$info_package.hour_until|substr:0:-3}">
         </div>
+        <div class="col" id="select_typeshipment">
+            <label class="form-control-label label-on-top col-12">{l s='Type Shipment' mod='rj_carrier'}</label>
+            <select class="custom-select form-control" name="id_type_shipment" id="id_type_shipment">
+            {if $info_type_shipment}
+                {foreach from=$info_type_shipment item=type_shipment}
+                <option value="{$type_shipment.id_type_shipment}" {if $type_shipment.id_reference_carrier == $info_package.id_reference_carrier}
+                    selected="selected" {/if}> 
+                    {$type_shipment.name|escape:'html':'UTF-8'}
+                </option>
+                {/foreach}
+            {/if}
+            </select>
+        
+        </div>
     </div>
     <div class="form-group row">
         <label class="form-control-label label-on-top col-12">{l s='Carrier message' mod='rj_carrier'}</label>
@@ -83,11 +98,15 @@
     $(document).ready(function(){
         $('#rj_contrareembolso').on('click', function(){
             getPriceOrder();
-        })
+        });
+            
+        $('#id_reference_carrier').on('change', function(e){
+            e.preventDefault();
+            getTypeShipment(this.value);
+        });
     })
 
     function getPriceOrder(){
-        console.log('getPriceOrder');
         if($('#rj_contrareembolso').prop('checked')){
             $.ajax({
                 type: 'POST',
@@ -109,5 +128,29 @@
         }else{
             $('#rj_cash_ondelivery').val('');
         }
+    }
+
+    function getTypeShipment(id_reference_carrier){
+        $.ajax({
+            type: 'POST',
+            dataType: 'json',
+            url: '{$url_ajax}', 
+            data:
+            {
+                ajax: 1,
+                action: 'typeShipment',
+                id_reference_carrier: id_reference_carrier,
+            },
+            success: function(typeshipments){
+                let select_typeshipments = '';
+                for (let key in typeshipments){
+                    select_typeshipments += '<option value="'+ typeshipments[key].id_type_shipment +'">' + typeshipments[key].name + '</option>';
+                }
+                $('#id_type_shipment').html(select_typeshipments);
+            },
+            error: function(data){
+
+            }
+        });
     }
 </script>

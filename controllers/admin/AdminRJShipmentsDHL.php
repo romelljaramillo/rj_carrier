@@ -30,7 +30,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         $this->deleted = false;
         $this->identifier = 'id_shipment';
         $this->_defaultOrderBy = 'id_shipment';
-        $this->_defaultOrderWay = 'ASC';
+        $this->_defaultOrderWay = 'DESC';
         $this->context = Context::getContext();
 
         $this->bulk_actions = array(
@@ -44,6 +44,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         $this->getFieldsList();
 
     }
+    
     /**
      * @param string $token
      * @param int $id
@@ -101,15 +102,18 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
     protected function querySql(){
         $this->_select = "a.id_shipment,
                             a.id_order,
+                            cc.shortname,
                             a.reference_order,
                             a.num_shipment,
                             a.product,
-                            a.cash_ondelivery,
-                            pk.quantity,
-                            pk.weight,
+                            ip.cash_ondelivery,
+                            ip.quantity,
+                            ip.weight,
                             a.date_add";
-        $this->_join = " INNER JOIN `"._DB_PREFIX_."rj_carrier_infopackage` pk ON a.id_infopackage = pk.id_infopackage";
-        $this->_where = ' AND a.delete=0';
+
+        $this->_join = " INNER JOIN `"._DB_PREFIX_."rj_carrier_infopackage` ip ON a.id_infopackage = ip.id_infopackage";
+        $this->_join .= " INNER JOIN `"._DB_PREFIX_."rj_carrier_company` cc ON a.id_carrier_company = cc.id_carrier_company";
+        $this->_where = ' AND a.delete=0 AND a.id_carrier_company = 2';
     }
 
     protected function getFieldsList()
@@ -117,6 +121,13 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         $this->querySql();
 
         $this->fields_list = array(
+            'id_shipment' => array(
+                'title' => $this->l('id Envío'),
+                'align' => 'text-center',
+                'class' => 'fixed-width-xs',
+                'havingFilter' => true,
+                'search' =>false,
+            ),
             'id_order' => array(
                 'title' => $this->l('Nº Order'),
                 'align' => 'text-center',
@@ -124,15 +135,11 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
                 'havingFilter' => true,
                 'filter_key' => 'a!id_order'
             ),
+            'shortname' => array(
+                'title' => $this->l('Transport'),
+            ),
             'reference_order' => array(
                 'title' => $this->l('order reference DHL'),
-                'havingFilter' => true,
-                'search' =>false,
-            ),
-            'id_shipment' => array(
-                'title' => $this->l('id Envío'),
-                'align' => 'text-center',
-                'class' => 'fixed-width-xs',
                 'havingFilter' => true,
                 'search' =>false,
             ),
@@ -149,8 +156,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
             'cash_ondelivery' => array(
                 'title' => $this->l('Contrareembolso'),
                 'havingFilter' => true,
-                'type' => 'price',
-                'filter_key' => 'pk!cashOndelivery',
+                'type' => 'price'
             ),
             'quantity' => array(
                 'title' => $this->l('Packages'),
@@ -172,23 +178,8 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         );
     }
 
-    public function getInfopackCashOndelivery($echo, $tr)
-    {
-        $rjcarrierInfoPackage = new RjcarrierShipment((int)$tr['id_infopackage']);
-
-        return Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
-    }
-
-    public function getInfopackPackcage($echo, $tr)
-    {
-        $rjCarrierInfoPackage = new RjcarrierInfoPackage((int)$tr['id_infopackage']);
-
-        return $rjCarrierInfoPackage->quantity;
-    }
-
     public function renderList()
     {
-        // $this->_select = '0 as printed';
         $this->addRowAction('printlabel');
         $this->actions = array('printlabel', 'delete');
         return parent::renderList();

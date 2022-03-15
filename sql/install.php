@@ -135,11 +135,43 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
     PRIMARY KEY (`id_carrier_company`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
+    `id_type_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_carrier_company` INT(10) NOT NULL,
+    `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `id_bc` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `id_reference_carrier` INT(10) DEFAULT NULL,
+    `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
+    `date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
+    PRIMARY KEY (`id_type_shipment`),
+    INDEX `id_type_shipment` (`id_type_shipment`,`id_carrier_company`,`id_reference_carrier`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
 	(1, \'Default Carrier\', \'DEF\', NULL),
 	(2, \'DHL\', \'DHL\', NULL),
 	(3, \'Correo Express\', \'CEX\', NULL);';
     
+$sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipment`, `id_carrier_company`, `name`, `id_bc`, `id_reference_carrier`, `active`) VALUES
+    (1,3,\'PAQ 10\',61,NULL,0),
+    (2,3,\'PAQ 14\',62,NULL,0),
+    (3,3,\'PAQ 24\',63,NULL,0),
+    (4,3,\'Baleares\',66,NULL,0),
+    (5,3,\'Canarias Express\',67,NULL,0),
+    (6,3,\'Canarias Aéreo\',68,NULL,0),
+    (7,3,\'Canarias Marítimo\',69,NULL,0),
+    (8,3,\'CEX Portugal Óptica\',73,NULL,0),
+    (9,3,\'Paquetería Óptica\',76,NULL,0),
+    (10,3,\'Internacional Express\',91,NULL,0),
+    (11,3,\'Internacional Estandard\',90,NULL,0),
+    (12,3,\'Paq Empresa 14\',92,NULL,0),
+    (13,3,\'ePaq 24\',93,NULL,0),
+    (14,3,\'Campaña CEX\',27,NULL,0),
+    (15,3,\'Entrega en Oficina\',44,NULL,0),
+    (16,3,\'Entrega + Recogida Multichrono\',54,NULL,0),
+    (17,3,\'Entrega + recogida + Manip Multichrono\',55,NULL,0);';
+
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
         return false;

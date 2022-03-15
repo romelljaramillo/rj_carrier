@@ -221,17 +221,17 @@ class Rj_Carrier extends Module
         ){
             $this->_postProcess();
         }
-
-        // $this->context->smarty->assign('module_dir', $this->_path);
-        // $this->_html = $this->context->smarty->fetch($this->local_path.'views/templates/admin/configure.tpl');
-
-        $this->_html .= $this->renderFormInfoShop();
-
-        $this->_html .= $this->renderConfigCarriers();
-
-        $this->_html .= $this->renderFormConfigInfoExtra();
         
-        return $this->_html;
+        $tab = Tools::getValue('tab_form');
+
+        $this->context->smarty->assign([
+            'form_info_shop' => $this->renderFormInfoShop(),
+            'form_config_carriers' => $this->renderConfigCarriers(),
+            'form_info_extra' => $this->renderFormConfigInfoExtra(),
+            'tab' => $tab
+        ]);
+        
+        return $this->display(__FILE__, 'views/templates/admin/configure.tpl');
     }
 
     /**
@@ -241,7 +241,7 @@ class Rj_Carrier extends Module
      */
     public function renderConfigCarriers() 
     {
-        $html = '';
+        $html = [];
         $carries_company = CarrierCompany::getCarriersCompany();
         
         foreach ($carries_company as $company) {
@@ -251,7 +251,7 @@ class Rj_Carrier extends Module
             include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
                 if (class_exists($class_name)) {
                     $class = new $class_name();
-                    $html .= $class->renderConfig();
+                    $html[$shortname] = $class->renderConfig();
                     $fields = $class->getFieldsFormConfigExtra();
                     $this->fields_form_config_info_extra = array_merge($this->fields_form_config_info_extra, $fields);
                 }
@@ -381,8 +381,8 @@ class Rj_Carrier extends Module
         $info_package_old = RjcarrierInfoPackage::getPackageByIdOrder($id_order, $id_shop);
 
         if ($info_package_old['id_reference_carrier'] != (int) $new_id_reference_carrier) {
-            $info_company_carrier_old = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_package_old['id_reference_carrier']);
-            $info_company_carrier_new = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($new_id_reference_carrier);
+            $info_company_carrier_old = CarrierCompany::getInfoCompanyByIdReferenceCarrier($info_package_old['id_reference_carrier']);
+            $info_company_carrier_new = CarrierCompany::getInfoCompanyByIdReferenceCarrier($new_id_reference_carrier);
             if ($info_company_carrier_old != $info_company_carrier_new) {
                 $this->deleteShipment($id_shipment_old);
                 return true;
@@ -390,6 +390,14 @@ class Rj_Carrier extends Module
         }
 
         return false;
+    }
+
+    public function getIdReferenceCarrierByIdOrder($id_order)
+    {
+        $id_lang = Context::getContext()->language->id;
+        $order = new Order($id_order);
+        $carrier = new Carrier($order->id_carrier, $id_lang);
+        return $carrier->id_reference;
     }
 
     public function hookDisplayAdminOrder($params)
@@ -419,10 +427,14 @@ class Rj_Carrier extends Module
         }
         
         $name_carrier = '';
-        if($info_package['id_reference_carrier']){
-            $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
-            $info_company_carrier = CarrierCompany::getShortnameCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
+
+        if(!$info_package['id_reference_carrier']){
+            $info_package['id_reference_carrier'] = $this->getIdReferenceCarrierByIdOrder($id_order);
         }
+
+        $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
+        $info_company_carrier = CarrierCompany::getInfoCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
+        $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdCarrierCompany($info_company_carrier['id_carrier_company']);
 
         $shipment = [
             'link' => $this->context->link,
@@ -434,6 +446,7 @@ class Rj_Carrier extends Module
             'carriers' => Carrier::getCarriers((int)$id_lang),
             'name_carrier' => $name_carrier->name,
             'info_company_carrier' => $info_company_carrier,
+            'info_type_shipment' => $info_type_shipment,
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
         ];
 
@@ -558,12 +571,13 @@ class Rj_Carrier extends Module
             if (!$infoshop->add()) {
                 $this->_html .= $this->displayError($this->l('The infoshop could not be added.'));
             } else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=3&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 3, 'module_name' => $this->name, 'tab_form' => 'infoshop']));
             }
         } elseif (!$infoshop->update()) {
             $this->_html = $this->displayError($this->l('The infoshop could not be updated.'));
         } else {
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=6&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => 'infoshop']));
+
         }
     }
 
@@ -637,7 +651,7 @@ class Rj_Carrier extends Module
 		if (!$res)
             $this->_html .= $this->displayError($this->l('The configuration could not be updated.'));
         else {
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true).'&conf=6&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name);
+            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => 'infoextra']));
         }
     }
 
@@ -805,8 +819,6 @@ class Rj_Carrier extends Module
 		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
 		$helper->default_form_language = $lang->id;
 		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-		$this->fields_form = array();
-
         $helper->identifier = $this->identifier;
 		$helper->submit_action = 'submitConfigExtraInfo';
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;

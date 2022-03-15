@@ -39,6 +39,7 @@ $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_shipment_shop`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_label`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_label_shop`';
 $sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_company`';
+$sql[] = 'DROP TABLE IF EXISTS `'. _DB_PREFIX_ . 'rj_carrier_type_shipment`';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {

@@ -224,35 +224,63 @@ class CarrierCex extends CarrierCompany
     public function createShipment($shipment)
     {
         $id_shipment = $shipment['info_shipment']['id_shipment'];
+
+        if(!$id_shipment){
+            return false;
+        }
+
         $shipment['info_config'] = $this->getConfigFieldsValues();
 
         $service_cex = new ServiceCex();
         $body_shipment = $service_cex->getBodyShipment($shipment);
-        dump($body_shipment);
-        die();
-        $this->saveRequestShipment($id_shipment, $body_shipment);
-        $response = $service_cex->postShipment($body_shipment);
 
-        if(!isset($response->shipmentId)) {
+        $this->saveRequestShipment($id_shipment, $body_shipment);
+        $response = $service_cex->postShipment($shipment['info_config']['RJ_CEX_WSURL'], $body_shipment);
+
+        if(!isset($response)) {
             return false;
         }
 
-        $this->saveResponseShipment($shipment, $response);
+        $this->saveResponseShipment($id_shipment, $response);
         
-        if($id_shipment){
-            $packages_qty = $shipment['info_package']['quantity'];
-            
+        if($response->codigoRetorno == 0){
+
+            $packages_qty = (int)$shipment['info_package']['quantity'];
+
+            $shipment['response'] = $response;
+
             for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
-                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty);
-                $pdf = $rjpdf->render($this->display_pdf, $num_package);
+                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty, $num_package);
+                
+                $pdf = $rjpdf->render($this->display_pdf);
 
                 if ($pdf) {
-                    $this->saveLabels($id_shipment, $pdf, $num_package);
+                    $response->listaBultos[$num_package - 1]->pdf = $pdf;
                 }
             }
+
+            $this->saveLabels($id_shipment, $response);
+
             return true;
         }
 
         return false;
+    }
+
+    public function saveLabels($id_shipment, $response, $num_package = 1)
+    {
+        $info_labels = $response->listaBultos;
+        foreach ($info_labels as $label) {
+            $rj_carrier_label = new RjcarrierLabel();
+            $rj_carrier_label->id_shipment = $id_shipment;
+            $rj_carrier_label->package_id = $response->datosResultado;
+            $rj_carrier_label->tracker_code = $label->codUnico;
+            $rj_carrier_label->label_type = $this->label_type;
+            $rj_carrier_label->pdf = base64_encode($label->pdf);
+            
+            if (!$rj_carrier_label->add())
+                return false;
+        }
+        return true;
     }
 }

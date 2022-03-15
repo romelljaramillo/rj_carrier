@@ -115,6 +115,7 @@ class RjcarrierInfoshop extends ObjectModel
         $fields['company'] = Tools::getValue('company', $infoshop->company);
         $fields['additionalname'] = Tools::getValue('additionalname', $infoshop->additionalname);
         $fields['id_country'] = Tools::getValue('id_country', $infoshop->id_country);
+        $fields['country'] = Country::getNameById(Context::getContext()->language->id, $fields['id_country']);
         $fields['state'] = Tools::getValue('state', $infoshop->state);
         $fields['city'] = Tools::getValue('city', $infoshop->city);
         $fields['street'] = Tools::getValue('street', $infoshop->street);

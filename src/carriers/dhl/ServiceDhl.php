@@ -280,19 +280,22 @@ Class ServiceDhl {
      * @param json $body
      * @return array
      */
-    public function request($method, $urlparam, $body = null)
+    private function request($method, $urlparam, $body = null)
     {
 
         $header = $this->headerRequest();
         $url = $this->base_url . $urlparam;
-        $curl = curl_init();
+        
+        $ch = curl_init();
 
         curl_setopt_array(
-            $curl,
+            $ch,
             array(
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_SSL_VERIFYHOST  => false,
+                CURLOPT_SSL_VERIFYPEER  => false,
                 CURLOPT_URL            => $url,
                 CURLOPT_POSTFIELDS     => $body,
-                CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING       => "",
                 CURLOPT_MAXREDIRS      => 10,
                 CURLOPT_HTTPHEADER     => $header,
@@ -301,16 +304,18 @@ Class ServiceDhl {
             )
         );
         
-        $response = utf8_encode(curl_exec($curl));
+        $response = utf8_encode(curl_exec($ch));
 
         if ($response === false) {
             return false;
         }
         
-        $curlInfo = curl_getinfo($curl);
-        $curlError = curl_errno($curl);
+        $curl_info = curl_getinfo($ch);
+        $curl_error = curl_errno($ch);
+
+        curl_close($ch);
         
-        if (!in_array($curlInfo['http_code'], array(200, 201)) || $curlError) {
+        if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
             return false;
         }
 
