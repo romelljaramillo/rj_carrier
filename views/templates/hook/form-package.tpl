@@ -68,8 +68,12 @@
             <select class="custom-select form-control" name="id_type_shipment" id="id_type_shipment">
             {if $info_type_shipment}
                 {foreach from=$info_type_shipment item=type_shipment}
-                <option value="{$type_shipment.id_type_shipment}" {if $type_shipment.id_reference_carrier == $info_package.id_reference_carrier}
-                    selected="selected" {/if}> 
+                <option value="{$type_shipment.id_type_shipment}" 
+                {if $type_shipment.id_type_shipment == $info_package.id_type_shipment }
+                    selected 
+                {elseif $type_shipment.id_reference_carrier == $info_package.id_reference_carrier}
+                    selected 
+                {/if}> 
                     {$type_shipment.name|escape:'html':'UTF-8'}
                 </option>
                 {/foreach}
@@ -144,7 +148,11 @@
             success: function(typeshipments){
                 let select_typeshipments = '';
                 for (let key in typeshipments){
-                    select_typeshipments += '<option value="'+ typeshipments[key].id_type_shipment +'">' + typeshipments[key].name + '</option>';
+                    let selected = '';
+                    if (typeshipments[key].id_reference_carrier == id_reference_carrier) {
+                        selected = 'selected';
+                    }
+                    select_typeshipments += '<option value="'+ typeshipments[key].id_type_shipment +'" ' + selected +'>' + typeshipments[key].name + '</option>';
                 }
                 $('#id_type_shipment').html(select_typeshipments);
             },

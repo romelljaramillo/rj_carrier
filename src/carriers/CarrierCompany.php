@@ -605,6 +605,7 @@ class CarrierCompany extends Module
         $rj_carrier_infopackage->length = Tools::getValue('rj_length');
         $rj_carrier_infopackage->cash_ondelivery = Tools::getValue('rj_cash_ondelivery');
         $rj_carrier_infopackage->message = Tools::getValue('rj_message');
+        $rj_carrier_infopackage->id_type_shipment = Tools::getValue('id_type_shipment');
         $rj_carrier_infopackage->hour_from = (self::validateFormatTime($hour_from))?$hour_from:'00:00:00';
         $rj_carrier_infopackage->hour_until = (self::validateFormatTime($hour_until))?$hour_until:'00:00:00';
         $rj_carrier_infopackage->width = Tools::getValue('rj_width');

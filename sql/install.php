@@ -59,12 +59,12 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
     `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
     `id_order` INT(10) NOT NULL,
     `id_reference_carrier` INT(10) NOT NULL,
+	`id_type_shipment` INT(10) NOT NULL,
 	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT \'1\',
 	`weight` DECIMAL(20,6) NULL DEFAULT NULL,
 	`length` DECIMAL(20,6) NULL DEFAULT NULL,
 	`width` DECIMAL(20,6) NULL DEFAULT NULL,
 	`height` DECIMAL(20,6) NULL DEFAULT NULL,
-	`parcel_type` VARCHAR(100) NULL DEFAULT NULL,
     `cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
 	`message` VARCHAR(255) NULL DEFAULT \'0\',
     `hour_from` TIME NULL DEFAULT NULL,
@@ -72,7 +72,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY  (`id_infopackage`),
-    INDEX `id_infopackage` (`id_infopackage`, `id_order`, `id_reference_carrier`)
+    INDEX `id_infopackage` (`id_infopackage`, `id_order`, `id_reference_carrier`, `id_type_shipment`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
@@ -170,7 +170,8 @@ $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipme
     (14,3,\'Campaña CEX\',27,NULL,0),
     (15,3,\'Entrega en Oficina\',44,NULL,0),
     (16,3,\'Entrega + Recogida Multichrono\',54,NULL,0),
-    (17,3,\'Entrega + recogida + Manip Multichrono\',55,NULL,0);';
+    (17,3,\'Entrega + recogida + Manip Multichrono\',55,NULL,0),
+    (18,2,\'DHL PARCEL IBERIA\', \'IBERIA\',3,1,NULL,0);';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {

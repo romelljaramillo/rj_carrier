@@ -153,7 +153,9 @@ Class ServiceDhl {
         ];
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
-
+        
+        $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
+        
         $data = [
             "shipmentId" => $num_shipment,
             "orderReference" => $id_order,
@@ -162,6 +164,7 @@ Class ServiceDhl {
             "accountId" => $accountId,
             "options" => [$typeDelivery, $options],
             "returnLabel" => false,
+            'product' => $type_shipment->id_bc,
             "pieces" => $pieces
         ];
 

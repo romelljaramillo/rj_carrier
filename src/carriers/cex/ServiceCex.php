@@ -8,63 +8,6 @@ Class ServiceCex {
 		$this->id_shop = Shop::getContextShopID();
     }
 
-    public function obtenerProductosCex($id_order = 0)
-    {
-        /*
-        Compruebo desde donde recibo la peticion
-            Pedido
-            Utilidades
-        */
-        if (Tools::getValue("id_customer_code")) {
-            $id_customer_code   = Tools::getValue("id_customer_code");
-        } else {
-            
-            $sql                = "SELECT cod.id FROM "._DB_PREFIX_."orders o
-                                    LEFT JOIN "._DB_PREFIX_."cex_customer_codes cod 
-                                        ON cod.id_shop = o.id_shop 
-                                            AND cod.id_shop_group = o.id_shop_group
-                                    WHERE o.id_order = $id_order";
-            $id_customer_code   = Db::getInstance()->getValue($sql);
-        }
-
-        $update         = false;
-        $contenido      = false;
-        
-        $sql            = "SELECT checked FROM "._DB_PREFIX_."cex_savedmodeships
-                            WHERE id_customer_code = $id_customer_code AND id_bc='63'";
-        $results        = Db::getInstance()->getValue($sql);
-
-        /*
-            En caso de que ya este checkado el producto
-        */
-        if (strcmp($results, "1") == 0) {
-            $contenido  = true;
-        } else {
-            $sql        = "UPDATE "._DB_PREFIX_."cex_savedmodeships SET checked = 1
-                            WHERE id_customer_code = $id_customer_code AND id_bc='63'";
-            $results    = Db::getInstance()->Execute($sql);
-
-            if ($results) {
-                $update = true;
-            }
-        }
-        $retorno = array(
-            'contenido' => $contenido,
-            'update'    => $update,
-        );
-
-        /*
-            Tratamiento del metodo de retorno diferente si se
-            pide la informacion desde utilidades o desde el pedido
-         */
-        if (Tools::getValue("id_customer_code")) {
-            echo json_encode($retorno);
-            return;
-        } else {
-            return $retorno;
-        }
-    }
-
     private function getUserCredentials()
     {
         return [
@@ -204,6 +147,13 @@ Class ServiceCex {
             $list_packages[] = $interior;
         }
 
+        $type_shipment = new RjcarrierTypeShipment((int)$info['id_type_shipment']);
+        
+        $reembolso = "";
+        if(doubleval($info['cash_ondelivery'])){
+            $reembolso = (string)round($info['cash_ondelivery'],2);
+        }
+
         return [
             "observac"      => $info['message'],
             "numBultos"     => (string)$info['quantity'],
@@ -212,9 +162,9 @@ Class ServiceCex {
             "alto"          => (string)round($info['height'],2),
             "largo"         => (string)round($info['length'],2),
             "ancho"         => (string)round($info['width'],2),
-            "producto"      => (string)($info['type_delivery'])?$info['type_delivery']:"63",
+            "producto"      => (string)$type_shipment->id_bc,
             "portes"        => "P",
-            "reembolso"     => (string)round($info['cash_ondelivery'],2),
+            "reembolso"     => $reembolso,
             "entrSabado"    => ($info['deliver_sat'])?"S":"",
             "seguro"        => (string)$info['insured_value'],
             "numEnvioVuelta" => "",

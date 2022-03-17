@@ -28,6 +28,7 @@ class RjcarrierInfoPackage extends ObjectModel
 {
     public $id_order;
     public $id_reference_carrier;
+    public $id_type_shipment;
     public $quantity;
     public $weight;
     public $length;
@@ -51,6 +52,7 @@ class RjcarrierInfoPackage extends ObjectModel
         'fields' => [
             'id_order'   => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
             'id_reference_carrier'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'id_type_shipment'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
             'quantity' =>	['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
             'weight' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
             'length' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
