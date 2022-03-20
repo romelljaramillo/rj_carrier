@@ -23,8 +23,12 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
+namespace Roanja\Module\RjCarrier\Model;
 
-class RjcarrierLabel extends ObjectModel
+use Shop;
+use Db;
+
+class RjcarrierLabel extends \ObjectModel
 {
 
     public $id_shipment;
@@ -56,7 +60,7 @@ class RjcarrierLabel extends ObjectModel
         )
     );
 
-    public function __construct($id_label = null, $id_lang = null, $id_shop = null, Context $context = null)
+    public function __construct($id_label = null, $id_lang = null, $id_shop = null, \Context $context = null)
 	{
         Shop::addTableAssociation('rj_carrier_label', array('type' => 'shop'));
 		parent::__construct($id_label, $id_lang, $id_shop);

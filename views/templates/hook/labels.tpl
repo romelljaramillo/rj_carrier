@@ -33,7 +33,7 @@
             </td>
             <td class="text-right cellShipmentActions">
                 <form name="order_rj_shipment"
-                    action="{$link->getAdminLink('AdminRJLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
+                    action="{$link->getAdminLink('AdminRjLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                     method="post" class="form-horizontal">
                     <input type="hidden" name="id_label" value="{$label.id_label}">
                     <button type="submit" id="btnCreateLabel" name="submitCreateLabel" formtarget="_blank"

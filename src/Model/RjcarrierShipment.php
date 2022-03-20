@@ -23,8 +23,12 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
+namespace Roanja\Module\RjCarrier\Model;
 
-class RjcarrierShipment extends ObjectModel
+use Shop;
+use Db;
+
+class RjcarrierShipment extends \ObjectModel
 {
     public $id_order;
     public $num_shipment;
@@ -62,7 +66,7 @@ class RjcarrierShipment extends ObjectModel
         ]
     ];
 
-    public	function __construct($id_shipment = null, $id_lang = null, $id_shop = null, Context $context = null)
+    public	function __construct($id_shipment = null, $id_lang = null, $id_shop = null, \Context $context = null)
 	{
         Shop::addTableAssociation('rj_carrier_shipment', ['type' => 'shop']);
 		parent::__construct($id_shipment, $id_lang, $id_shop);
@@ -77,7 +81,7 @@ class RjcarrierShipment extends ObjectModel
         AND cs.`delete` = 0' );
 
         if($res['name_carrier']  == '0'){
-            $res['name_carrier'] = Carrier::getCarrierNameFromShopName();
+            $res['name_carrier'] = \Carrier::getCarrierNameFromShopName();
         }
 
         return $res;
@@ -121,13 +125,13 @@ class RjcarrierShipment extends ObjectModel
     {
         $rjcarrierInfoPackage = new RjcarrierInfoPackage((int)$tr['id_infopackage']);
 
-        return Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
+        return \Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
     }
 
     public function delete()
 	{
         $this->delete = true;
-        $order = new Order($this->id_order);
+        $order = new \Order($this->id_order);
         if($order->valid){
             return false;
         }

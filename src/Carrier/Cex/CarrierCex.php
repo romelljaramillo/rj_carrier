@@ -1,14 +1,37 @@
 <?php
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    PrestaShop SA and Contributors <contact@prestashop.com>
+ * @copyright Since 2007 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
 
-if (!defined('_PS_VERSION_')) {
-    exit;
-}
+namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
-include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
-include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ServiceCex.php');
-include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
+use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
+use Roanja\Module\RjCarrier\Carrier\Cex\ServiceCex;
+use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
+use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 
+// include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
+// include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ServiceCex.php');
+// include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
 
+/**
+ * Class CarrierCex.
+ */
 class CarrierCex extends CarrierCompany
 {
     public function __construct()
@@ -251,7 +274,7 @@ class CarrierCex extends CarrierCompany
             $shipment['response'] = $response;
 
             for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
-                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty, $num_package);
+                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, \Context::getContext()->smarty, $num_package);
                 
                 $pdf = $rjpdf->render($this->display_pdf);
 

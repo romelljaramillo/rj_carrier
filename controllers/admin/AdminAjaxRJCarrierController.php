@@ -17,14 +17,20 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  */
+// namespace Roanja\Module\RjCarrier\Controller\Admin;
 
-class AdminAjaxRJCarrierController extends ModuleAdminController
+use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+
+// use Tools;
+
+class AdminAjaxRjCarrierController extends ModuleAdminController
 {
 
     public function ajaxProcessContrareembolso()
     {
         $id_order = (int) Tools::getValue('id_order');
-        $order          = new Order($id_order);
+        $order          = new \Order($id_order);
         $datosOrden     = $order->getFields();
         header('Content-Type: application/json');
         $this->ajaxRender(json_encode($datosOrden['total_paid_tax_incl']));

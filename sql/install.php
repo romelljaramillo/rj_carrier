@@ -139,7 +139,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
     `id_type_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT,
     `id_carrier_company` INT(10) NOT NULL,
     `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `id_bc` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
+    `id_bc` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
     `id_reference_carrier` INT(10) DEFAULT NULL,
     `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
     `date_add` DATETIME NOT NULL,
@@ -171,7 +171,7 @@ $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipme
     (15,3,\'Entrega en Oficina\',44,NULL,0),
     (16,3,\'Entrega + Recogida Multichrono\',54,NULL,0),
     (17,3,\'Entrega + recogida + Manip Multichrono\',55,NULL,0),
-    (18,2,\'DHL PARCEL IBERIA\', \'IBERIA\',3,1,NULL,0);';
+    (18,2,\'DHL PARCEL IBERIA\', \'IBERIA\',NULL,0);';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {

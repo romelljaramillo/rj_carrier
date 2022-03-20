@@ -1,4 +1,30 @@
 <?php
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    PrestaShop SA and Contributors <contact@prestashop.com>
+ * @copyright Since 2007 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
+
+namespace Roanja\Module\RjCarrier\Carrier\Cex;
+
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+
+use Configuration;
+use Shop;
+use Country;
 
 Class ServiceCex {
 
@@ -132,7 +158,7 @@ Class ServiceCex {
         
         //Lista adicional de bultos
         for ($i = 1; $i <= $info['quantity']; $i++) {
-            $interior = new stdClass();
+            $interior = new \stdClass();
             $interior->alto = "";
             $interior->ancho = "";
             $interior->codBultoCli = $i;
@@ -179,11 +205,11 @@ Class ServiceCex {
     {
         $fecha = date("d-m-Y");
 
-        $iso_lang = Context::getContext()->language->iso_code;
+        $iso_lang = \Context::getContext()->language->iso_code;
         $lang = $this->obtenerIdioma($iso_lang);
 
         $config_extra_info = $info_shipment['config_extra_info'];
-        $lista = new stdClass(); 
+        $lista = new \stdClass(); 
 
         if($esMasiva==true){
             $lista->tipoEtiqueta = "";
@@ -262,7 +288,7 @@ Class ServiceCex {
         return [
             'Content-Type: application/json',
             'Accept:application/json',
-            'Content-Length: ' . Tools::strlen($body)
+            'Content-Length: ' . \Tools::strlen($body)
         ];
     }
 

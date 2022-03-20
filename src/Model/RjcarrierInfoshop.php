@@ -23,8 +23,13 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
+namespace Roanja\Module\RjCarrier\Model;
 
-class RjcarrierInfoshop extends ObjectModel
+use Db;
+use Tools;
+use Shop;
+
+class RjcarrierInfoshop extends \ObjectModel
 {
     public $firstname;
     public $lastname;
@@ -75,7 +80,7 @@ class RjcarrierInfoshop extends ObjectModel
         )
     );
 
-    public function __construct($id_infoshop = null, $id_lang = null, $id_shop = null, Context $context = null)
+    public function __construct($id_infoshop = null, $id_lang = null, $id_shop = null, \Context $context = null)
 	{
         Shop::addTableAssociation('rj_carrier_infoshop', array('type' => 'shop'));
 		parent::__construct($id_infoshop, $id_lang, $id_shop);
@@ -115,7 +120,7 @@ class RjcarrierInfoshop extends ObjectModel
         $fields['company'] = Tools::getValue('company', $infoshop->company);
         $fields['additionalname'] = Tools::getValue('additionalname', $infoshop->additionalname);
         $fields['id_country'] = Tools::getValue('id_country', $infoshop->id_country);
-        $fields['country'] = Country::getNameById(Context::getContext()->language->id, $fields['id_country']);
+        $fields['country'] = \Country::getNameById(\Context::getContext()->language->id, $fields['id_country']);
         $fields['state'] = Tools::getValue('state', $infoshop->state);
         $fields['city'] = Tools::getValue('city', $infoshop->city);
         $fields['street'] = Tools::getValue('street', $infoshop->street);

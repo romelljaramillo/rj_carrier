@@ -24,7 +24,11 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class RjcarrierTypeShipment extends ObjectModel
+namespace Roanja\Module\RjCarrier\Model;
+
+use Db;
+
+class RjcarrierTypeShipment extends \ObjectModel
 {
     public $id_carrier_company;
     public $name;
@@ -64,7 +68,8 @@ class RjcarrierTypeShipment extends ObjectModel
 
     public static function getTypeShipmentsActiveByIdCarrierCompany($id_carrier_company)
     {
-        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`id_reference_carrier`, cts.`active`, cc.`name` as carrier_company, cc.`shortname`, c.`name` as reference_carrier 
+        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`id_reference_carrier`, cts.`active`, cc.`name` as carrier_company, 
+        cc.`shortname`, c.`name` as reference_carrier 
         FROM `' . _DB_PREFIX_ . 'rj_carrier_type_shipment` cts
         LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_company` cc ON cts.`id_carrier_company` = cc.`id_carrier_company`
         LEFT JOIN `' . _DB_PREFIX_ . 'carrier` c ON cts.`id_reference_carrier` = c.`id_reference` AND c.deleted = 0

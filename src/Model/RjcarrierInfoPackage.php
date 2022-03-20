@@ -23,8 +23,13 @@
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
+namespace Roanja\Module\RjCarrier\Model;
 
-class RjcarrierInfoPackage extends ObjectModel
+use Db;
+use Shop;
+use Context;
+
+class RjcarrierInfoPackage extends \ObjectModel
 {
     public $id_order;
     public $id_reference_carrier;

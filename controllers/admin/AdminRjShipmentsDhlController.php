@@ -1,17 +1,25 @@
 <?php
 /**
-* NOTICE OF LICENSE
-*
-* This file is licenced under the GNU General Public License, version 3 (GPL-3.0).
-* With the purchase or the installation of the software in your application
-* you accept the licence agreement.
-*
-* @author    Roanja www.roanja.com <info@roanja.com>
-* @copyright 2021 Roanja.com
-* @license   https://opensource.org/licenses/GPL-3.0 GNU General Public License version 3
-*/
-include_once _PS_MODULE_DIR_ . 'rj_carrier/controllers/admin/AdminRJLabelController.php';
-class AdminRJShipmentsDHLController extends ModuleAdminController
+ * 2016-2018 ROANJA.COM
+ *
+ * NOTICE OF LICENSE
+ *
+ *  @author Romell Jaramillo <info@roanja.com>
+ *  @copyright 2016-2018 ROANJA.COM
+ *  @license GNU General Public License version 2
+ *
+ * You can not resell or redistribute this software.
+ */
+
+// namespace Roanja\Module\RjCarrier\Controller\Admin;
+
+use Roanja\Module\RjCarrier\Controller\Admin\AdminRjLabelController;
+use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
+use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
+
+// use Tools;
+
+class AdminRjShipmentsDhlController extends ModuleAdminController
 {
     protected $statuses_array = array();
     protected $nameInforme = 'shipments';
@@ -31,7 +39,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         $this->identifier = 'id_shipment';
         $this->_defaultOrderBy = 'id_shipment';
         $this->_defaultOrderWay = 'DESC';
-        $this->context = Context::getContext();
+        $this->context = \Context::getContext();
 
         $this->bulk_actions = array(
             'delete' => array(
@@ -76,11 +84,11 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
         }
 
         if (Tools::isSubmit('printlabel' . $this->table)) {
-            $resp = AdminRJLabelController::printLabelsShipment(Tools::getValue($this->identifier));
+            $resp = AdminRjLabelController::printLabelsShipment(Tools::getValue($this->identifier));
         }
 
         if (Tools::isSubmit('updatestatus' . $this->table)) {
-            $this->module->updateStatus((int) Tools::getValue($this->identifier));
+            // $this->module->updateStatus((int) Tools::getValue($this->identifier));
         }
 
         return parent::postProcess();
@@ -91,7 +99,7 @@ class AdminRJShipmentsDHLController extends ModuleAdminController
 
         if ($shipments = Tools::getValue('rj_carrier_shipmentBox')) {
             foreach ($shipments as $id_shipment) {
-                $res = AdminRJLabelController::downloadLabelsShipment($id_shipment);
+                $res = AdminRjLabelController::downloadLabelsShipment($id_shipment);
                 if(!$res)
                     return $res;
                     

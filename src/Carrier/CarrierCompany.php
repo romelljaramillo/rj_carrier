@@ -1,16 +1,50 @@
 <?php
-if (!defined('_PS_VERSION_')) {
-    exit;
-}
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    PrestaShop SA and Contributors <contact@prestashop.com>
+ * @copyright Since 2007 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
+
+namespace Roanja\Module\RjCarrier\Carrier;
 
 use Ramsey\Uuid\Uuid;
 
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierCompany.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierTypeShipment.php');
-include_once _PS_MODULE_DIR_.'rj_carrier/controllers/admin/AdminRJLabelController.php';
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/RjPDF.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierShipment.php');
+use Roanja\Module\RjCarrier\Model\RjcarrierCompany;
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
+use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
+use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
+use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
 
+use Configuration;
+use Db;
+use Module;
+use Tools;
+use Language;
+use Shop;
+use Validate;
+use HelperForm;
+use HelperList;
+use Carrier;
+use Context;
+use Order;
+
+/**
+ * Class CarrierCompany.
+ */
 class CarrierCompany extends Module
 {
 
@@ -146,7 +180,7 @@ class CarrierCompany extends Module
             }
     
             if (!$res)
-                $this->_html .= $this->displayError($this->l('Error al guardar la configuración.'));
+                $this->_html .= $this->displayError($this->l('The Configuration could not be added.'));
             else {
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
             }
@@ -176,12 +210,12 @@ class CarrierCompany extends Module
 
         if (!Tools::getValue('id_type_shipment')) {
             if (!$typeShipment->add()) {
-                $this->_html .= $this->displayError($this->l('The infoshop could not be added.'));
+                $this->_html .= $this->displayError($this->l('The Type Shipment could not be added.'));
             } else {
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 3, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
             }
         } elseif (!$typeShipment->update()) {
-            $this->_html = $this->displayError($this->l('The infoshop could not be updated.'));
+            $this->_html = $this->displayError($this->l('The Type Shipment could not be updated.'));
         } else {
                 Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
         }
@@ -655,77 +689,6 @@ class CarrierCompany extends Module
             return true;
         }
         return false;
-    }
-
-    protected function getMultiLanguageInfoMsg()
-    {
-        return '<p class="alert alert-warning">'.
-                    $this->getTranslator()->trans('Since multiple languages are activated on your shop, please mind to upload your image for each one of them', array(), 'Modules.Imageslider.Admin').
-                '</p>';
-    }
-
-    protected function getWarningMultishopHtml()
-    {
-        if (Shop::getContext() == Shop::CONTEXT_GROUP || Shop::getContext() == Shop::CONTEXT_ALL) {
-            return '<p class="alert alert-warning">' .
-            $this->getTranslator()->trans('You cannot manage slides items from a "All Shops" or a "Group Shop" context, select directly the shop you want to edit', array(), 'Modules.Imageslider.Admin') .
-            '</p>';
-        } else {
-            return '';
-        }
-    }
-
-    protected function getShopContextError($shop_contextualized_name, $mode)
-    {
-        if (is_array($shop_contextualized_name)) {
-            $shop_contextualized_name = implode('<br/>', $shop_contextualized_name);
-        }
-
-        if ($mode == 'edit') {
-            return '<p class="alert alert-danger">' .
-            $this->trans('You can only edit this slide from the shop(s) context: %s', array($shop_contextualized_name), 'Modules.Imageslider.Admin') .
-            '</p>';
-        } else {
-            return '<p class="alert alert-danger">' .
-            $this->trans('You cannot add slides from a "All Shops" or a "Group Shop" context', array(), 'Modules.Imageslider.Admin') .
-            '</p>';
-        }
-    }
-
-    protected function getShopAssociationError($id_slide)
-    {
-        return '<p class="alert alert-danger">'.
-                        $this->trans('Unable to get slide shop association information (id_slide: %d)', array((int)$id_slide), 'Modules.Imageslider.Admin') .
-                '</p>';
-    }
-
-
-    protected function getCurrentShopInfoMsg()
-    {
-        $shop_info = null;
-
-        if (Shop::isFeatureActive()) {
-            if (Shop::getContext() == Shop::CONTEXT_SHOP) {
-                $shop_info = $this->trans('The modifications will be applied to shop: %s', array($this->context->shop->name),'Modules.Imageslider.Admin');
-            } else if (Shop::getContext() == Shop::CONTEXT_GROUP) {
-                $shop_info = $this->trans('The modifications will be applied to this group: %s', array(Shop::getContextShopGroup()->name), 'Modules.Imageslider.Admin');
-            } else {
-                $shop_info = $this->trans('The modifications will be applied to all shops and shop groups', array(), 'Modules.Imageslider.Admin');
-            }
-
-            return '<div class="alert alert-info">'.
-                        $shop_info.
-                    '</div>';
-        } else {
-            return '';
-        }
-    }
-
-    protected function getSharedSlideWarning()
-    {
-        return '<p class="alert alert-warning">'.
-                    $this->trans('This slide is shared with other shops! All shops associated to this slide will apply modifications made here', array(), 'Modules.Imageslider.Admin').
-                '</p>';
     }
 
 }

@@ -24,6 +24,16 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
+namespace Roanja\Module\RjCarrier\Model\Pdf;
+
+use Configuration;
+use Translate;
+use Validate;
+use Context;
+use Shop;
+use Tools;
+use Hook;
+
 /**
  * @since 1.5
  */
@@ -88,8 +98,8 @@ abstract class HTMLTemplateLabel
         $shop_address = '';
 
         $shop_address_obj = $this->shop->getAddress();
-        if (isset($shop_address_obj) && $shop_address_obj instanceof Address) {
-            $shop_address = AddressFormat::generateAddress($shop_address_obj, array(), ' - ', ' ');
+        if (isset($shop_address_obj) && $shop_address_obj instanceof \Address) {
+            $shop_address = \AddressFormat::generateAddress($shop_address_obj, array(), ' - ', ' ');
         }
 
         return $shop_address;

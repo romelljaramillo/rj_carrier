@@ -1,5 +1,30 @@
 <?php
+/**
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
+ * It is also available through the world-wide-web at this URL:
+ * https://opensource.org/licenses/AFL-3.0
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * @author    PrestaShop SA and Contributors <contact@prestashop.com>
+ * @copyright Since 2007 PrestaShop SA and Contributors
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
+ */
 
+namespace Roanja\Module\RjCarrier\Carrier\Dhl;
+
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+
+use Configuration;
+use Shop;
+use Country;
 
 Class ServiceDhl {
     protected $userId;
@@ -57,7 +82,7 @@ Class ServiceDhl {
 
     private function setCookies($cookies)
     {
-        $res = setcookie(
+        setcookie(
             "accessToken", 
             $cookies->{'accessToken'}, 
             $cookies->{'accessTokenExpiration'}
@@ -71,7 +96,7 @@ Class ServiceDhl {
 
         $this->accessToken = $cookies->{'accessToken'};
 
-        return $res;
+        return true;
     }
 
     public function getCookieToken()
@@ -83,10 +108,11 @@ Class ServiceDhl {
             $refreshToken = json_encode(array('refreshToken' => $_COOKIE['refreshToken']));
             $resp = $this->request('POST', $this->urlRefresToken, $refreshToken);
             if($resp){
-                if($this->setCookies($resp)){
-                    $this->accessToken = $resp->{'accessToken'};
-                    return true;
-                }
+                return $this->setCookies($resp);
+                // if($this->setCookies($resp)){
+                //     $this->accessToken = $resp->{'accessToken'};
+                //     return true;
+                // }
             }
             return false;
         }

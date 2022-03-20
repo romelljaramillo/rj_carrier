@@ -24,13 +24,13 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-// require_once(_PS_TOOL_DIR_.'tcpdf/config/lang/eng.php');
-// require_once(_PS_TOOL_DIR_.'tcpdf/tcpdf.php');
+namespace Roanja\Module\RjCarrier\Model\Pdf;
+
 use iio\libmergepdf\Merger;
 /**
  * @since 1.5
  */
-class RjPDFGenerator extends TCPDF
+class RjPDFGenerator extends \TCPDF
 {
     const DEFAULT_FONT = 'helvetica';
 
@@ -81,7 +81,7 @@ class RjPDFGenerator extends TCPDF
     public function __construct($use_cache = false, $orientation = 'P')
     {
         parent::__construct($orientation, 'mm', 'DL', true, 'UTF-8', $use_cache, false);
-        $this->setRTL(Context::getContext()->language->is_rtl);
+        $this->setRTL(\Context::getContext()->language->is_rtl);
     }
 
     /**
@@ -186,7 +186,7 @@ class RjPDFGenerator extends TCPDF
     public function render($filename, $display = true)
     {
         if (empty($filename)) {
-            throw new PrestaShopException('Missing filename.');
+            throw new \PrestaShopException('Missing filename.');
         }
 
         // $this->lastPage();

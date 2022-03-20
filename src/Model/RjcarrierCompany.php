@@ -24,7 +24,11 @@
 *  International Registered Trademark & Property of PrestaShop SA
 */
 
-class RjcarrierCompany extends ObjectModel
+namespace Roanja\Module\RjCarrier\Model;
+
+use Db;
+
+class RjcarrierCompany extends \ObjectModel
 {
     public $name;
     public $shortname;

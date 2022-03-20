@@ -35,11 +35,13 @@ if (file_exists($autoloadPath)) {
     require_once $autoloadPath;
 }
 
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierShipment.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierInfoPackage.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierInfoshop.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
+use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
+use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
+use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
+use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
+use Roanja\Module\RjCarrier\Model\RjcarrierInfoshop;
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+
 
 class Rj_Carrier extends Module
 {
@@ -70,9 +72,7 @@ class Rj_Carrier extends Module
         'displayAdminOrder',
         'displayAfterCarrier',
         'displayBeforeCarrier',
-        'displayHeader',
         'header',
-        'displayBackOfficeHeader'
     ];
 
     /**
@@ -90,10 +90,42 @@ class Rj_Carrier extends Module
      * Names of ModuleAdminController used
      */
     const RJ_MODULE_ADMIN_CONTROLLERS = [
-        'AdminParentTabRjCarrier',
-        'AdminRJModule',
-        'AdminRJLabel',
-        'AdminAjaxRJCarrier'
+        'AdminParentTabRjCarrier' => [
+            'name' => 'Rj Carrier',
+            'visible' => true,
+            'class_name' => 'AdminParentTabRjCarrier'
+        ],
+        'AdminParentTabDhl' => [
+            'name' => 'DHL',
+            'visible' => true,
+            'class_name' => 'AdminParentTabDhl',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'local_shipping'
+        ],
+        'AdminRjModule' => [
+            'name' => 'Configuration',
+            'visible' => true,
+            'class_name' => 'AdminRjModule',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'settings'
+
+        ],
+        'AdminRjLabel' => [
+            'name' => 'AdminRJLabel',
+            'visible' => true,
+            'class_name' => 'AdminRjLabel',
+        ],
+        'AdminAjaxRjCarrier' => [
+            'name' => 'AdminAjaxRjCarrier',
+            'visible' => true,
+            'class_name' => 'AdminAjaxRjCarrier'
+        ],
+        'AdminRjShipmentsDhl' => [
+            'name' => 'Shipments DHL',
+            'visible' => true,
+            'class_name' => 'AdminRjShipmentsDhl',
+            'parent_class_name' => 'AdminParentTabDhl'
+        ]
     ];
 
     /**
@@ -133,12 +165,7 @@ class Rj_Carrier extends Module
     {
         $defaultInstall = parent::install()
             && $this->registerHook(self::RJ_HOOK_LIST)
-            && $this->installTab('AdminParentTabRjCarrier', 'RJ Carrier')
-            && $this->installTab('AdminParentTabDhl', 'DHL', 'AdminParentTabRjCarrier', 'local_shipping')
-            && $this->installTab('AdminRJModule', 'Configuration', 'AdminParentTabRjCarrier', 'settings')
-            && $this->installTab('AdminRJShipmentsDHL', 'Shipments DHL', 'AdminParentTabDhl')
-            && $this->installTab('AdminRJLabel', 'AdminRJLabel')
-            && $this->installTab('AdminAjaxRJCarrier', 'AdminAjaxRJCarrier');
+            && $this->installTabs();
 
         if(!$defaultInstall){
             return false;
@@ -148,36 +175,56 @@ class Rj_Carrier extends Module
 
         // Install specific to prestashop 1.7
         if(_PS_VERSION_ >= 1.7){
-            return $this->registerHook(self::RJ_HOOK_LIST_17) &&
-                $this->updatePosition(\Hook::getIdByName('displayAdminOrder'), false, 1);
+            $result = $this->registerHook(self::RJ_HOOK_LIST_17);
+            $this->updatePosition(\Hook::getIdByName('displayAdminOrder'), false, 1);
+            return $result;
         }
 
         // Install specific to prestashop 1.6
-        return $this->registerHook(self::RJ_HOOK_LIST_16) &&
-            $this->updatePosition(\Hook::getIdByName('adminOrder'), false, 1);
-
+        $result = $this->registerHook(self::RJ_HOOK_LIST_16);
+        $this->updatePosition(\Hook::getIdByName('adminOrder'), false, 1);
+        return $result;
     }
 
-    public function installTab($className, $tabName, $tabParentName = false, $icon = '')
+    /**
+     * Install all Tabs.
+     *
+     * @return bool
+     */
+    public function installTabs()
     {
+        foreach (static::RJ_MODULE_ADMIN_CONTROLLERS as $adminTab) {
+            if (false === $this->installTab($adminTab)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Install Tab.
+     * Used in upgrade script.
+     *
+     * @param array $tabData
+     *
+     * @return bool
+     */
+    public function installTab(array $tabData)
+    {
+        $tabNameByLangId = array_fill_keys(
+            Language::getIDs(false),
+            $tabData['name']
+        );
+
         $tab = new Tab();
-        $tab->active = 1;
-        $tab->class_name = $className;
-        $tab->name = array();
-
-        foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = $tabName;
-        }
-        if ($tabParentName) {
-            $tab->id_parent = (int)Tab::getIdFromClassName($tabParentName);
-        } else {
-            $tab->id_parent = 0;
-        }
-
-        $tab->icon = $icon;
-
         $tab->module = $this->name;
-        return $tab->add();
+        $tab->class_name = $tabData['class_name'];
+        $tab->id_parent = empty($tabData['parent_class_name']) ? 0 : Tab::getIdFromClassName($tabData['parent_class_name']);
+        $tab->name = $tabNameByLangId;
+        $tab->icon = $tabData['icon'];
+
+        return (bool) $tab->add();
     }
 
     /**
@@ -193,23 +240,56 @@ class Rj_Carrier extends Module
     }
 
     /**
-     * uninstall tabs
+     * Uninstall all Tabs.
      *
      * @return bool
      */
     public function uninstallTabs()
     {
-        $uninstallTabCompleted = true;
-
-        foreach (static::RJ_MODULE_ADMIN_CONTROLLERS as $controllerName) {
-            $id_tab = (int) Tab::getIdFromClassName($controllerName);
-            $tab = new Tab($id_tab);
-            if (Validate::isLoadedObject($tab)) {
-                $uninstallTabCompleted = $uninstallTabCompleted && $tab->delete();
+        foreach (static::RJ_MODULE_ADMIN_CONTROLLERS as $adminTab) {
+            if (false === $this->uninstallTab($adminTab)) {
+                return false;
             }
         }
 
-        return $uninstallTabCompleted;
+        return true;
+    }
+
+    /**
+     * Uninstall Tab.
+     * Can be used in upgrade script.
+     *
+     * @param array $tabData
+     *
+     * @return bool
+     */
+    public function uninstallTab(array $tabData)
+    {
+        $tabId = Tab::getIdFromClassName($tabData['class_name']);
+        $tab = new Tab($tabId);
+
+        if (false === Validate::isLoadedObject($tab)) {
+            return false;
+        }
+
+        if (false === (bool) $tab->delete()) {
+            return false;
+        }
+
+        if (isset($tabData['core_reference'])) {
+            $tabCoreId = Tab::getIdFromClassName($tabData['core_reference']);
+            $tabCore = new Tab($tabCoreId);
+
+            if (Validate::isLoadedObject($tabCore)) {
+                $tabCore->active = true;
+            }
+
+            if (false === (bool) $tabCore->save()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function getContent()
@@ -247,10 +327,11 @@ class Rj_Carrier extends Module
         foreach ($carries_company as $company) {
             $shortname = strtolower($company['shortname']);
             $class_name = 'Carrier' . ucfirst($shortname);
-            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php')) {
-            include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
-                if (class_exists($class_name)) {
-                    $class = new $class_name();
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/Carrier/'. ucfirst($shortname) .'/'.$class_name.'.php')) {
+            // include_once(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. ucfirst($shortname) .'/'.$class_name.'.php');
+                $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
+                if (class_exists($Class)) {
+                    $class = new $Class();
                     $html[$shortname] = $class->renderConfig();
                     $fields = $class->getFieldsFormConfigExtra();
                     $this->fields_form_config_info_extra = array_merge($this->fields_form_config_info_extra, $fields);
@@ -272,10 +353,10 @@ class Rj_Carrier extends Module
         foreach ($carries_company as $company) {
             $shortname = strtolower($company['shortname']);
             $class_name = 'Carrier' . ucfirst($shortname);
-            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php')) {
-            include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/'.$class_name.'.php');
-                if (class_exists($class_name)) {
-                    $class = new $class_name();
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/Carrier/'. ucfirst($shortname) .'/'.$class_name.'.php')) {
+                    $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
+                    if (class_exists($Class)) {
+                        $class = new $Class();
                     $fields = $class->getConfigFieldsExtra();
                     $this->fields_config_info_extra = array_merge_recursive($this->fields_config_info_extra, $fields);
                 }
@@ -447,7 +528,7 @@ class Rj_Carrier extends Module
             'name_carrier' => $name_carrier->name,
             'info_company_carrier' => $info_company_carrier,
             'info_type_shipment' => $info_type_shipment,
-            'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRJCarrier'),
+            'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRjCarrier'),
         ];
 
         if(!$info_shipment['id_shipment']){
@@ -488,10 +569,11 @@ class Rj_Carrier extends Module
         if($shortname) {
             $shortname = strtolower($shortname);
             $class_name = 'Carrier' . ucfirst($shortname);
-            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/' . $class_name .'.php')) {
-                include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/'. $shortname .'/' .$class_name .'.php');
-                if (class_exists($class_name)) {
-                    $class = new $class_name();
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. $shortname .'/' . $class_name .'.php')) {
+                // include_once(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. $shortname .'/' .$class_name .'.php');
+                $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
+                if (class_exists($Class)) {
+                    $class = new $Class();
                     $class->createShipment($shipment);
                 }
             } else {
@@ -597,36 +679,20 @@ class Rj_Carrier extends Module
             }
 
             foreach ($this->fields_config_info_extra as $field) {
-                if(in_array($field, $this->fields_multi_confi)){
-                    $toString_field =  serialize(Tools::getValue($field));
-                    $res &=  Configuration::updateValue($field, $toString_field, false, $shop_group_id, $shop_id);
-                } else {
-                    $res &=  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
-                }
-
+                $res =  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
             }
         }
 
         /* Update global shop context if needed*/
         switch ($shop_context) {
             case Shop::CONTEXT_ALL:
-                foreach ($fields as $field) {
-                    if(in_array($field, $this->fields_multi_confi)){
-                        $toString_field =  serialize(Tools::getValue($field));
-                        $res &= Configuration::updateValue($field, $toString_field);
-                    } else {
-                        $res &= Configuration::updateValue($field, Tools::getValue($field));
-                    }
+                foreach ($this->fields_config_info_extra as $field) {
+                    $res &= Configuration::updateValue($field, Tools::getValue($field));
                 }
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
-                        foreach ($fields as $field) {
-                            if(in_array($field, $this->fields_multi_confi)){
-                                $toString_field =  serialize(Tools::getValue($field));
-                                $res &= Configuration::updateValue($field, $toString_field, false, $shop_group_id);
-                            } else {
-                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
-                            }
+                        foreach ($this->fields_config_info_extra as $field) {
+                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
                         }
                     }
                 }
@@ -634,13 +700,8 @@ class Rj_Carrier extends Module
             case Shop::CONTEXT_GROUP:
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
-                        foreach ($fields as $field) {
-                            if(in_array($field, $this->fields_multi_confi)){
-                                $toString_field =  serialize(Tools::getValue($field));
-                                $res &= Configuration::updateValue($field, $toString_field, false, $shop_group_id);
-                            } else {
-                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
-                            }
+                        foreach ($this->fields_config_info_extra as $field) {
+                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
                         }
                     }
                 }
@@ -849,11 +910,7 @@ class Rj_Carrier extends Module
         $this->setFieldsConfigExtraCarriers();
 
         foreach ($this->fields_config_info_extra as $field) {
-            if(in_array($field, $this->fields_multi_confi)){
-                $arry_fields[$field . '[]'] = Tools::getValue($field, Tools::unSerialize(Configuration::get($field, null, $id_shop_group, $id_shop)));
-            } else {
-                $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
-            }
+            $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
         }
 
         return $arry_fields;

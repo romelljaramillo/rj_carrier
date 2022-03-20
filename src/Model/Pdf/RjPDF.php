@@ -26,11 +26,12 @@
 /**
  * @since 1.5
  */
+namespace Roanja\Module\RjCarrier\Model\Pdf;
 
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/RjPDFGenerator.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/HTMLTemplateDefault.php');
+use Roanja\Module\RjCarrier\Model\Pdf\HTMLTemplateLabel;
+use Roanja\Module\RjCarrier\Model\Pdf\RjPDFGenerator;
 
-class RjPDF extends Module
+class RjPDF extends \Module
 {
     public $filename;
     public $pdf_renderer;
@@ -54,7 +55,7 @@ class RjPDF extends Module
      */
     public function __construct($shipment, $template, $smarty, $num_package, $orientation = 'P')
     {
-        $this->pdf_renderer = new RjPDFGenerator((bool)Configuration::get('PS_PDF_USE_CACHE'), $orientation);
+        $this->pdf_renderer = new RjPDFGenerator((bool)\Configuration::get('PS_PDF_USE_CACHE'), $orientation);
         $this->template = $template;
         $this->num_package = $num_package;
        
@@ -73,7 +74,7 @@ class RjPDF extends Module
     public function render($display)
     {
 
-        $this->pdf_renderer->setFontForLang(Context::getContext()->language->iso_code);
+        $this->pdf_renderer->setFontForLang(\Context::getContext()->language->iso_code);
         $this->pdf_renderer->startPageGroup();
 
         $template = $this->getTemplateObject();
@@ -271,7 +272,7 @@ class RjPDF extends Module
     public function getTemplateObject()
     {
         $class = false;
-        $class_name = 'HTMLTemplate' . $this->template;
+        $class_name = 'Roanja\Module\RjCarrier\Model\Pdf\HTMLTemplate' . $this->template;
 
         if (class_exists($class_name)) {
             // Some HTMLTemplateXYZ implementations won't use the third param but this is not a problem (no warning in PHP),
@@ -279,7 +280,7 @@ class RjPDF extends Module
             $class = new $class_name($this->shipment, $this->smarty, $this->send_bulk_flag);
 
             if (!($class instanceof HTMLTemplateLabel)) {
-                throw new PrestaShopException('Invalid class. It should be an instance of HTMLTemplate');
+                throw new \PrestaShopException('Invalid class. It should be an instance of HTMLTemplate');
             }
         }
 

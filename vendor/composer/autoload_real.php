@@ -24,7 +24,7 @@ class ComposerAutoloaderInitfe664b36c32c26407e3ea2324e30cdd0
 
         require __DIR__ . '/platform_check.php';
 
-        spl_autoload_register(array('ComposerAutoloaderInitfe664b36c32c26407e3ea2324e30cdd0', 'loadClassLoader'), true, true);
+        spl_autoload_register(array('ComposerAutoloaderInitfe664b36c32c26407e3ea2324e30cdd0', 'loadClassLoader'), true, false);
         self::$loader = $loader = new \Composer\Autoload\ClassLoader(\dirname(\dirname(__FILE__)));
         spl_autoload_unregister(array('ComposerAutoloaderInitfe664b36c32c26407e3ea2324e30cdd0', 'loadClassLoader'));
 
@@ -34,23 +34,14 @@ class ComposerAutoloaderInitfe664b36c32c26407e3ea2324e30cdd0
 
             call_user_func(\Composer\Autoload\ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0::getInitializer($loader));
         } else {
-            $map = require __DIR__ . '/autoload_namespaces.php';
-            foreach ($map as $namespace => $path) {
-                $loader->set($namespace, $path);
-            }
-
-            $map = require __DIR__ . '/autoload_psr4.php';
-            foreach ($map as $namespace => $path) {
-                $loader->setPsr4($namespace, $path);
-            }
-
             $classMap = require __DIR__ . '/autoload_classmap.php';
             if ($classMap) {
                 $loader->addClassMap($classMap);
             }
         }
 
-        $loader->register(true);
+        $loader->setClassMapAuthoritative(true);
+        $loader->register(false);
 
         if ($useStaticLoader) {
             $includeFiles = Composer\Autoload\ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0::$files;

@@ -36,7 +36,7 @@
                     </form>
                 </div>
                 <div class="col-6 pl-1">
-                    <form action="{$link->getAdminLink('AdminRJLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
+                    <form action="{$link->getAdminLink('AdminRjLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                         method="post" class="form-horizontal">
                         <input type="hidden" name="id_shipment" value="{$info_shipment.id_shipment}">
                         <button type="submit" id="btnCreateLabelsShipment" name="submitCreateLabelsShipment" formtarget="_blank"

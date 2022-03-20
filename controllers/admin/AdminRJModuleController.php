@@ -11,17 +11,13 @@
  * You can not resell or redistribute this software.
  */
 
-if (!defined('_PS_VERSION_')) {
-    # module validation
-    exit;
-}
+// namespace Roanja\Module\RjCarrier\Controller\Admin;
 
-class AdminRJModuleController extends ModuleAdminController
+class AdminRjModuleController extends \ModuleAdminController
 {
     public function __construct()
     {
         parent::__construct();
-
         \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink('AdminModules').'&configure=rj_carrier');
     }
 }

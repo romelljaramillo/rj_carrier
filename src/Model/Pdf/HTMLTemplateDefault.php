@@ -24,11 +24,12 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-/**
- * @since 1.5
- */
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/HTMLTemplateLabel.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/rj_carrier.php');
+namespace Roanja\Module\RjCarrier\Model\Pdf;
+
+use Roanja\Module\RjCarrier\Model\Pdf\HTMLTemplateLabel;
+
+use Shop;
+use Configuration;
 
 class HTMLTemplateDefault extends HTMLTemplateLabel
 {

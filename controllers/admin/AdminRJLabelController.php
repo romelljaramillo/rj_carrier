@@ -23,14 +23,16 @@
 *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
 *  International Registered Trademark & Property of PrestaShop SA
 */
-require_once(_PS_MODULE_DIR_.'rj_carrier/vendor/autoload.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/pdf/RjPDF.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierInfoPackage.php');
-include_once(_PS_MODULE_DIR_.'rj_carrier/classes/RjcarrierLabel.php');
 
+// namespace Roanja\Module\RjCarrier\Controller\Admin;
+
+// use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
+use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use iio\libmergepdf\Merger;
 
-class AdminRJLabelController extends ModuleAdminController
+// use Tools;
+
+class AdminRjLabelController extends ModuleAdminController
 {
     const NAME_ETIQUETA = "ETIQUETA_TRANS";
     
@@ -47,12 +49,8 @@ class AdminRJLabelController extends ModuleAdminController
     {
         parent::initProcess();
         $this->checkCacheFolder();
-        $access = Profile::getProfileAccess($this->context->employee->id_profile, (int)Tab::getIdFromClassName('AdminOrders'));
-        $this->action = Tools::getValue('action');
         
-        if ($access['view'] === '1' && $this->action === 'create-etiqueta-custom') {
-            $this->generateLabelPdf('mensaje');
-        } elseif (Tools::isSubmit('submitCreateLabel')) {
+        if (Tools::isSubmit('submitCreateLabel')) {
             if(Tools::getValue('id_label')){
                 $this->printLabel2(Tools::getValue('id_label'));
             }
@@ -172,10 +170,10 @@ class AdminRJLabelController extends ModuleAdminController
         }
     }
 
-    public static function generateLabelPdf($shipment)
-    {
-        $pdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty);
-        return $pdf->render();
-    }
+    // public static function generateLabelPdf($shipment)
+    // {
+    //     $pdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, \Context::getContext()->smarty);
+    //     return $pdf->render();
+    // }
 
 }
