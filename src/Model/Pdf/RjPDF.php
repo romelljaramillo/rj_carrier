@@ -30,6 +30,7 @@ namespace Roanja\Module\RjCarrier\Model\Pdf;
 
 use Roanja\Module\RjCarrier\Model\Pdf\HTMLTemplateLabel;
 use Roanja\Module\RjCarrier\Model\Pdf\RjPDFGenerator;
+use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 class RjPDF extends \Module
 {
@@ -219,8 +220,11 @@ class RjPDF extends \Module
         $this->pdf_renderer->SetFont('dejavusans', '', 9, '', true);
         $this->pdf_renderer->setCellMargins(0, 1, 0, 1);
         $this->pdf_renderer->setCellPaddings(0, 10, 0, 0);
+
+        $type_shipment = new RjcarrierTypeShipment($this->shipment['info_package']['id_type_shipment']);
+
         $this->pdf_renderer->Cell(10, 0, 'ES', 0, 0, 'C', 1);
-        $this->pdf_renderer->Cell(25, 0, '63 - PAQ 24', 0, 0, 'C', 1);
+        $this->pdf_renderer->Cell(25, 0, $type_shipment->name, 0, 0, 'C', 1);
         $this->pdf_renderer->Cell(60, 0, 'Env.: ' . $this->shipment['response']->datosResultado, 0, 0, 'C', 1);
 
         $this->pdf_renderer->Line(15, 107, 15, 118, $style2);

@@ -503,8 +503,9 @@ class CarrierCompany extends Module
         if(!$id_shipment){
             return false;
         }
+        $request = json_encode($shipment);
         
-        $this->saveRequestShipment($id_shipment, $shipment);
+        $this->saveRequestShipment($id_shipment, $request);
 
         $packages_qty = $shipment['info_package']['quantity'];
         
