@@ -29,10 +29,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-$autoloadPath = __DIR__ . '/vendor/autoload.php';
-
-if (file_exists($autoloadPath)) {
-    require_once $autoloadPath;
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
 }
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
@@ -95,36 +93,29 @@ class Rj_Carrier extends Module
             'visible' => true,
             'class_name' => 'AdminParentTabRjCarrier'
         ],
-        'AdminParentTabDhl' => [
-            'name' => 'DHL',
-            'visible' => true,
-            'class_name' => 'AdminParentTabDhl',
-            'parent_class_name' => 'AdminParentTabRjCarrier',
-            'icon' => 'local_shipping'
-        ],
-        'AdminRjModule' => [
+        'AdminRjCarrierModule' => [
             'name' => 'Configuration',
             'visible' => true,
-            'class_name' => 'AdminRjModule',
+            'class_name' => 'AdminRjCarrierModule',
             'parent_class_name' => 'AdminParentTabRjCarrier',
             'icon' => 'settings'
-
+        ],
+        'AdminRjShipments' => [
+            'name' => 'Shipments',
+            'visible' => true,
+            'class_name' => 'AdminRjShipments',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'local_shipping'
         ],
         'AdminRjLabel' => [
             'name' => 'AdminRJLabel',
             'visible' => true,
-            'class_name' => 'AdminRjLabel',
+            'class_name' => 'AdminRjLabel'
         ],
         'AdminAjaxRjCarrier' => [
             'name' => 'AdminAjaxRjCarrier',
             'visible' => true,
             'class_name' => 'AdminAjaxRjCarrier'
-        ],
-        'AdminRjShipmentsDhl' => [
-            'name' => 'Shipments DHL',
-            'visible' => true,
-            'class_name' => 'AdminRjShipmentsDhl',
-            'parent_class_name' => 'AdminParentTabDhl'
         ]
     ];
 
@@ -145,6 +136,29 @@ class Rj_Carrier extends Module
         $this->author = 'Roanja';
         $this->need_instance = 0;
 
+        $tabNames = [];
+        foreach (Language::getLanguages(true) as $lang) {
+            $tabNames['configuration'][$lang['locale']] = $this->trans('Configuration', [], 'Modules.RjCarrier.Admin', $lang['locale']);
+            $tabNames['shipments'][$lang['locale']] = $this->trans('Shipments', [], 'Modules.RjCarrier.Admin', $lang['locale']);
+        }
+        
+        /* $this->tabs = [
+            [
+                'route_name' => 'admin_rj_carrier_module',
+                'class_name' => 'AdminRjCarrierModule',
+                'visible' => true,
+                'name' => $tabNames['configuration'],
+                'parent_class_name' => 'AdminParentTab',
+            ],
+            [
+                'route_name' => 'admin_rj_carrier_shipments',
+                'class_name' => 'AdminRjShipments',
+                'visible' => true,
+                'name' => $tabNames['shipments'],
+                'parent_class_name' => 'AdminParentTab',
+            ],
+        ]; */
+
         /**
          * Set $this->bootstrap to true if your module is compliant with bootstrap (PrestaShop 1.6)
          */
@@ -152,12 +166,12 @@ class Rj_Carrier extends Module
 
         parent::__construct();
 
-        $this->displayName = $this->l('Service multi-carrier Rj Carrier');
+        $this->displayName = $this->l('Rj Carrier');
         $this->description = $this->l('Service multi-carrier economic');
 
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall the module?');
 
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 
     }
 
@@ -212,19 +226,22 @@ class Rj_Carrier extends Module
      */
     public function installTab(array $tabData)
     {
-        $tabNameByLangId = array_fill_keys(
-            Language::getIDs(false),
-            $tabData['name']
-        );
+        if (Tab::getIdFromClassName($tabData['class_name'])) {
+            return true;
+        }
 
         $tab = new Tab();
         $tab->module = $this->name;
         $tab->class_name = $tabData['class_name'];
         $tab->id_parent = empty($tabData['parent_class_name']) ? 0 : Tab::getIdFromClassName($tabData['parent_class_name']);
-        $tab->name = $tabNameByLangId;
-        $tab->icon = $tabData['icon'];
+        foreach (Language::getLanguages(true) as $lang) {
+            $tab->name[$lang['id_lang']] = $tabData['name'];
+        }
+        if(!empty($tabData['icon'])){
+            $tab->icon = $tabData['icon'];
+        }
 
-        return (bool) $tab->add();
+        return $tab->add();
     }
 
     /**
@@ -570,7 +587,6 @@ class Rj_Carrier extends Module
             $shortname = strtolower($shortname);
             $class_name = 'Carrier' . ucfirst($shortname);
             if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. $shortname .'/' . $class_name .'.php')) {
-                // include_once(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. $shortname .'/' .$class_name .'.php');
                 $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
                 if (class_exists($Class)) {
                     $class = new $Class();

@@ -13,13 +13,13 @@
 
 // namespace Roanja\Module\RjCarrier\Controller\Admin;
 
-use Roanja\Module\RjCarrier\Controller\Admin\AdminRjLabelController;
+use Roanja\Module\RjCarrier\Controller\Admin\LabelController;
 use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 
 // use Tools;
 
-class AdminRjShipmentsDhlController extends ModuleAdminController
+class AdminRjShipmentsController extends ModuleAdminController
 {
     protected $statuses_array = array();
     protected $nameInforme = 'shipments';
@@ -31,7 +31,7 @@ class AdminRjShipmentsDhlController extends ModuleAdminController
         $this->lang = false;
         $this->addRowAction('view');
         $this->table = 'rj_carrier_shipment';
-        $this->className = 'RjcarrierShipment';
+        $this->className = 'Roanja\Module\RjCarrier\Model\RjcarrierShipment';
         parent::__construct();
 
         $this->allow_export = true;
@@ -84,7 +84,7 @@ class AdminRjShipmentsDhlController extends ModuleAdminController
         }
 
         if (Tools::isSubmit('printlabel' . $this->table)) {
-            $resp = AdminRjLabelController::printLabelsShipment(Tools::getValue($this->identifier));
+            $resp = LabelController::printLabelsShipment(Tools::getValue($this->identifier));
         }
 
         if (Tools::isSubmit('updatestatus' . $this->table)) {
@@ -99,7 +99,7 @@ class AdminRjShipmentsDhlController extends ModuleAdminController
 
         if ($shipments = Tools::getValue('rj_carrier_shipmentBox')) {
             foreach ($shipments as $id_shipment) {
-                $res = AdminRjLabelController::downloadLabelsShipment($id_shipment);
+                $res = LabelController::downloadLabelsShipment($id_shipment);
                 if(!$res)
                     return $res;
                     
@@ -121,7 +121,7 @@ class AdminRjShipmentsDhlController extends ModuleAdminController
 
         $this->_join = " INNER JOIN `"._DB_PREFIX_."rj_carrier_infopackage` ip ON a.id_infopackage = ip.id_infopackage";
         $this->_join .= " INNER JOIN `"._DB_PREFIX_."rj_carrier_company` cc ON a.id_carrier_company = cc.id_carrier_company";
-        $this->_where = ' AND a.delete=0 AND a.id_carrier_company = 2';
+        $this->_where = ' AND a.delete=0';
     }
 
     protected function getFieldsList()
@@ -145,6 +145,8 @@ class AdminRjShipmentsDhlController extends ModuleAdminController
             ),
             'shortname' => array(
                 'title' => $this->l('Transport'),
+                'havingFilter' => true,
+                'filter_key' => 'a!id_order'
             ),
             'reference_order' => array(
                 'title' => $this->l('order reference DHL'),

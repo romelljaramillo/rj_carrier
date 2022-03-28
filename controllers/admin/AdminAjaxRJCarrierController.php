@@ -17,12 +17,9 @@
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License 3.0 (AFL-3.0)
  */
-// namespace Roanja\Module\RjCarrier\Controller\Admin;
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
-
-// use Tools;
 
 class AdminAjaxRjCarrierController extends ModuleAdminController
 {

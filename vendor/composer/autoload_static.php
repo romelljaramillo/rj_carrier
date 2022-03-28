@@ -26,7 +26,6 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         ),
         'R' => 
         array (
-            'Roanja\\Module\\RjCarrier\\Controller\\' => 35,
             'Roanja\\Module\\RjCarrier\\' => 24,
             'Ramsey\\Uuid\\' => 12,
         ),
@@ -44,10 +43,6 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Symfony\\Polyfill\\Ctype\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
-        ),
-        'Roanja\\Module\\RjCarrier\\Controller\\' => 
-        array (
-            0 => __DIR__ . '/../..' . '/controllers',
         ),
         'Roanja\\Module\\RjCarrier\\' => 
         array (
@@ -118,6 +113,9 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Roanja\\Module\\RjCarrier\\Carrier\\Cex\\ServiceCex' => __DIR__ . '/../..' . '/src/Carrier/Cex/ServiceCex.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\CarrierDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/CarrierDhl.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\ServiceDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/ServiceDhl.php',
+        'Roanja\\Module\\RjCarrier\\Controller\\Admin\\LabelController' => __DIR__ . '/../..' . '/src/Controller/Admin/LabelController.php',
+        'Roanja\\Module\\RjCarrier\\Controller\\Admin\\RjCarrierModuleController' => __DIR__ . '/../..' . '/src/Controller/Admin/RjCarrierModuleController.php',
+        'Roanja\\Module\\RjCarrier\\Controller\\Admin\\ShipmentsController' => __DIR__ . '/../..' . '/src/Controller/Admin/ShipmentsController.php',
         'Roanja\\Module\\RjCarrier\\Model\\Pdf\\HTMLTemplateDefault' => __DIR__ . '/../..' . '/src/Model/Pdf/HTMLTemplateDefault.php',
         'Roanja\\Module\\RjCarrier\\Model\\Pdf\\HTMLTemplateLabel' => __DIR__ . '/../..' . '/src/Model/Pdf/HTMLTemplateLabel.php',
         'Roanja\\Module\\RjCarrier\\Model\\Pdf\\RjPDF' => __DIR__ . '/../..' . '/src/Model/Pdf/RjPDF.php',

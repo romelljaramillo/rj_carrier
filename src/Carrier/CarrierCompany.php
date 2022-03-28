@@ -600,6 +600,7 @@ class CarrierCompany extends Module
         $rj_carrier_shipment->num_shipment = self::getUUID();
         $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
         $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
+        $rj_carrier_shipment->product = $info_shipment['name_carrier'];
 
         if (!$id_shipment) {
             if (!$rj_carrier_shipment->add())

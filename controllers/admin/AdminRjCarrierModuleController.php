@@ -13,11 +13,11 @@
 
 // namespace Roanja\Module\RjCarrier\Controller\Admin;
 
-class AdminRjModuleController extends \ModuleAdminController
+class AdminRjCarrierModuleController extends ModuleAdminController
 {
     public function __construct()
     {
         parent::__construct();
-        \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink('AdminModules').'&configure=rj_carrier');
+        \Tools::redirectAdmin(\Context::getContext()->link->getAdminLink('AdminModules', true, [], ['configure' => 'rj_carrier']));
     }
 }

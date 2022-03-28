@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
     <name>rj_carrier</name>
-    <displayName><![CDATA[Service multi-carrier Rj Carrier]]></displayName>
+    <displayName><![CDATA[Rj Carrier]]></displayName>
     <version><![CDATA[1.0.0]]></version>
     <description><![CDATA[Service multi-carrier economic]]></description>
     <author><![CDATA[Roanja]]></author>
