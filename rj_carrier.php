@@ -40,6 +40,7 @@ use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoshop;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
+define('IMG_ICON_COMPANY_DIR', 'ruta_icons');
 
 class Rj_Carrier extends Module
 {
@@ -345,7 +346,6 @@ class Rj_Carrier extends Module
             $shortname = strtolower($company['shortname']);
             $class_name = 'Carrier' . ucfirst($shortname);
             if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/Carrier/'. ucfirst($shortname) .'/'.$class_name.'.php')) {
-            // include_once(_PS_MODULE_DIR_.'rj_carrier/src/carrier/'. ucfirst($shortname) .'/'.$class_name.'.php');
                 $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
                 if (class_exists($Class)) {
                     $class = new $Class();

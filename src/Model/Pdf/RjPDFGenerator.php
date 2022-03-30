@@ -215,11 +215,6 @@ class RjPDFGenerator extends \TCPDF
      */
     public function writePage()
     {
-        // $this->SetHeaderMargin(5);
-        // $this->SetFooterMargin(5);
-        // $this->setMargins(5, 5, 5);
-        // $this->AddPage();
-        // $this->writeHTML($this->content, true, false, true, true, '');
         $this->lastPage();
     }
 

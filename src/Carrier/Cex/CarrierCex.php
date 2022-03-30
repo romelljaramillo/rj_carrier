@@ -164,7 +164,6 @@ class CarrierCex extends CarrierCompany
 
     private function setFieldsFormConfig()
     {
-
         $this->fields_form = array(
             'form' => array(
                 'legend' => array(
@@ -274,7 +273,7 @@ class CarrierCex extends CarrierCompany
             $shipment['response'] = $response;
 
             for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
-                $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, \Context::getContext()->smarty, $num_package);
+                $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
                 
                 $pdf = $rjpdf->render($this->display_pdf);
 

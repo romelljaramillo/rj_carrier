@@ -129,13 +129,6 @@ class AdminRjShipmentsController extends ModuleAdminController
         $this->querySql();
 
         $this->fields_list = array(
-            'id_shipment' => array(
-                'title' => $this->l('id Envío'),
-                'align' => 'text-center',
-                'class' => 'fixed-width-xs',
-                'havingFilter' => true,
-                'search' =>false,
-            ),
             'id_order' => array(
                 'title' => $this->l('Nº Order'),
                 'align' => 'text-center',
@@ -146,27 +139,28 @@ class AdminRjShipmentsController extends ModuleAdminController
             'shortname' => array(
                 'title' => $this->l('Transport'),
                 'havingFilter' => true,
-                'filter_key' => 'a!id_order'
+                'filter_key' => 'cc!shortname',
             ),
             'reference_order' => array(
                 'title' => $this->l('order reference DHL'),
                 'havingFilter' => true,
-                'search' =>false,
+                'filter_key' => 'a!reference_order'
             ),
             'num_shipment' => array(
-                'title' => $this->l('Id DHL'),
+                'title' => $this->l('Shipment number'),
                 'havingFilter' => true,
-                'search' =>false,
+                'filter_key' => 'a!num_shipment'
             ),
             'product' => array(
-                'title' => $this->l('Product DHL'),
+                'title' => $this->l('Carrier'),
                 'havingFilter' => true,
-                'search' =>false,
+                'filter_key' => 'a!product',
             ),
             'cash_ondelivery' => array(
-                'title' => $this->l('Contrareembolso'),
+                'title' => $this->l('Cash ondelivery'),
                 'havingFilter' => true,
-                'type' => 'price'
+                'type' => 'price',
+                'filter_key' => 'ip!cash_ondelivery',
             ),
             'quantity' => array(
                 'title' => $this->l('Packages'),
@@ -180,7 +174,7 @@ class AdminRjShipmentsController extends ModuleAdminController
                 'search' =>false,
             ),
             'date_add' => array(
-                'title' => $this->l('Fecha'),
+                'title' => $this->l('Date'),
                 'havingFilter' => true,
                 'type' => 'datetime',
                 'filter_key' => 'a!date_add',

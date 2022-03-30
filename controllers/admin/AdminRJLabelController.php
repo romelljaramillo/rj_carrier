@@ -172,7 +172,7 @@ class AdminRjLabelController extends ModuleAdminController
 
     // public static function generateLabelPdf($shipment)
     // {
-    //     $pdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, \Context::getContext()->smarty);
+    //     $pdf = new RjPDF($shipment, RjPDF::TEMPLATE_LABEL, \Context::getContext()->smarty);
     //     return $pdf->render();
     // }
 

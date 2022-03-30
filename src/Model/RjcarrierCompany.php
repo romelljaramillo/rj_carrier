@@ -58,4 +58,12 @@ class RjcarrierCompany extends \ObjectModel
 
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
     }
+
+    public static function getIconCompanyByShortname($shortname)
+    {
+        $sql = 'SELECT cc.icon FROM `' . _DB_PREFIX_ . 'rj_carrier_company` cc
+		WHERE cc.`shortname` ="' . $shortname .'"';
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+    }
 }

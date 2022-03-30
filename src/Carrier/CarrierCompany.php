@@ -53,7 +53,7 @@ class CarrierCompany extends Module
 
     
     /** @var string Nombre corto del transportista siglas ejemp: CEX Correo Express */
-    public $shortname = 'rjcarrier';
+    public $shortname = 'DEF';
     public $display_pdf = 'S';
     public $label_type = 'B2X_Generic_A4_Third';
 
@@ -503,6 +503,7 @@ class CarrierCompany extends Module
         if(!$id_shipment){
             return false;
         }
+        
         $request = json_encode($shipment);
         
         $this->saveRequestShipment($id_shipment, $request);
@@ -510,7 +511,7 @@ class CarrierCompany extends Module
         $packages_qty = $shipment['info_package']['quantity'];
         
         for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
-            $rjpdf = new RjPDF($shipment, RjPDF::TEMPLATE_TAG_TD, Context::getContext()->smarty, $num_package);
+            $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
             $pdf = $rjpdf->render($this->display_pdf);
 
             if ($pdf) {
@@ -538,6 +539,13 @@ class CarrierCompany extends Module
         return true;
     }
 
+    /**
+     * Guarda el request que se hace al servicio
+     *
+     * @param array $id_shipment
+     * @param json $request
+     * @return void
+     */
     public function saveRequestShipment($id_shipment, $request)
     {
         $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
@@ -554,6 +562,13 @@ class CarrierCompany extends Module
         return true;
     }
 
+    /**
+     * Guarda el response que se hace al servicio
+     *
+     * @param array $id_shipment
+     * @param json $response
+     * @return void
+     */
     public function saveResponseShipment($id_shipment, $response)
     {
         $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
