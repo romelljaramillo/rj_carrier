@@ -43,7 +43,6 @@ class RjcarrierInfoshop extends \ObjectModel
     public $postcode;
     public $additionaladdress;
     public $isbusiness;
-    public $addition;
     public $email;
     public $phone;
     public $vatnumber;
@@ -59,21 +58,20 @@ class RjcarrierInfoshop extends \ObjectModel
         'primary' => 'id_infoshop',
         'multishop' => true,
         'fields' => array(
-            'firstname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'lastname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'firstname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
+            'lastname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
             'company' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'additionalname' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'id_country' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'state' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
-            'city' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
-            'street' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'number' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'postcode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'state' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255, 'required' => true],
+            'city' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255, 'required' => true],
+            'street' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
+            'number' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
+            'postcode' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
             'additionaladdress' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'isbusiness' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'addition' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'email' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
-            'phone' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
+            'phone' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100, 'required' => true],
             'vatnumber' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 100],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat']
@@ -110,7 +108,7 @@ class RjcarrierInfoshop extends \ObjectModel
         } else {
             $infoshop = new RjcarrierInfoshop();
         }
-
+        
         if($id_infoshop){
             $fields['id_infoshop'] = Tools::getValue('id_infoshop', $infoshop->id);
         }
@@ -128,7 +126,6 @@ class RjcarrierInfoshop extends \ObjectModel
         $fields['postcode'] = Tools::getValue('postcode', $infoshop->postcode);
         $fields['additionaladdress'] = Tools::getValue('additionaladdress', $infoshop->additionaladdress);
         $fields['isbusiness'] = Tools::getValue('isbusiness', $infoshop->isbusiness);
-        $fields['addition'] = Tools::getValue('addition', $infoshop->addition);
         $fields['email'] = Tools::getValue('email', $infoshop->email);
         $fields['phone'] = Tools::getValue('phone', $infoshop->phone);
         $fields['vatnumber'] = Tools::getValue('vatnumber', $infoshop->vatnumber);

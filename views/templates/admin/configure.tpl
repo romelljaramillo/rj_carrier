@@ -23,6 +23,10 @@
 *  International Registered Trademark & Property of PrestaShop SA
 *}
 
+{block name='notifications'}
+{include file='../hook/notifications.tpl'}
+{/block}
+
 <div id="modulecontent module_display" class="clearfix">
     <div id="menu-config-rj-carrier" class="col-lg-2 col-xs-2">
         <div class="list-group nav flex-column nav-pills" role="tablist" aria-orientation="vertical">

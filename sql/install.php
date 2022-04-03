@@ -40,7 +40,6 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
     `additionaladdress` varchar(100) NULL,
     `isbusiness` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
     `email` varchar(150) NULL,
-    `addition` varchar(100) NULL,
     `phone` varchar(20) NULL,
     `vatnumber` varchar(20) NULL,
     `date_add` datetime NOT NULL,

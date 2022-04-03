@@ -15,8 +15,10 @@
                 {/block}
             </div>
         </div>
+        {dump($info_shipment)}
+        {dump($info_package)}
         {if $info_company_carrier}
-        {if !$info_shipment.num_shipment}
+        {if !$info_shipment.num_shipment && $info_package.id_infopackage}
         <div class="carrier card"  id="rjcarrierPanel">
             <div class="card-header">
                 <h3 class="card-header-title">
