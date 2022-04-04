@@ -39,6 +39,7 @@ use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoshop;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
+use Roanja\Module\RjCarrier\Model\RjcarrierCompany;
 
 define('IMG_ICON_COMPANY_DIR', 'ruta_icons');
 
@@ -46,10 +47,10 @@ class Rj_Carrier extends Module
 {
     protected $order;
     protected $_html;
-    protected $errors = [];
-    // protected $warning = [];
-    protected $success = [];
-    protected $info = [];
+    protected $_errors = [];
+    protected $_warning = [];
+    protected $_success = [];
+    protected $_info = [];
 
     /**
      * Default hook to install
@@ -124,7 +125,7 @@ class Rj_Carrier extends Module
     /**
      * Names of fields config Info Extra carrier used
      */
-    public $fields_config_info_extra = [];
+    protected $fields_config_info_extra = [];
 
     public $fields_form_config_info_extra = [];
 
@@ -336,7 +337,7 @@ class Rj_Carrier extends Module
     public function renderConfigCarriers() 
     {
         $html = [];
-        $carries_company = CarrierCompany::getCarriersCompany();
+        $carries_company = RjcarrierCompany::getCarrierCompany();
         
         foreach ($carries_company as $company) {
             $shortname = strtolower($company['shortname']);
@@ -362,7 +363,7 @@ class Rj_Carrier extends Module
      */
     public function setFieldsConfigExtraCarriers() 
     {
-        $carries_company = CarrierCompany::getCarriersCompany();
+        $carries_company = RjcarrierCompany::getCarrierCompany();
         foreach ($carries_company as $company) {
             $shortname = strtolower($company['shortname']);
             $class_name = 'Carrier' . ucfirst($shortname);
@@ -488,13 +489,20 @@ class Rj_Carrier extends Module
     
     protected function validationConfiguration()
     {
-        $this->context = Context::getContext();
-        $id_shop = $this->context->shop->id;
-        $id_shop_group = $this->context->shop->id_shop_group;
-
-        if(!Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop)){
-            $this->warning[] = $this->getTranslator()->trans('The cash on delivery is not configured, you must configure it in the module options!.', 
-            array(), 'Modules.Rj_Carrier.Admin');
+        $carries_company = RjcarrierCompany::getCarrierCompany();
+        foreach ($carries_company as $company) {
+            $shortname = strtolower($company['shortname']);
+            $class_name = 'Carrier' . ucfirst($shortname);
+            if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/Carrier/'. ucfirst($shortname) .'/'.$class_name.'.php')) {
+                $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
+                if (class_exists($Class)) {
+                    $class = new $Class();
+                    $validation = $class->validationConfiguration();
+                    if($validation){
+                        $this->_warning = array_merge($this->_warning, $validation);
+                    }
+                }
+            }
         }
     }
 
@@ -678,7 +686,7 @@ class Rj_Carrier extends Module
             }
 
             foreach ($this->fields_config_info_extra as $field) {
-                $res =  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
+                $res =  Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id, $shop_id);
             }
         }
 
@@ -686,12 +694,12 @@ class Rj_Carrier extends Module
         switch ($shop_context) {
             case Shop::CONTEXT_ALL:
                 foreach ($this->fields_config_info_extra as $field) {
-                    $res &= Configuration::updateValue($field, Tools::getValue($field));
+                    $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
                 }
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
                         foreach ($this->fields_config_info_extra as $field) {
-                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
                         }
                     }
                 }
@@ -700,7 +708,7 @@ class Rj_Carrier extends Module
                 if (count($shop_groups_list)) {
                     foreach ($shop_groups_list as $shop_group_id) {
                         foreach ($this->fields_config_info_extra as $field) {
-                            $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                            $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
                         }
                     }
                 }
@@ -908,7 +916,7 @@ class Rj_Carrier extends Module
         $this->setFieldsConfigExtraCarriers();
 
         foreach ($this->fields_config_info_extra as $field) {
-            $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
+            $arry_fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
         }
 
         return $arry_fields;
@@ -922,10 +930,10 @@ class Rj_Carrier extends Module
     protected function prepareNotifications()
     {
         $notifications = [
-            'error' => $this->errors,
-            'warning' => $this->warning,
-            'success' => $this->success,
-            'info' => $this->info,
+            'error' => $this->_errors,
+            'warning' => $this->_warning,
+            'success' => $this->_success,
+            'info' => $this->_info,
         ];
 
         if (session_status() == PHP_SESSION_NONE) {

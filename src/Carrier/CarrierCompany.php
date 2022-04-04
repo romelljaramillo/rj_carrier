@@ -58,11 +58,25 @@ class CarrierCompany extends Module
     public $label_type = 'B2X_Generic_A4_Third';
 
     /** @var array Campos de configuración */
-    public $fields_config = [];
+    protected $fields_config = [];
 
-    public $fields_multi_confi = [];
+    // public $fields_config_info_extra = [
+    //     'RJ_ETIQUETA_TRANSP_PREFIX',
+    //     'RJ_MODULE_CONTRAREEMBOLSO',
+    // ];
 
-    public $fields_config_info_extra = [];
+    protected $fields_config_info_extra = [
+        [
+            'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
+            'require' => false,
+            'type' => 'string'
+        ],
+        [
+            'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
+            'require' => true,
+            'type' => 'float'
+        ]
+    ];
 
     /** @var array Campos del formulario configuración */
     public $fields_form;
@@ -121,14 +135,82 @@ class CarrierCompany extends Module
         return $this->fields_config_info_extra;
     }
 
+    public function getFieldsFormConfigExtra()
+    {
+        $modulesPay = self::getModulesPay();
+        $modules_array[] =  array(
+            'id' => '',
+            'name' => ''
+        );
+        foreach ($modulesPay as $module) {
+            $modules_array[] =  array(
+                'id' => $module['name'],
+                'name' => $module['name']
+            );
+        }
+
+        return [
+            [
+                'type' => 'text',
+                'label' => $this->l('Prefix etiqueta'),
+                'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
+                'class' => 'fixed-width-lg',
+            ],
+            [
+                'type' => 'select',
+                'label' => $this->l('Module contrareembolso'),
+                'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
+                'options' => [
+                    'query' => $modules_array,
+                    'id' => 'id',
+                    'name' => 'name'
+                ]
+            ]
+        ];
+    }
+
+    public static function getModulesPay()
+    {
+        $id_shop = Shop::getContextShopID();
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
+        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
+        WHERE mc.`id_shop` = ' . $id_shop . '
+        GROUP BY m.`id_module`');
+    }
+
     /**
-     * Valida que los carries seleccionados no hayan sido antes configurados por otros
+     * Valida que los carries seleccionados hayan sido configurados
      *
      * @return void
      */
-    protected function validationConfig()
+    public function validationConfiguration()
     {
-        return true;
+        $id_shop = Context::getContext()->shop->id;
+        $id_shop_group = Context::getContext()->shop->id_shop_group;
+        $warning = [];
+
+        // valida los campos de configuaración de los carrier company
+        foreach ($this->fields_config as $value) {
+            if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
+                $warning[] = $this->getTranslator()->trans('Required data module configuration!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $value['name'];
+            }
+        }
+
+        // valida los campos de configuaración extra de los carrier company
+        foreach ($this->fields_config_info_extra as $value) {
+            if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
+                $warning[] = $this->getTranslator()->trans('Required data the module extra configuration!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $value['name'];
+            }
+        }
+
+        if(count($warning)){
+            return $warning;
+        }
+
+        return false;
     }
 
     protected function _postProcess()
@@ -150,20 +232,20 @@ class CarrierCompany extends Module
                 }
                 
                 foreach ($this->fields_config as $field) {
-                    $res &=  Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id, $shop_id);
+                    $res &=  Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id, $shop_id);
                 }
             }
     
             switch ($shop_context) {
                 case Shop::CONTEXT_ALL:
                     foreach ($this->fields_config as $field) {
-                        $res &= Configuration::updateValue($field, Tools::getValue($field));
+                        $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
                     }
                     
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             foreach ($this->fields_config as $field) {
-                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                                $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
                             }
                         }
                     }
@@ -172,7 +254,7 @@ class CarrierCompany extends Module
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             foreach ($this->fields_config as $field) {
-                                $res &= Configuration::updateValue($field, Tools::getValue($field), false, $shop_group_id);
+                                $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
                             }
                         }
                     }
@@ -221,20 +303,6 @@ class CarrierCompany extends Module
         }
     }
 
-    public static function getCarriersCompany($shortname = null)
-    {
-        $where = '';
-
-        if($shortname){
-            $where = ' WHERE c.shortname = ' . $shortname;
-        }
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            'SELECT * FROM '._DB_PREFIX_.'rj_carrier_company c '
-            .$where
-        );
-    }
-
     /**
      * Devuelve shortname comapany a partir del id_refernce_carrier
      *
@@ -248,7 +316,7 @@ class CarrierCompany extends Module
             $carrier_company = new RjcarrierCompany((int)$type_shipment['id_carrier_company']);
             return  $carrier_company->getFields();
         } else {
-            $carries_company = self::getCarriersCompany();
+            $carries_company = RjcarrierCompany::getCarrierCompany();
         }
 
         return $carries_company[0];
@@ -490,7 +558,7 @@ class CarrierCompany extends Module
         $arry_fields = [];
 
         foreach ($this->fields_config as $field) {
-            $arry_fields[$field] = Tools::getValue($field, Configuration::get($field, null, $id_shop_group, $id_shop));
+            $arry_fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
         }
 
         return $arry_fields;

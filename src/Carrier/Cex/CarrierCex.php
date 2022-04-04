@@ -25,10 +25,6 @@ use Roanja\Module\RjCarrier\Carrier\Cex\ServiceCex;
 use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 
-// include_once(_PS_MODULE_DIR_.'rj_carrier/src/carriers/CarrierCompany.php');
-// include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/cex/ServiceCex.php');
-// include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
-
 /**
  * Class CarrierCex.
  */
@@ -38,30 +34,86 @@ class CarrierCex extends CarrierCompany
     {
         $this->name_carrier = 'Correo Express';
         $this->shortname = 'CEX';
-        /**
-         * Names of fields config DHL carrier used
-         */
+
         $this->fields_config = [
-            'RJ_CEX_COD_CLIENT',
-            'RJ_CEX_USER',
-            'RJ_CEX_PASS',
-            'RJ_CEX_ACTIVE',
-            'RJ_CEX_WSURL',
-            'RJ_CEX_WSURLSEG',
-            'RJ_CEX_WSURLMOD',
-            'RJ_CEX_WSURLANUL'
+            [
+                'name' => 'RJ_CEX_COD_CLIENT',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_USER',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_PASS',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_WSURL',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_WSURLSEG',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_WSURLMOD',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_CEX_WSURLANUL',
+                'require' => true,
+                'type' => 'boolean'
+            ],
+            [
+                'name' => 'RJ_CEX_ACTIVE',
+                'require' => false,
+                'type' => 'string'
+            ]
         ];
 
-        // $this->fields_multi_confi = [ ];
-
         $this->fields_config_info_extra = [
-            'RJ_ENABLESHIPPINGTRACK',
-            'RJ_LABELSENDER',
-            'RJ_LABELSENDER_TEXT',
-            'RJ_ENABLEWEIGHT',
-            'RJ_DEFAULTKG',
-            'RJ_HOUR_FROM',
-            'RJ_HOUR_UNTIL'
+            [
+                'name' => 'RJ_ENABLESHIPPINGTRACK',
+                'require' => false,
+                'type' => 'boolean'
+            ],
+            [
+                'name' => 'RJ_LABELSENDER',
+                'require' => false,
+                'type' => 'boolean'
+            ],
+            [
+                'name' => 'RJ_LABELSENDER_TEXT',
+                'require' => false,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_ENABLEWEIGHT',
+                'require' => false,
+                'type' => 'boolean'
+            ],
+            [
+                'name' => 'RJ_DEFAULTKG',
+                'require' => false,
+                'type' => 'float'
+            ],
+            [
+                'name' => 'RJ_HOUR_FROM',
+                'require' => true,
+                'type' => 'time'
+            ],
+            [
+                'name' => 'RJ_HOUR_UNTIL',
+                'require' => true,
+                'type' => 'time'
+            ],
         ];
 
         parent::__construct();

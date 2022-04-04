@@ -24,14 +24,6 @@ use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Dhl\ServiceDhl;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 
-// include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/CarrierCompany.php');
-// include_once (_PS_MODULE_DIR_ . 'rj_carrier/src/carriers/dhl/ServiceDhl.php');
-// include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierShipment.php');
-// include_once(_PS_MODULE_DIR_. 'rj_carrier/classes/RjcarrierLabel.php');
-
-use Shop;
-use Db;
-
 /**
  * Class CarrierDhl.
  */
@@ -45,25 +37,46 @@ class CarrierDhl extends CarrierCompany
         /**
          * Names of fields config DHL carrier used
          */
+
         $this->fields_config = [
-            'RJ_DHL_ACCOUNID',
-            'RJ_DHL_USERID',
-            'RJ_DHL_KEY',
-            'RJ_DHL_KEY_DEV',
-            'RJ_DHL_URL_PRO',
-            'RJ_DHL_URL_DEV',
-            'RJ_DHL_ENV',
-        ];
-
-        // $this->fields_multi_confi = [];
-
-        $this->fields_config_info_extra = [
-            'RJ_ETIQUETA_TRANSP_PREFIX',
-            'RJ_MODULE_CONTRAREEMBOLSO',
+            [
+                'name' => 'RJ_DHL_ACCOUNID',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_USERID',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_KEY',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_KEY_DEV',
+                'require' => false,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_URL_PRO',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_URL_DEV',
+                'require' => true,
+                'type' => 'string'
+            ],
+            [
+                'name' => 'RJ_DHL_ENV',
+                'require' => false,
+                'type' => 'boolean'
+            ],
         ];
 
         parent::__construct();
-
     }
 
     public function renderConfig()
@@ -144,50 +157,6 @@ class CarrierDhl extends CarrierCompany
                 ),
             ),
         );
-    }
-
-    public function getFieldsFormConfigExtra()
-    {
-        $modulesPay = self::getModulesPay();
-        $modules_array[] =  array(
-            'id' => '',
-            'name' => ''
-        );
-        foreach ($modulesPay as $module) {
-            $modules_array[] =  array(
-                'id' => $module['name'],
-                'name' => $module['name']
-            );
-        }
-
-        return [
-            [
-                'type' => 'text',
-                'label' => $this->l('Prefix etiqueta'),
-                'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
-                'class' => 'fixed-width-lg',
-            ],
-            [
-                'type' => 'select',
-                'label' => $this->l('Module contrareembolso'),
-                'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
-                'options' => [
-                    'query' => $modules_array,
-                    'id' => 'id',
-                    'name' => 'name'
-                ]
-            ]
-        ];
-    }
-
-    public static function getModulesPay()
-    {
-        $id_shop = Shop::getContextShopID();
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
-        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
-        WHERE mc.`id_shop` = ' . $id_shop . '
-        GROUP BY m.`id_module`');
     }
 
     /**

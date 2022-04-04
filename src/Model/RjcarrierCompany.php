@@ -66,4 +66,18 @@ class RjcarrierCompany extends \ObjectModel
 
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
     }
+
+    public static function getCarrierCompany($shortname = null)
+    {
+        $where = '';
+
+        if($shortname){
+            $where = ' WHERE c.shortname = ' . $shortname;
+        }
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
+            'SELECT * FROM '._DB_PREFIX_.'rj_carrier_company c '
+            .$where
+        );
+    }
 }
