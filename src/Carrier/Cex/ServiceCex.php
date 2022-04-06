@@ -34,6 +34,11 @@ Class ServiceCex {
 		$this->id_shop = Shop::getContextShopID();
     }
 
+    /**
+     * obtiene la información de las credenciales del servicio
+     *
+     * @return void
+     */
     private function getUserCredentials()
     {
         return [
@@ -42,6 +47,13 @@ Class ServiceCex {
         ];
     }
 
+    /**
+     * Formatea el código postal
+     *
+     * @param string $valor
+     * @param int $longitud
+     * @return void
+     */
     public function rellenarCeros($valor, $longitud)
     {
         $res = str_pad($valor, $longitud, '0', STR_PAD_LEFT);
@@ -53,6 +65,12 @@ Class ServiceCex {
         return 'P' . $cod_client;
     }
 
+    /**
+     * Genera el body de la información del envío
+     *
+     * @param array $info_shipment
+     * @return void
+     */
     public function getBodyShipment($info_shipment)
     {
         $info_config = $info_shipment['info_config'];
@@ -80,7 +98,7 @@ Class ServiceCex {
     /**
      * Crea el formato de quien envia
      *
-     * @param [array] $infoReceiver nota: hacer una interface
+     * @param array $infoReceiver nota: hacer una interface
      * @return void
      */
     public function getShipper($info)
@@ -152,6 +170,12 @@ Class ServiceCex {
         ];
     }
 
+    /**
+     * Crea el formato del la información de los paquetes
+     *
+     * @param array $info
+     * @return void
+     */
     public function getPieces($info)
     {
         $weight = (string)$info['weight'] / (float)$info['quantity'];
@@ -292,7 +316,7 @@ Class ServiceCex {
         ];
     }
 
-    /* public function request($method, $url, $body = null)
+    public function request($method, $url, $body = null)
     {
  
         $credenciales   = $this->getUserCredentials();
@@ -335,11 +359,11 @@ Class ServiceCex {
         } else {
             return false;
         }
-    } */
+    }
 
-    // pruebas
+    // para pruebas
 
-    public function request($method, $url, $body = null)
+    /* public function request($method, $url, $body = null)
     {
         $response = '{
             "codigoRetorno": 0,
@@ -369,6 +393,6 @@ Class ServiceCex {
         }';
 
         return json_decode($response);
-    }
+    } */
 
 }

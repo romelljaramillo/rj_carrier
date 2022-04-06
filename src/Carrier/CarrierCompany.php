@@ -108,7 +108,7 @@ class CarrierCompany extends Module
 
             $this->_html .= $this->renderFormConfig();
             $this->_html .= $this->viewAddTypeShipment();
-            $this->_html .= $this->typeShipmentList();
+            $this->_html .= $this->renderListTypeShipment();
         }
         
         return $this->_html;
@@ -167,16 +167,6 @@ class CarrierCompany extends Module
                 ]
             ]
         ];
-    }
-
-    public static function getModulesPay()
-    {
-        $id_shop = Shop::getContextShopID();
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
-        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
-        WHERE mc.`id_shop` = ' . $id_shop . '
-        GROUP BY m.`id_module`');
     }
 
     /**
@@ -276,7 +266,7 @@ class CarrierCompany extends Module
         }
     }
 
-    public function _postProcessTypeShipment()
+    protected function _postProcessTypeShipment()
     {
         if (Tools::isSubmit('id_type_shipment') && RjcarrierTypeShipment::typeShipmentExists((int)Tools::getValue('id_type_shipment'))) {
             $typeShipment = new RjcarrierTypeShipment((int)Tools::getValue('id_type_shipment'));
@@ -344,7 +334,12 @@ class CarrierCompany extends Module
 		return $helper->generateForm(array($this->fields_form));
     }
 
-    private function typeShipmentList()
+    /**
+     * Devuelve el listado de type shipment 
+     *
+     * @return void
+     */
+    private function renderListTypeShipment()
     {
 
         $carrier_company = RjcarrierCompany::getCarrierCompanyByShortname($this->shortname);
@@ -740,6 +735,16 @@ class CarrierCompany extends Module
         } 
 
         return $rj_carrier_infopackage->getFields();
+    }
+
+    public static function getModulesPay()
+    {
+        $id_shop = Shop::getContextShopID();
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
+        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
+        WHERE mc.`id_shop` = ' . $id_shop . '
+        GROUP BY m.`id_module`');
     }
 
     public static function getUUID()
