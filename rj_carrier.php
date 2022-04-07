@@ -135,7 +135,7 @@ class Rj_Carrier extends Module
     {
         $this->name = 'rj_carrier';
         $this->tab = 'administration';
-        $this->version = '1.0.0';
+        $this->version = '2.0.0';
         $this->author = 'Roanja';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -487,7 +487,7 @@ class Rj_Carrier extends Module
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
     
-    protected function validationConfiguration()
+    protected function validationConfigurationCarrier()
     {
         $carries_company = RjcarrierCompany::getCarrierCompany();
         foreach ($carries_company as $company) {
@@ -513,7 +513,7 @@ class Rj_Carrier extends Module
         $info_package = [];
         $info_company_carrier = [];
 
-        $this->validationConfiguration();
+        $this->validationConfigurationCarrier();
 
         $this->order = new Order($id_order);
 

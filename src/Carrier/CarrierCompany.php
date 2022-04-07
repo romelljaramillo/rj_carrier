@@ -60,11 +60,6 @@ class CarrierCompany extends Module
     /** @var array Campos de configuración */
     protected $fields_config = [];
 
-    // public $fields_config_info_extra = [
-    //     'RJ_ETIQUETA_TRANSP_PREFIX',
-    //     'RJ_MODULE_CONTRAREEMBOLSO',
-    // ];
-
     protected $fields_config_info_extra = [
         [
             'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',

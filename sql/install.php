@@ -65,7 +65,7 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
 	`width` DECIMAL(20,6) NULL DEFAULT NULL,
 	`height` DECIMAL(20,6) NULL DEFAULT NULL,
     `cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
-	`message` VARCHAR(255) NULL DEFAULT \'0\',
+	`message` VARCHAR(255) NULL DEFAULT,
     `hour_from` TIME NULL DEFAULT NULL,
 	`hour_until` TIME NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
