@@ -709,7 +709,7 @@ class CarrierCompany extends Module
 
         $rj_carrier_infopackage->id_order = (int)Tools::getValue('id_order');
         $rj_carrier_infopackage->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
-        $rj_carrier_infopackage->quantity = (int)Tools::getValue('rj_quantity');
+        $rj_carrier_infopackage->quantity = (!(int)Tools::getValue('rj_quantity')) ? 1 : (int)Tools::getValue('rj_quantity');
         $rj_carrier_infopackage->weight = Tools::getValue('rj_weight');
         $rj_carrier_infopackage->length = Tools::getValue('rj_length');
         $rj_carrier_infopackage->cash_ondelivery = Tools::getValue('rj_cash_ondelivery');

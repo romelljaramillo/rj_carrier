@@ -249,7 +249,7 @@ class Rj_Carrier extends Module
      */
     public function uninstall()
     {
-        // include(dirname(__FILE__).'/sql/uninstall.php');
+        include(dirname(__FILE__).'/sql/uninstall.php');
         
         return parent::uninstall() && $this->uninstallTabs();
     }
@@ -504,6 +504,21 @@ class Rj_Carrier extends Module
                 }
             }
         }
+
+        $fields = RjcarrierInfoshop::$definition['fields'];
+        $info_shop = RjcarrierInfoshop::getShopData();
+        foreach ($info_shop as $key => $value) {
+            if($fields[$key]['required'] && !$value){
+                $this->_warning[] = $this->getTranslator()->trans('Required data module configuration Info shop!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $key;
+            }
+        }
+
+        if($this->_warning){
+            $this->_warning[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
+                'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
+                $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
+        }
     }
 
     public function hookDisplayAdminOrder($params)
@@ -523,7 +538,7 @@ class Rj_Carrier extends Module
             $this->deleteShipment(Tools::getValue('id_shipment'));
             $info_package = $this->getInfoPackage($id_order);
             $info_shipment = [];
-        } elseif (Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')){
+        } elseif ((Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) && empty($this->_warning)){
             
             if(Tools::getValue('id_reference_carrier') && $info_shipment['id_shipment']){
                 if($this->deleteShitmentChangeCarrier($id_order, $info_shipment['id_shipment'], Tools::getValue('id_reference_carrier')))
@@ -561,7 +576,7 @@ class Rj_Carrier extends Module
         ];
 
         if(!$info_shipment['id_shipment']){
-            if (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')){
+            if ((Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')) && empty($this->_warning)){
                 $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
                 
                 $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
@@ -569,6 +584,10 @@ class Rj_Carrier extends Module
                 $info_shipment = $shipment['info_shipment'];
 
                 $this->selectShipment($shipment);
+            } else {
+                $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
+                    'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
+                    $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
             }
         }
         

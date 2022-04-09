@@ -49,23 +49,23 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infoshop_shop` (
-    `id_infoshop` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `id_shop` int(10) unsigned NOT NULL,
+    `id_infoshop` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_infoshop`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
-    `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
-    `id_order` INT(10) NOT NULL,
-    `id_reference_carrier` INT(10) NOT NULL,
-	`id_type_shipment` INT(10) NOT NULL,
-	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT \'1\',
+    `id_infopackage` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_order` INT(10) UNSIGNED NOT NULL,
+    `id_reference_carrier` INT(10) UNSIGNED NOT NULL,
+	`id_type_shipment` INT(10) UNSIGNED NOT NULL,
+	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT 1,
 	`weight` DECIMAL(20,6) NULL DEFAULT NULL,
 	`length` DECIMAL(20,6) NULL DEFAULT NULL,
 	`width` DECIMAL(20,6) NULL DEFAULT NULL,
 	`height` DECIMAL(20,6) NULL DEFAULT NULL,
     `cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
-	`message` VARCHAR(255) NULL DEFAULT,
+	`message` VARCHAR(255) NULL,
     `hour_from` TIME NULL DEFAULT NULL,
 	`hour_until` TIME NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
@@ -75,19 +75,19 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
-    `id_infopackage` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `id_shop` int(10) unsigned NOT NULL,
+    `id_infopackage` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_infopackage`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
     `id_shipment` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`id_order` INT(10) NOT NULL,
+	`id_order` INT(10) UNSIGNED NOT NULL,
 	`reference_order` VARCHAR(100) NOT NULL,
 	`num_shipment` CHAR(36) NOT NULL,
-	`id_carrier_company` INT(10) NOT NULL,
-	`id_infopackage` INT(10) NOT NULL,
-	`account` VARCHAR(100) NOT NULL,
+	`id_carrier_company` INT(10) UNSIGNED NOT NULL,
+	`id_infopackage` INT(10) UNSIGNED NOT NULL,
+	`account` VARCHAR(100),
 	`product` VARCHAR(100) NOT NULL,
 	`request` TEXT NULL DEFAULT NULL,
 	`response` TEXT NULL DEFAULT NULL,
@@ -119,13 +119,13 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
-    `id_label` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `id_shop` int(10) unsigned NOT NULL,
+    `id_label` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_label`, `id_shop`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
-    `id_carrier_company` int(10) unsigned NOT NULL AUTO_INCREMENT,
+    `id_carrier_company` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
     `shortname` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
     `icon` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -135,8 +135,8 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
-    `id_type_shipment` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `id_carrier_company` INT(10) NOT NULL,
+    `id_type_shipment` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_carrier_company` INT(10) UNSIGNED NOT NULL,
     `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
     `id_bc` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
     `id_reference_carrier` INT(10) DEFAULT NULL,
