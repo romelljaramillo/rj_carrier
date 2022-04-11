@@ -146,24 +146,6 @@ class Rj_Carrier extends Module
             $tabNames['shipments'][$lang['locale']] = $this->trans('Shipments', [], 'Modules.RjCarrier.Admin', $lang['locale']);
         }
         
-        // rutas para controladores modernos prestashop - symfony
-        /* $this->tabs = [
-            [
-                'route_name' => 'admin_rj_carrier_module',
-                'class_name' => 'AdminRjCarrierModule',
-                'visible' => true,
-                'name' => $tabNames['configuration'],
-                'parent_class_name' => 'AdminParentTab',
-            ],
-            [
-                'route_name' => 'admin_rj_carrier_shipments',
-                'class_name' => 'AdminRjShipments',
-                'visible' => true,
-                'name' => $tabNames['shipments'],
-                'parent_class_name' => 'AdminParentTab',
-            ],
-        ]; */
-
         parent::__construct();
 
         $this->displayName = $this->l('Rj Carrier');
@@ -249,7 +231,7 @@ class Rj_Carrier extends Module
      */
     public function uninstall()
     {
-        include(dirname(__FILE__).'/sql/uninstall.php');
+        // include(dirname(__FILE__).'/sql/uninstall.php');
         
         return parent::uninstall() && $this->uninstallTabs();
     }

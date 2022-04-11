@@ -177,11 +177,14 @@ abstract class TemplateLabel
 
         $this->pdf_class->SetFont('dejavusans', '', 11, '', true);
 
+        $id_order = $this->shipment['info_package']['id_order'];
         $cash_ondelivery = Common::convertAndFormatPrice($this->shipment['info_package']['cash_ondelivery']);
+        $quantity = $this->shipment['info_package']['quantity'];
+        $weight = Common::convertAndFormatNumber($this->shipment['info_package']['weight']) / $quantity;
 
-        $this->pdf_class->Cell(25, 0, $this->shipment['info_package']['id_order'], 0, 0, 'C', 1);
-        $this->pdf_class->Cell(20, 0, Common::convertAndFormatNumber($this->shipment['info_package']['weight']), 0, 0, 'C', 1);
-        $this->pdf_class->Cell(20, 0, $this->num_package .'/'. $this->shipment['info_package']['quantity'], 0, 0, 'C', 1);
+        $this->pdf_class->Cell(25, 0, $id_order, 0, 0, 'C', 1);
+        $this->pdf_class->Cell(20, 0, $weight, 0, 0, 'C', 1);
+        $this->pdf_class->Cell(20, 0, $this->num_package .'/'. $quantity, 0, 0, 'C', 1);
         $this->pdf_class->Cell(25, 0, $cash_ondelivery, 0, 0, 'C', 1);
 
         $this->pdf_class->Line(30, 92, 30, 103, $style2);

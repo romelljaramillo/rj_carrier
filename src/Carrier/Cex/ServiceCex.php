@@ -317,7 +317,7 @@ Class ServiceCex {
         ];
     }
 
-    /*protected function request($method, $url, $body = null)
+    protected function request($method, $url, $body = null)
     {
  
         $credenciales   = $this->getUserCredentials();
@@ -360,11 +360,11 @@ Class ServiceCex {
         } else {
             return false;
         }
-    }*/
+    }
 
     // para pruebas
 
-    protected function request($method, $url, $body = null)
+    /*protected function request($method, $url, $body = null)
     {
         $credenciales   = $this->getUserCredentials();
         $response = '{
@@ -395,6 +395,6 @@ Class ServiceCex {
         }';
 
         return json_decode($response);
-    }
+    }*/
 
 }
