@@ -22,8 +22,8 @@ namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Cex\ServiceCex;
-use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
+use Roanja\Module\RjCarrier\lib\Pdf\RjPDF;
 
 /**
  * Class CarrierCex.
@@ -49,7 +49,7 @@ class CarrierCex extends CarrierCompany
             [
                 'name' => 'RJ_CEX_PASS',
                 'require' => true,
-                'type' => 'string'
+                'type' => 'password'
             ],
             [
                 'name' => 'RJ_CEX_WSURL',
@@ -232,13 +232,13 @@ class CarrierCex extends CarrierCompany
                     ),
                     array(
                         'type' => 'text',
-                        'label' => $this->l('Usuario'),
+                        'label' => $this->l('User'),
                         'name' => 'RJ_CEX_USER',
                         'required' => true,
                     ),
                     array(
-                        'type' => 'text',
-                        'label' => $this->l('Contraseña'),
+                        'type' => 'password',
+                        'label' => $this->l('Password'),
                         'name' => 'RJ_CEX_PASS',
                         'required' => true,
                     ),

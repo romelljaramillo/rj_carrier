@@ -20,6 +20,7 @@
 
 namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
+use Roanja\Module\RjCarrier\lib\Common;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
@@ -43,7 +44,7 @@ Class ServiceCex {
     {
         return [
             'user'  => Configuration::get('RJ_CEX_USER', null, $this->id_shop_group, $this->id_shop),
-            'password' => Configuration::get('RJ_CEX_PASS', null, $this->id_shop_group, $this->id_shop)
+            'password' => Common::encrypt('decrypt',Configuration::get('RJ_CEX_PASS', null, $this->id_shop_group, $this->id_shop))
         ];
     }
 
@@ -297,7 +298,7 @@ Class ServiceCex {
     }
 
     /**
-     * Undocumented function
+     * Ejecuta el request
      *
      * @param array $body
      * @return obj
@@ -316,7 +317,7 @@ Class ServiceCex {
         ];
     }
 
-    public function request($method, $url, $body = null)
+    /*protected function request($method, $url, $body = null)
     {
  
         $credenciales   = $this->getUserCredentials();
@@ -359,12 +360,13 @@ Class ServiceCex {
         } else {
             return false;
         }
-    }
+    }*/
 
     // para pruebas
 
-    /* public function request($method, $url, $body = null)
+    protected function request($method, $url, $body = null)
     {
+        $credenciales   = $this->getUserCredentials();
         $response = '{
             "codigoRetorno": 0,
             "mensajeRetorno": "",
@@ -393,6 +395,6 @@ Class ServiceCex {
         }';
 
         return json_decode($response);
-    } */
+    }
 
 }

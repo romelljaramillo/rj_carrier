@@ -24,8 +24,9 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-namespace Roanja\Module\RjCarrier\Model\Pdf;
+namespace Roanja\Module\RjCarrier\lib\Pdf;
 
+use Roanja\Module\RjCarrier\lib\Common;
 use Roanja\Module\RjCarrier\Model\RjcarrierCompany;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 use Configuration;
@@ -154,7 +155,7 @@ abstract class TemplateLabel
         $this->pdf_class->SetFont('dejavusans', '', 10, '', true);
         $this->pdf_class->Cell(50, 0, $this->shipment['info_customer']['state'] . " - " . $this->shipment['info_customer']['country'], 0, 1, 'L');
     }
-
+    
     protected function zonePackage()
     {
         $this->pdf_class->setCellPaddings(1, 1, 1, 1);
@@ -176,10 +177,12 @@ abstract class TemplateLabel
 
         $this->pdf_class->SetFont('dejavusans', '', 11, '', true);
 
+        $cash_ondelivery = Common::convertAndFormatPrice($this->shipment['info_package']['cash_ondelivery']);
+
         $this->pdf_class->Cell(25, 0, $this->shipment['info_package']['id_order'], 0, 0, 'C', 1);
-        $this->pdf_class->Cell(20, 0, $this->shipment['info_package']['weight'], 0, 0, 'C', 1);
+        $this->pdf_class->Cell(20, 0, Common::convertAndFormatNumber($this->shipment['info_package']['weight']), 0, 0, 'C', 1);
         $this->pdf_class->Cell(20, 0, $this->num_package .'/'. $this->shipment['info_package']['quantity'], 0, 0, 'C', 1);
-        $this->pdf_class->Cell(25, 0, $this->shipment['info_package']['cash_ondelivery'], 0, 0, 'C', 1);
+        $this->pdf_class->Cell(25, 0, $cash_ondelivery, 0, 0, 'C', 1);
 
         $this->pdf_class->Line(30, 92, 30, 103, $style2);
         $this->pdf_class->Line(55, 92, 55, 103, $style2);

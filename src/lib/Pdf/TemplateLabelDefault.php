@@ -24,9 +24,9 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-namespace Roanja\Module\RjCarrier\Model\Pdf;
+namespace Roanja\Module\RjCarrier\lib\Pdf;
 
-use Roanja\Module\RjCarrier\Model\Pdf\TemplateLabel;
+use Roanja\Module\RjCarrier\lib\Pdf\TemplateLabel;
 
 class TemplateLabelDefault extends TemplateLabel
 {

@@ -432,11 +432,11 @@ class Rj_Carrier extends Module
         $rjcarrierShipment = new RjcarrierShipment((int)$id_shipment);
         
         if(!$rjcarrierShipment->delete()){
-            $this->errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
+            $this->_errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
             return false;
         }
             
-        $this->success[] = $this->l('Se ha eliminado el envío.');
+        $this->_success[] = $this->l('Se ha eliminado el envío.');
         return true;
     }
 
@@ -535,9 +535,10 @@ class Rj_Carrier extends Module
         $info_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
 
         if (Tools::isSubmit('submitDeleteShipment')) {
-            $this->deleteShipment(Tools::getValue('id_shipment'));
+            if($this->deleteShipment(Tools::getValue('id_shipment'))){
+                $info_shipment = [];
+            }
             $info_package = $this->getInfoPackage($id_order);
-            $info_shipment = [];
         } elseif ((Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) && empty($this->_warning)){
             
             if(Tools::getValue('id_reference_carrier') && $info_shipment['id_shipment']){
@@ -576,19 +577,18 @@ class Rj_Carrier extends Module
         ];
 
         if(!$info_shipment['id_shipment']){
-            if ((Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend')) && empty($this->_warning)){
-                $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
-                
-                $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
-
-                $info_shipment = $shipment['info_shipment'];
-
-                $this->selectShipment($shipment);
-            } else {
-                $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
-                    'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
-                    $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
-            }
+            if ((Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend'))){
+                if(empty($this->_warning)){
+                    $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
+                    $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
+                    $info_shipment = $shipment['info_shipment'];
+                    $this->selectShipment($shipment);
+                } else {
+                    $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
+                        'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
+                        $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
+                }
+            } 
         }
         
         if($info_shipment['id_shipment']){
@@ -672,7 +672,7 @@ class Rj_Carrier extends Module
         
         $validate = $infoshop->validateFields(false, true);
         if($validate !== true){
-            $this->errors[] = $this->getTranslator()->trans('Required fields missing ' , [], 'Modules.Rj_Carrier.Admin') . $validate;
+            $this->_errors[] = $this->getTranslator()->trans('Required fields missing ' , [], 'Modules.Rj_Carrier.Admin') . $validate;
             return false;
         }
 

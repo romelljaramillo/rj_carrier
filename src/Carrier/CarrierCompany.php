@@ -20,14 +20,14 @@
 
 namespace Roanja\Module\RjCarrier\Carrier;
 
-use Ramsey\Uuid\Uuid;
+use Roanja\Module\RjCarrier\lib\Common;
 
 use Roanja\Module\RjCarrier\Model\RjcarrierCompany;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
-use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
+use Roanja\Module\RjCarrier\lib\Pdf\RjPDF;
 
 use Configuration;
 use Db;
@@ -217,18 +217,32 @@ class CarrierCompany extends Module
                 }
                 
                 foreach ($this->fields_config as $field) {
-                    $res &=  Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id, $shop_id);
+                    if($field['type'] === 'password') {
+                        if(Tools::getValue($field['name']))
+                            $res &=  Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id, $shop_id);
+                    } else {
+                        $res &=  Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id, $shop_id);
+                    }
                 }
             }
     
             switch ($shop_context) {
                 case Shop::CONTEXT_ALL:
                     foreach ($this->fields_config as $field) {
-                        $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
+                        if($field['type'] === 'password') {
+                            if(Tools::getValue($field['name']))
+                                $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])));
+                        } else {
+                            $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
+                        }
                     }
                     
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
+                            if($field['type'] === 'password') {
+                                if(Tools::getValue($field['name']))
+                                    $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id);
+                            }
                             foreach ($this->fields_config as $field) {
                                 $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
                             }
@@ -239,7 +253,12 @@ class CarrierCompany extends Module
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             foreach ($this->fields_config as $field) {
-                                $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
+                                if($field['type'] === 'password') {
+                                    if(Tools::getValue($field['name']))
+                                        $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id);
+                                } else {
+                                    $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
+                                }
                             }
                         }
                     }
@@ -548,7 +567,11 @@ class CarrierCompany extends Module
         $arry_fields = [];
 
         foreach ($this->fields_config as $field) {
-            $arry_fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
+            if($field['type'] === 'password'){
+                $arry_fields[$field['name']] = Tools::getValue($field['name'], Common::encrypt('decrypt',Configuration::get($field['name'], null, $id_shop_group, $id_shop)));
+            }  else {
+                $arry_fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
+            }
         }
 
         return $arry_fields;
@@ -582,7 +605,7 @@ class CarrierCompany extends Module
 
     public function saveLabels($id_shipment, $pdf, $num_package = 1)
     {
-        $uuid = self::getUUID();
+        $uuid = Common::getUUID();
 
         $rj_carrier_label = new RjcarrierLabel();
         $rj_carrier_label->id_shipment = $id_shipment;
@@ -670,7 +693,7 @@ class CarrierCompany extends Module
 
         $rj_carrier_shipment->id_order = (int)$id_order;
         $rj_carrier_shipment->reference_order = $order->reference;
-        $rj_carrier_shipment->num_shipment = self::getUUID();
+        $rj_carrier_shipment->num_shipment = Common::getUUID();
         $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
         $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
         $rj_carrier_shipment->product = $info_shipment['name_carrier'];
@@ -740,12 +763,6 @@ class CarrierCompany extends Module
         INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
         WHERE mc.`id_shop` = ' . $id_shop . '
         GROUP BY m.`id_module`');
-    }
-
-    public static function getUUID()
-    {
-        $uuid = Uuid::uuid4();
-        return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
     }
 
     public function getPosicionLabel($posicionLabel)

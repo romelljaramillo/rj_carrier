@@ -26,10 +26,10 @@
 /**
  * @since 1.5
  */
-namespace Roanja\Module\RjCarrier\Model\Pdf;
+namespace Roanja\Module\RjCarrier\lib\Pdf;
 
-use Roanja\Module\RjCarrier\Model\Pdf\TemplateLabel;
-use Roanja\Module\RjCarrier\Model\Pdf\RjPDFGenerator;
+use Roanja\Module\RjCarrier\lib\Pdf\TemplateLabel;
+use Roanja\Module\RjCarrier\lib\Pdf\RjPDFGenerator;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 class RjPDF extends \Module
@@ -73,7 +73,6 @@ class RjPDF extends \Module
      */
     public function render($display)
     {
-
         $this->pdf_renderer->setFontForLang(\Context::getContext()->language->iso_code);
         $this->pdf_renderer->startPageGroup();
 
@@ -82,13 +81,6 @@ class RjPDF extends \Module
         if (empty($this->filename)) {
             $this->filename = $template->getFilename();
         }
-
-        // $this->pdf_renderer->SetPrintHeader(true);
-        // $this->pdf_renderer->SetPrintFooter(true);
-
-        // $template->getHeader();
-        // $template->getFooter();
-        // set header and footer fonts
 
         $this->pdf_renderer->SetHeaderMargin(5);
         $this->pdf_renderer->SetFooterMargin(5);
@@ -119,11 +111,9 @@ class RjPDF extends \Module
     public function getTemplateObject()
     {
         $class = false;
-        $class_name = 'Roanja\Module\RjCarrier\Model\Pdf\TemplateLabel' . $this->template;
+        $class_name = 'Roanja\Module\RjCarrier\lib\Pdf\TemplateLabel' . $this->template;
 
         if (class_exists($class_name)) {
-            // Some HTMLTemplateXYZ implementations won't use the third param but this is not a problem (no warning in PHP),
-            // the third param is then ignored if not added to the method signature.
             $class = new $class_name($this->shipment, $this->pdf_renderer, $this->num_package);
 
             if (!($class instanceof TemplateLabel)) {

@@ -126,6 +126,7 @@ function upgrade_module_2_0_0($module)
 
     // upgrade rj_carrier_label
     Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_label` CHANGE COLUMN `labelid` `package_id` VARCHAR(100) NOT NULL AFTER `id_shipment`');
+    Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_label` CHANGE COLUMN `pdf` `pdf` MEDIUMBLOB NULL DEFAULT NULL AFTER `label_type`');
     Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_label` DROP COLUMN `parcel_type`');
     Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_label` DROP COLUMN `piece_number`');
     Db::getInstance()->execute('ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_label` DROP COLUMN `routing_code`');

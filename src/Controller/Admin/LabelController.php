@@ -28,7 +28,8 @@ namespace Roanja\Module\RjCarrier\Controller\Admin;
 
 // use Roanja\Module\RjCarrier\Model\Pdf\RjPDF;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
-use iio\libmergepdf\Merger;
+use Roanja\Module\RjCarrier\lib\Common;
+// use iio\libmergepdf\Merger;
 
 use Tools;
 
@@ -110,12 +111,12 @@ class LabelController extends \ModuleAdminController
             $i++;
         }
 
-        $mergePDF = self::mergePDF($pdfs);
+        $merge_pdf = Common::mergePdf($pdfs);
 
         header('Content-Type: application/pdf; charset=utf-8');
         header('Cache-Control: no-store, no-cache');
         
-        echo $mergePDF;
+        echo $merge_pdf;
 
         foreach ($pdfs as $pdf) {
             unlink($pdf);
@@ -132,7 +133,7 @@ class LabelController extends \ModuleAdminController
             array_push($pdfs,_PS_MODULE_DIR_.'rj_carrier/labels/etiqueta'.$i.'.pdf');
             $i++;
         }
-        $fichero = self::mergePDF($pdfs);
+        $fichero = Common::mergePdf($pdfs);
         foreach ($pdfs as $pdf) {
             unlink($pdf);
         }
@@ -156,12 +157,12 @@ class LabelController extends \ModuleAdminController
 
     }
 
-    public function mergePDF($arrayPDF)
+    /* public function mergePDF($arrayPDF)
     {
         $merger = new Merger;
         $merger->addIterator($arrayPDF);
         return  $merger->merge();
-    }
+    } */
 
     public function checkCacheFolder()
     {

@@ -24,12 +24,8 @@
  *  International Registered Trademark & Property of PrestaShop SA
  */
 
-namespace Roanja\Module\RjCarrier\Model\Pdf;
+namespace Roanja\Module\RjCarrier\lib\Pdf;
 
-use iio\libmergepdf\Merger;
-/**
- * @since 1.5
- */
 class RjPDFGenerator extends \TCPDF
 {
     const DEFAULT_FONT = 'helvetica';
@@ -150,10 +146,6 @@ class RjPDFGenerator extends \TCPDF
         }else {
             $this->font = 'dejavusans';
         }
-
-        // $this->setHeaderFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
-        // $this->setFooterFont(array($this->font, '', PDF_FONT_SIZE_MAIN, '', false));
-
         $this->setFont($this->font, '', PDF_FONT_SIZE_MAIN, '', false);
     }
 
@@ -265,11 +257,4 @@ class RjPDFGenerator extends \TCPDF
         return $seed;
     }
 
-    public function mergePDF($arrayPDF)
-    {
-        $merger = new Merger;
-        $merger->addIterator($arrayPDF);
-        $createdPdf = $merger->merge();
-        return $createdPdf;
-    }
 }
