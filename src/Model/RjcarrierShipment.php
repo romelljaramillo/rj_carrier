@@ -128,7 +128,7 @@ class RjcarrierShipment extends \ObjectModel
         return \Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
     }
 
-    public function delete()
+    /* public function delete()
 	{
         $this->delete = true;
         $order = new \Order($this->id_order);
@@ -138,5 +138,5 @@ class RjcarrierShipment extends \ObjectModel
         if(!$this->update())
             return false;
         return true;
-	}
+	} */
 }
