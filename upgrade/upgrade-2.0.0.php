@@ -157,14 +157,3 @@ function upgrade_module_2_0_0($module)
 
     return true;
 }
-
-function uninstallTab($tabName = '')
-    {
-        //$tab_class = Tools::ucfirst($this->name) . Tools::ucfirst($class_sfx);
-        $id_tab    = Tab::getIdFromClassName($tabName);
-        if ($id_tab != 0) {
-            $tab = new Tab($id_tab);
-            $tab->delete();
-            return true;
-        }
-    }

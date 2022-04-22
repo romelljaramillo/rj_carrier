@@ -90,10 +90,10 @@
         </div>
     </div>
     <div class="panel-footer">
-        <button type="submit" id="formPackageCarrier" class="btn btn-primary pull-right" name="submitFormPackCarrier">
+        <button type="submit" id="formPackageCarrier" class="btn btn-primary" name="submitFormPackCarrier">
             {l s='Save'}
         </button>
-        <button type="submit" id="savePackSend" class="btn btn-primary pull-right" name="submitSavePackSend">
+        <button type="submit" id="savePackSend" class="btn btn-primary" name="submitSavePackSend">
             {l s='Save and generate' mod='rj_carrier'}
         </button>
     </div>

@@ -237,7 +237,7 @@ class CarrierCex extends CarrierCompany
                         'required' => true,
                     ),
                     array(
-                        'type' => 'text',
+                        'type' => 'password',
                         'label' => $this->l('Password'),
                         'name' => 'RJ_CEX_PASS',
                         'required' => true,
