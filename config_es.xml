@@ -2,7 +2,7 @@
 <module>
     <name>rj_carrier</name>
     <displayName><![CDATA[Rj Carrier]]></displayName>
-    <version><![CDATA[2.0.0]]></version>
+    <version><![CDATA[2.0.1]]></version>
     <description><![CDATA[Servicio multi-carrier econ&oacute;mico]]></description>
     <author><![CDATA[Roanja]]></author>
     <tab><![CDATA[administration]]></tab>

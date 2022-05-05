@@ -99,9 +99,9 @@ class RjcarrierLabel extends \ObjectModel
 		WHERE l.`id_shipment` = ' . (int)$id_shipment .' 
         GROUP BY l.`print`';
         
-        $res = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
-        if(count($res) == 1 ){
-            return ($res[0]['print'] == 1);
+        $res =  Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
+        if(isset($res['print'])){
+            return $res['print'];
         }
         return false;
     }

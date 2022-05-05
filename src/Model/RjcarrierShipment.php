@@ -80,10 +80,6 @@ class RjcarrierShipment extends \ObjectModel
 		WHERE cs.`id_order` = ' . (int) $id_order . ' 
         AND cs.`delete` = 0' );
 
-        if($res['name_carrier']  == '0'){
-            $res['name_carrier'] = \Carrier::getCarrierNameFromShopName();
-        }
-
         return $res;
     }
 
@@ -94,6 +90,18 @@ class RjcarrierShipment extends \ObjectModel
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_shipment` c
 		WHERE c.`id_order` = ' . (int) $id_order . ' AND c.`delete` = 0');
     }
+
+    public static function shipmentExistsByIdInfopackage($id_infopackage)
+    {
+		$req = 'SELECT c.id_shipment
+		FROM `' . _DB_PREFIX_ . 'rj_carrier_shipment` c
+		WHERE c.`id_infopackage` = ' . (int) $id_infopackage . ' AND c.`delete` = 0';
+
+        $row = Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($req);
+
+        return ($row['id_shipment']);
+    }
+
 
     public static function getIdByIdOrder($id_order)
     {
@@ -128,15 +136,15 @@ class RjcarrierShipment extends \ObjectModel
         return \Tools::displayPrice($rjcarrierInfoPackage->cash_ondelivery);
     }
 
-    /* public function delete()
+    public function delete()
 	{
         $this->delete = true;
-        $order = new \Order($this->id_order);
-        if($order->valid){
-            return false;
-        }
+        // $order = new \Order($this->id_order);
+        // if($order->valid){
+        //     return false;
+        // }
         if(!$this->update())
             return false;
         return true;
-	} */
+	}
 }

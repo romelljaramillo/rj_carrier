@@ -167,11 +167,11 @@ Class ServiceDhl {
                 "key"   => "COD_CASH",
                 "input" => $info_package['cash_ondelivery']
             ];
-        } else {
+        } /* else {
             $typeDelivery = [
                 "key"   => "DOOR"
             ];
-        }
+        } */
 
         $options = [
             "key"   => "REFERENCE",
@@ -180,7 +180,7 @@ Class ServiceDhl {
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
         
-        $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
+        // $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
         
         $data = [
             "shipmentId" => $num_shipment,
@@ -190,7 +190,7 @@ Class ServiceDhl {
             "accountId" => $accountId,
             "options" => [$typeDelivery, $options],
             "returnLabel" => false,
-            'product' => $type_shipment->id_bc,
+            // 'product' => $type_shipment->id_bc,
             "pieces" => $pieces
         ];
 
@@ -279,19 +279,20 @@ Class ServiceDhl {
                 "additionalAddressLine"=> $info['additionaladdress'],
                 "number"=> $info['number'],
                 "isBusiness"=> ($info['company'])?true:false,
-                "addition"=> $info['addition']
+                "addition"=> ''
             ],
             "email"=> $info['email'],
             "phoneNumber"=> $info['phone'],
             "vatNumber"=> $info['vatnumber'],
-            "eoriNumber"=> $info['eorinumber']
+            "eoriNumber"=> ''
         ];
     }
 
     private function headerRequest()
     {
         if(!$this->accessToken){
-            $this->accessToken = $_COOKIE['accessToken'];
+            if(isset($_COOKIE['accessToken']))
+                $this->accessToken = $_COOKIE['accessToken'];
         }
 
         return array(

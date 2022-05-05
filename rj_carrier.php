@@ -119,6 +119,13 @@ class Rj_Carrier extends Module
             'name' => 'AdminAjaxRjCarrier',
             'visible' => true,
             'class_name' => 'AdminAjaxRjCarrier'
+        ],
+        'AdminRjShipmentGenerate' => [
+            'name' => 'Generate Shipment',
+            'visible' => true,
+            'class_name' => 'AdminRjShipmentGenerate',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'assessment'
         ]
     ];
 
@@ -135,24 +142,18 @@ class Rj_Carrier extends Module
     {
         $this->name = 'rj_carrier';
         $this->tab = 'administration';
-        $this->version = '2.0.0';
+        $this->version = '2.0.1';
         $this->author = 'Roanja';
         $this->need_instance = 0;
         $this->bootstrap = true;
 
-        $tabNames = [];
-        foreach (Language::getLanguages(true) as $lang) {
-            $tabNames['configuration'][$lang['locale']] = $this->trans('Configuration', [], 'Modules.RjCarrier.Admin', $lang['locale']);
-            $tabNames['shipments'][$lang['locale']] = $this->trans('Shipments', [], 'Modules.RjCarrier.Admin', $lang['locale']);
-        }
-        
         parent::__construct();
 
         $this->displayName = $this->l('Rj Carrier');
         $this->description = $this->l('Service multi-carrier economic');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall the module?');
 
-        $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
+        $this->ps_versions_compliancy = ['min' => '1.7', 'max' => _PS_VERSION_];
     }
 
     public function install()
@@ -381,6 +382,12 @@ class Rj_Carrier extends Module
         return $info_customer;
     }
 
+    /**
+     * Obtiene la información de los paquetes
+     *
+     * @param int $id_order
+     * @return array $rj_carrier_infopackage
+     */
     public function getInfoPackage($id_order)
     {
         $this->context = Context::getContext();
@@ -393,10 +400,10 @@ class Rj_Carrier extends Module
         if(!isset($rj_carrier_infopackage['cash_ondelivery'])){
             $module_contrareembolso = Configuration::get('RJ_MODULE_CONTRAREEMBOLSO', null, $id_shop_group, $id_shop);
             
-            $data_orden = $this->order->getFields();
+            $order = new Order($id_order);
 
-            if($module_contrareembolso == $data_orden["module"]){
-                $rj_carrier_infopackage['cash_ondelivery'] = $data_orden['total_paid_tax_incl'];
+            if($module_contrareembolso == $order->module){
+                $rj_carrier_infopackage['cash_ondelivery'] = $order->total_paid_tax_incl;
             }
         }
 
@@ -446,6 +453,12 @@ class Rj_Carrier extends Module
         return false;
     }
 
+    /**
+     * Obtiene el id_reference
+     *
+     * @param int $id_order
+     * @return int id_reference
+     */
     public function getIdReferenceCarrierByIdOrder($id_order)
     {
         $id_lang = Context::getContext()->language->id;
@@ -491,7 +504,7 @@ class Rj_Carrier extends Module
         $info_shop = RjcarrierInfoshop::getShopData();
         foreach ($info_shop as $key => $value) {
             if($fields[$key]['required'] && !$value){
-                $this->_warning[] = $this->getTranslator()->trans('Required data module configuration Info shop!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $this->_warning[] = $this->l('Required data module configuration Info shop!. ') . 
                 $key;
             }
         }
@@ -499,10 +512,71 @@ class Rj_Carrier extends Module
         if($this->_warning){
             $this->_warning[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
                 'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
-                $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
+                $this->l('Go to configuration!. ').'</a>';
         }
     }
 
+    /**
+     * Generael envío y las etiquetas del mismo
+     *
+     * @param int $id_infopackage
+     * @return void
+     */
+    public function generateLabel($id_infopackage)
+    {
+        if(!$id_infopackage){
+            return;
+        }
+
+        $rjcarrier_infoPackage = new RjcarrierInfoPackage((int)$id_infopackage);
+        $info_package = $rjcarrier_infoPackage->getFields();
+        
+        $id_order = $info_package['id_order'];
+        
+        $id_lang = Context::getContext()->language->id;
+        
+        $info_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
+
+        if($info_shipment){
+            return;
+        }
+
+        if(!$info_package['id_reference_carrier']){
+            $info_package['id_reference_carrier'] = $this->getIdReferenceCarrierByIdOrder($id_order);
+        }
+
+        $carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
+
+        $name_carrier = '';
+        if($carrier->name){
+            $name_carrier = $carrier->name;
+        }
+
+        $info_company_carrier = CarrierCompany::getInfoCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
+        $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdCarrierCompany($info_company_carrier['id_carrier_company']);
+
+        $shipment = [
+            'id_order' => $id_order,
+            'info_package' => $info_package,
+            'info_customer' => $this->getInfoCustomer($id_order),
+            'info_shop' => RjcarrierInfoshop::getShopData(),
+            'name_carrier' => $name_carrier,
+            'info_company_carrier' => $info_company_carrier,
+            'info_type_shipment' => $info_type_shipment,
+            'config_extra_info' => $this->getConfigExtraFieldsValues()
+        ];
+
+        $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
+
+        $this->selectShipment($shipment);
+    }
+
+    /**
+     * Vista del modulo en admin order
+     *
+     * @param [type] $params
+     * @return void
+     */
     public function hookDisplayAdminOrder($params)
     {
         $id_lang = Context::getContext()->language->id;
@@ -511,8 +585,6 @@ class Rj_Carrier extends Module
         $info_company_carrier = [];
 
         $this->validationConfigurationCarrier();
-
-        $this->order = new Order($id_order);
 
         $info_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
 
@@ -568,7 +640,7 @@ class Rj_Carrier extends Module
                 } else {
                     $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
                         'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
-                        $this->getTranslator()->trans('Go to configuration!. ', [], 'Modules.Rj_Carrier.Admin').'</a>';
+                        $this->l('Go to configuration!. ').'</a>';
                 }
             } 
         }
@@ -629,7 +701,7 @@ class Rj_Carrier extends Module
         if (Tools::getValue('id_infoshop')) {
             $infoshop = new RjcarrierInfoshop((int)Tools::getValue('id_infoshop'));
             if (!Validate::isLoadedObject($infoshop)) {
-                $this->_html .= $this->displayError($this->getTranslator()->trans('Invalid infoshop ID', array(), 'Modules.Rj_Carrier.Admin'));
+                $this->_html .= $this->displayError($this->l('Invalid infoshop ID'));
                 return false;
             }
         } else {
@@ -654,7 +726,7 @@ class Rj_Carrier extends Module
         
         $validate = $infoshop->validateFields(false, true);
         if($validate !== true){
-            $this->_errors[] = $this->getTranslator()->trans('Required fields missing ' , [], 'Modules.Rj_Carrier.Admin') . $validate;
+            $this->_errors[] = $this->l('Required fields missing ') . $validate;
             return false;
         }
 
@@ -676,7 +748,7 @@ class Rj_Carrier extends Module
         $res = true;
         $shop_context = Shop::getContext();
 
-        $shop_groups_list = array();
+        $shop_groups_list = [];
         $shops = Shop::getContextListShopID();
 
         foreach ($shops as $shop_id) {
@@ -730,114 +802,114 @@ class Rj_Carrier extends Module
         $countries = Country::getCountries((int) $this->context->language->id);
         foreach ($countries as $country) {
             // $this->statuses_array[$status['id_order_state']] = $status['name'];
-            $countries_array[] =  array(
+            $countries_array[] =  [
                 'id' => $country['id_country'],
                 'name' => $country['name']
-            );
+            ];
         }
         
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
+        $fields_form = [
+            'form' => [
+                'legend' => [
                     'title' => $this->l('Information company'),
                     'icon' => 'icon-cogs'
-                ),
-                'input' => array(
-                    array(
+                ],
+                'input' => [
+                    [
                         'type' => 'text',
                         'label' => $this->l('Firstname'),
                         'name' => 'firstname',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Lastname'),
                         'name' => 'lastname',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Company'),
                         'name' => 'company',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Additional name'),
                         'name' => 'additionalname',
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Email'),
                         'name' => 'email',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Phone'),
                         'name' => 'phone',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('VAT Number'),
                         'name' => 'vatnumber',
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Street'),
                         'name' => 'street',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Number'),
                         'name' => 'number',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Postcode'),
                         'name' => 'postcode',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('City'),
                         'name' => 'city',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('State'),
                         'name' => 'state',
                         'required' => true,
-                    ),
-                    array(
+                    ],
+                    [
                         'type' => 'select',
                         'label' => $this->l('Select Country'),
                         'name' => 'id_country',
                         'required' => true,
-                        'options' => array(
+                        'options' => [
                             'query' => $countries_array,
                             'id' => 'id',
                             'name' => 'name'
-                        )
-                    ),
-                    array(
+                        ]
+                    ],
+                    [
                         'type' => 'text',
                         'label' => $this->l('Additional address'),
                         'name' => 'additionaladdress',
-                    )
-                ),
-                'submit' => array(
+                    ]
+                ],
+                'submit' => [
                     'title' => $this->l('Save'),
-                )
-            ),
-        );
+                ]
+            ],
+        ];
 
         if ($id_infoshop = RjcarrierInfoshop::getInfoShopID()) {
-            $fields_form['form']['input'][] = array('type' => 'hidden', 'name' => 'id_infoshop');
+            $fields_form['form']['input'][] = ['type' => 'hidden', 'name' => 'id_infoshop'];
         }
 
         $helper = new HelperForm();
@@ -846,19 +918,19 @@ class Rj_Carrier extends Module
 		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
 		$helper->default_form_language = $lang->id;
 		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-		$this->fields_form = array();
+		$this->fields_form = [];
         $helper->module = $this;
 		$helper->identifier = $this->identifier;
 		$helper->submit_action = 'submitConfigInfoShop';
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = array(
+		$helper->tpl_vars = [
 			'fields_value' => RjcarrierInfoshop::getShopData(),
 			'languages' => $this->context->controller->getLanguages(),
 			'id_language' => $this->context->language->id
-		);
+        ];
 
-		return $helper->generateForm(array($fields_form));
+		return $helper->generateForm([$fields_form]);
     }
 
     /**
@@ -868,18 +940,18 @@ class Rj_Carrier extends Module
      */
     public function renderFormConfigInfoExtra()
     {
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
+        $fields_form = [
+            'form' => [
+                'legend' => [
                     'title' => $this->l('Configuration extra information'),
                     'icon' => 'icon-cogs'
-                ),
+                ],
                 'input' => $this->fields_form_config_info_extra,
-                'submit' => array(
+                'submit' => [
                     'title' => $this->l('Save'),
-                )
-            ),
-        );
+                ]
+            ],
+        ];
 
         $helper = new HelperForm();
 		$helper->show_toolbar = false;
@@ -891,15 +963,15 @@ class Rj_Carrier extends Module
 		$helper->submit_action = 'submitConfigExtraInfo';
 		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
 		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = array(
+		$helper->tpl_vars = [
 			'fields_value' => $this->getConfigExtraFieldsValues(),
 			'languages' => $this->context->controller->getLanguages(),
 			'id_language' => $this->context->language->id
-		);
+        ];
 
         $helper->override_folder = '/';
 
-		return $helper->generateForm(array($fields_form));
+		return $helper->generateForm([$fields_form]);
     }
 
     /**

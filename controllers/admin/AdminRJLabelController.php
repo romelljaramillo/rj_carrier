@@ -33,17 +33,6 @@ use Roanja\Module\RjCarrier\lib\Common;
 
 class AdminRjLabelController extends ModuleAdminController
 {
-    const NAME_ETIQUETA = "ETIQUETA_TRANS";
-    
-    public function postProcess()
-    {
-        $action = Tools::getValue('submitAction');
-        parent::postProcess();
-
-        // We want to be sure that displaying PDF is the last thing this controller will do
-        exit;
-    }
-
     public function initProcess()
     {
         parent::initProcess();
@@ -99,7 +88,7 @@ class AdminRjLabelController extends ModuleAdminController
 
     public static function printLabelsShipment($id_shipment)
     {
-        $labels = RjcarrierLabel::getPDFsByIdShipment($id_shipment);
+        $labels = RjcarrierLabel::getPDFsByIdShipment((int)$id_shipment);
         $i=0;
         $pdfs=[];
         foreach ($labels as $label) {

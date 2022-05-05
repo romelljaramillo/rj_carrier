@@ -78,17 +78,6 @@
                 {include file='./label-defauld.tpl'}
                 {/block}
             </div>
-            <div class="card-footer">
-                <div class="row">
-                    <div class="col-md-6">
-                        {if $info_package.print} 
-                        <i class="material-icons text-success" data-toggle="pstooltip" data-placement="top" data-original-title="{l s='printed' mod='rj_carrier'}">print</i> 
-                        {else} 
-                        <i class="material-icons text-muted" data-toggle="pstooltip" data-placement="top" data-original-title="{l s='not printed' mod='rj_carrier'}">print_disabled</i> 
-                        {/if}
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

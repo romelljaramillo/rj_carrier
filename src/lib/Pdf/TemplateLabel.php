@@ -102,9 +102,10 @@ abstract class TemplateLabel
         $this->pdf_class->SetFillColor(255, 255, 255);
         $this->pdf_class->setY(5+($this->incH*$this->cb)+($this->offset*$this->cb));
         $this->pdf_class->MultiCell(25, 0, $this->l('Trasnporte'), 0, 'L', 1, 0, '', '', true);
-        $this->pdf_class->SetFont('dejavusans', '', 15, '', true);
+        $this->pdf_class->SetFont('dejavusans', '', 14, '', true);
         $this->pdf_class->MultiCell(70, 0, $this->shipment['name_carrier'], 0, 'R', 0, 1, '', '', true);
-        $this->pdf_class->Line(5, 15+($this->incH*$this->cb)+($this->offset*$this->cb), 105, 15+($this->incH*$this->cb)+($this->offset*$this->cb));
+        // $this->pdf_class->Line(5, 15+($this->incH*$this->cb)+($this->offset*$this->cb), 105, 15+($this->incH*$this->cb)+($this->offset*$this->cb));
+        $this->pdf_class->Line(5, 15, 105, 15);
         $this->pdf_class->ln(4);
     }
 
@@ -112,7 +113,7 @@ abstract class TemplateLabel
     {
         $this->pdf_class->SetFont('dejavusans', '', 9, '', true);
         $this->pdf_class->setY(15);
-        $this->pdf_class->MultiCell(20, 0, $this->l('From').':', 0, 'L', 1, 0, '', '', true);
+        $this->pdf_class->MultiCell(10, 0, $this->l('From').':', 0, 'L', 1, 0, '', '', true);
 
         $data_shipper = $this->shipment['info_shop']['company'] . "\n" .
                         $this->shipment['info_shop']['lastname'] . " " . $this->shipment['info_shop']['firstname'] . "\n" .
@@ -143,14 +144,14 @@ abstract class TemplateLabel
         $this->shipment['info_customer']['lastname'] . " " . $this->shipment['info_customer']['firstname'] . "\n" .
         $this->l('Tel.') . ": " . $this->shipment['info_customer']['phone'] . " - " . $this->shipment['info_customer']['phone_mobile'];
 
-        $this->pdf_class->MultiCell(85, 0, $data_shipper, 0, 'L', 0, 1, '', '', true);
+        $this->pdf_class->MultiCell(80, 0, $data_shipper, 0, 'L', 0, 1, '', '', true);
 
         $this->pdf_class->setCellPaddings(0, 0, 0, 0);
         $this->pdf_class->setCellMargins(14, 0, 0, 0);
 
         $this->pdf_class->SetFont('dejavusans', '', 10, '', true);
         $this->pdf_class->Cell(50, 0, $this->shipment['info_customer']['address1'], 0, 1, 'L');
-        $this->pdf_class->SetFont('dejavusans', '', 20, '', true);
+        $this->pdf_class->SetFont('dejavusans', '', 14, '', true);
         $this->pdf_class->Cell(50, 0, $this->shipment['info_customer']['postcode'] . " - " . $this->shipment['info_customer']['city'], 0, 1, 'L');
         $this->pdf_class->SetFont('dejavusans', '', 10, '', true);
         $this->pdf_class->Cell(50, 0, $this->shipment['info_customer']['state'] . " - " . $this->shipment['info_customer']['country'], 0, 1, 'L');

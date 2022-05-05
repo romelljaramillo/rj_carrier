@@ -3,7 +3,7 @@
     method="post" class="form-horizontal">
     <input type="hidden" name="id_infopackage" value="{$info_package.id_infopackage}">
     <input type="hidden" name="info_company_carrier" value="{$info_company_carrier.id_carrier_company}">
-    <button type="submit" id="btnShipment" class="btn btn-success pull-right"
+    <button type="submit" id="btnShipment" class="btn btn-success"
         name="submitShipment">
         <i class="material-icons">local_shipping</i>
         {l s='Create shipment' mod='rj_carrier'} - {$info_company_carrier.shortname}
