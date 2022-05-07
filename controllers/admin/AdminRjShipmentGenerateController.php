@@ -251,8 +251,7 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
                         OR (b.delete=1 AND b.id_infopackage NOT IN (
                             SELECT d.id_infopackage                  
                             FROM ps_rj_carrier_shipment d            
-                            WHERE d.id_infopackage = a.id_infopackage
-                            AND d.`delete` = 0)
+                            WHERE d.`delete` = 0)
                         )                     
                         OR b.`delete` = 0";
         $this->_group = " GROUP BY a.id_infopackage, a.id_order";
