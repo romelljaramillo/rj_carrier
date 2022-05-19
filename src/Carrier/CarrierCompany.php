@@ -612,7 +612,10 @@ class CarrierCompany extends Module
         $rj_carrier_label->package_id = $uuid;
         $rj_carrier_label->label_type = $this->label_type;
         $rj_carrier_label->tracker_code = 'TC' .$uuid . '-' . $num_package;
-        $rj_carrier_label->pdf = base64_encode($pdf);
+        
+        if(Common::createFileLabel($pdf, $uuid)){
+            $rj_carrier_label->pdf = $uuid;
+        }
 
         if (!$rj_carrier_label->add())
             return false;
@@ -792,5 +795,4 @@ class CarrierCompany extends Module
         }
         return false;
     }
-
 }

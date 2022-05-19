@@ -23,6 +23,7 @@ namespace Roanja\Module\RjCarrier\Carrier\Dhl;
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Dhl\ServiceDhl;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
+use Roanja\Module\RjCarrier\lib\Common;
 
 /**
  * Class CarrierDhl.
@@ -201,7 +202,12 @@ class CarrierDhl extends CarrierCompany
             $rj_carrier_label->package_id = $label_service->labelId;
             $rj_carrier_label->tracker_code = $label_service->trackerCode;
             $rj_carrier_label->label_type = $label_service->labelType;
-            $rj_carrier_label->pdf = $label_service->pdf;
+            
+            $pdf = base64_decode($label_service->pdf);
+
+            if(Common::createFileLabel($pdf, $label_service->labelId)){
+                $rj_carrier_label->pdf = $label_service->labelId;
+            }
             
             if (!$rj_carrier_label->add())
                 return false;

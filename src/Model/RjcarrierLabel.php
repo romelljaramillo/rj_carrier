@@ -79,7 +79,7 @@ class RjcarrierLabel extends \ObjectModel
     public static function getPDFsByIdShipment($id_shipment)
     {
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
-		SELECT l.id_label as id, l.pdf
+		SELECT l.id_label, l.package_id, l.pdf
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_label` l
 		WHERE l.`id_shipment` = ' . (int)$id_shipment);
     }

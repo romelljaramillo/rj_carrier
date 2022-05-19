@@ -181,7 +181,8 @@ abstract class TemplateLabel
         $id_order = $this->shipment['info_package']['id_order'];
         $cash_ondelivery = Common::convertAndFormatPrice($this->shipment['info_package']['cash_ondelivery']);
         $quantity = $this->shipment['info_package']['quantity'];
-        $weight = Common::convertAndFormatNumber($this->shipment['info_package']['weight']) / $quantity;
+        $weight =  $this->shipment['info_package']['weight'] / $quantity;
+        $weight = Common::convertAndFormatNumber($weight);
 
         $this->pdf_class->Cell(25, 0, $id_order, 0, 0, 'C', 1);
         $this->pdf_class->Cell(20, 0, $weight, 0, 0, 'C', 1);

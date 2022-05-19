@@ -87,4 +87,16 @@ class Common {
         $createdPdf = $merger->merge();
         return $createdPdf;
     }
+
+    public static function createFileLabel($pdf, $package_id)
+    {
+        file_put_contents(_PS_MODULE_DIR_.'rj_carrier/labels/'. $package_id .'.pdf', $pdf);
+        return true;
+    }
+
+    public static function getFileLabel($package_id)
+    {
+        $file = _PS_MODULE_DIR_.'rj_carrier/labels/' . $package_id . '.pdf';
+        return $file;
+    }
 }

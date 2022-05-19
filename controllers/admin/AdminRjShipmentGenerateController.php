@@ -124,6 +124,8 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
                 $this->content .= '<div class="col-md-4">';
                 $this->content .= $this->renderOrderResumen($this->id_order_pack, $this->id_infopackage);
                 $this->content .= '</div></div>';
+            } elseif($this->display == 'viewunproduced') {
+                $this->content .= $this->renderUnproducedLabel();
             } else {
                 $this->content .= $this->renderList();
             }
@@ -182,12 +184,29 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
         return $tpl->fetch();       
     }
 
+    public function renderUnproducedLabel()
+    {
+        $tpl = $this->createTemplate('unproduced-label.tpl');
+        $tpl->assign([
+            'link' => $this->context->link,
+            'id_order' => Tools::getValue('id_order'),
+        ]);
+
+        return  $tpl->fetch(); 
+    }
+
     public function postProcess()
     {
         if (Tools::isSubmit('update' . $this->table)) {
             if(Tools::getValue('id_order')){
+                $rjcarrier_infopack = RjcarrierInfoPackage::getPackageByIdOrder((int)Tools::getValue('id_order'), $this->context->shop->id);
+                
+                if(!$rjcarrier_infopack){
+                    $this->display = 'viewunproduced';
+                    return parent::postProcess();
+                }
+
                 $this->id_order_pack = (int)Tools::getValue('id_order');
-                $rjcarrier_infopack = RjcarrierInfoPackage::getPackageByIdOrder($this->id_order_pack, $this->context->shop->id);
                 $this->id_infopackage = $rjcarrier_infopack['id_infopackage'];
             } else {
                 $rjcarrier_infopack = new RjcarrierInfoPackage(Tools::getValue($this->identifier));
