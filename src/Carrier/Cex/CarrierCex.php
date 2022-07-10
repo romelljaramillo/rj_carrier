@@ -20,6 +20,8 @@
 
 namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
+use Roanja\Module\RjCarrier\lib\Common;
+
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Cex\ServiceCex;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
@@ -316,6 +318,8 @@ class CarrierCex extends CarrierCompany
             return false;
         }
 
+        $response = $this->deletedEtiquetaResponse($response);
+
         $this->saveResponseShipment($id_shipment, $response);
         
         if($response->codigoRetorno == 0){
@@ -331,10 +335,10 @@ class CarrierCex extends CarrierCompany
 
                 if ($pdf) {
                     $response->listaBultos[$num_package - 1]->pdf = $pdf;
+                    $reponse_pdf = $response->listaBultos[$num_package - 1];
+                    $this->saveLabels($id_shipment, $reponse_pdf);
                 }
             }
-
-            $this->saveLabels($id_shipment, $response);
 
             return true;
         }
@@ -342,20 +346,37 @@ class CarrierCex extends CarrierCompany
         return false;
     }
 
-    public function saveLabels($id_shipment, $response, $num_package = 1)
+    public function saveLabels($id_shipment, $reponse_pdf, $num_package = 1)
     {
-        $info_labels = $response->listaBultos;
-        foreach ($info_labels as $label) {
-            $rj_carrier_label = new RjcarrierLabel();
-            $rj_carrier_label->id_shipment = $id_shipment;
-            $rj_carrier_label->package_id = $response->datosResultado;
-            $rj_carrier_label->tracker_code = $label->codUnico;
-            $rj_carrier_label->label_type = $this->label_type;
-            $rj_carrier_label->pdf = base64_encode($label->pdf);
-            
-            if (!$rj_carrier_label->add())
-                return false;
+        $rj_carrier_label = new RjcarrierLabel();
+        $rj_carrier_label->id_shipment = $id_shipment;
+        $rj_carrier_label->package_id = $reponse_pdf->codUnico;
+        $rj_carrier_label->tracker_code = $reponse_pdf->codUnico;
+        $rj_carrier_label->label_type = $this->label_type;
+        
+        if(Common::createFileLabel($reponse_pdf->pdf, $reponse_pdf->codUnico)){
+            $rj_carrier_label->pdf = $reponse_pdf->codUnico;
         }
+        
+        if (!$rj_carrier_label->add())
+            return false;
+
         return true;
+    }
+
+    /**
+     * Elimina la etiqueta que viene en el response 
+     *
+     * @param obj $response
+     * @return obj $response
+     */
+    public function deletedEtiquetaResponse($response)
+    {
+        if(isset($response->etiqueta)){ 
+            $response->etiqueta = [];
+            return $response;
+        }
+
+        return;
     }
 }
