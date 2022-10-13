@@ -4,3 +4,4 @@
 .vscode
 *.zip
 *.rest
+config_es.xml
