@@ -1,6 +1,6 @@
 /_api
 /api
-/labels/*
+/labels/*.pdf
 .vscode
 *.zip
 *.rest
