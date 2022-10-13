@@ -1,3 +1,6 @@
 /_api
 /api
-/labels
+/labels/*
+.vscode
+*.zip
+*.rest
