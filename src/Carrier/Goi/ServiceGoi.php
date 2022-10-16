@@ -18,23 +18,26 @@
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
 
-namespace Roanja\Module\RjCarrier\Carrier\Dhl;
+namespace Roanja\Module\RjCarrier\Carrier\Goi;
 
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
 use Shop;
 use Country;
+use Order;
 
-Class ServiceDhl {
+Class ServiceGoi {
     protected $userId;
     protected $key;
-    protected $base_url = 'https://api-gw.dhlparcel.nl';
-    protected $urllogin = '/authenticate/api-key';
-    protected $urlShipments = '/shipments';
+    protected $base_url = 'https://api-jaw.letsgoi.com';
+    protected $urllogin = '/oauth/token';
+    protected $urlShipments = '/integrations/import';
     protected $urlLabels = '/labels';
-    protected $urlRefresToken = '/authenticate/refresh-token';
+    protected $urlRefresToken = '/oauth/token';
     protected $accessToken = null;
+    protected $access_token = 'access_token_goi';
+    protected $refresh_token = 'refresh_token_goi';
 
     public function __construct()
     {
@@ -42,39 +45,41 @@ Class ServiceDhl {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
         
-        $this->getConfigurationDHL();
-        $this->postLogin();
+        $this->getConfigurationGOI();
+
+        $this->getCookieToken();
     }
 
-    private function getConfigurationDHL()
+    private function getConfigurationGOI()
     {
-        $this->userId = Configuration::get('RJ_DHL_USERID', null, $this->id_shop_group, $this->id_shop);
-        $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
+        $this->userId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
+        $env = Configuration::get('RJ_GOI_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
-            $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
+            $this->key = Configuration::get('RJ_GOI_KEY', null, $this->id_shop_group, $this->id_shop);
+            $this->base_url = Configuration::get('RJ_GOI_URL_PRO', null, $this->id_shop_group, $this->id_shop);
         } else {
-            $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
+            $this->key = Configuration::get('RJ_GOI_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
+            $this->base_url = Configuration::get('RJ_GOI_URL_DEV', null, $this->id_shop_group, $this->id_shop);
         }
     }
 
     public function postLogin()
     {
-        if(!$this->getCookieToken()){
-            $body = $this->bodyLogin();
-            $resp = $this->request('POST', $this->urllogin, $body);
-            if($resp){
-                return $this->setCookies($resp);
-            }
+        $body = $this->bodyLogin();
+        $resp = $this->request('POST', $this->urllogin, $body);
+
+        if($resp){
+            return $this->setCookies($resp);
         }
+        return false;
     }
 
     private function bodyLogin()
     {
         $body = array(
-            "userId"=> $this->userId, 
-            "key"=> $this->key
+            "client_id"=> $this->userId, 
+            "client_secret"=> $this->key,
+            "grant_type"=> 'client_credentials'
         );
 
         return json_encode($body);
@@ -83,35 +88,25 @@ Class ServiceDhl {
     private function setCookies($cookies)
     {
         setcookie(
-            "accessToken", 
-            $cookies->{'accessToken'}, 
-            $cookies->{'accessTokenExpiration'}
+            $this->access_token, 
+            $cookies->access_token,
+            $cookies->expires_in
         );
 
-        setcookie(
-            "refreshToken", 
-            $cookies->{'refreshToken'}, 
-            $cookies->{'refreshTokenExpiration'}
-        );
-
-        $this->accessToken = $cookies->{'accessToken'};
+        $this->accessToken = $cookies->access_token;
 
         return true;
     }
 
     public function getCookieToken()
     {
-        if(isset($_COOKIE['accessToken'])) {
-            $this->accessToken = $_COOKIE['accessToken'];
+        if(isset($_COOKIE[$this->access_token])) {
+            $this->accessToken = $_COOKIE[$this->access_token];
             return true;
-        } elseif (isset($_COOKIE['refreshToken'])) {
-            $refreshToken = json_encode(array('refreshToken' => $_COOKIE['refreshToken']));
-            $resp = $this->request('POST', $this->urlRefresToken, $refreshToken);
-            if($resp){
-                return $this->setCookies($resp);
-            }
-            return false;
+        } else {
+            return $this->postLogin();
         }
+
         return false;
     }
 
@@ -134,7 +129,7 @@ Class ServiceDhl {
     }
 
     /**
-     * Devuelve la respuesta de las etiquetas del servicio DHL
+     * Devuelve la respuesta de las etiquetas del servicio GOI
      *
      * @param string $labelId
      * @return obj
@@ -147,66 +142,69 @@ Class ServiceDhl {
 
     public function getBodyShipment($info_shipment)
     {
-        $num_shipment = $info_shipment['info_shipment']['num_shipment'];
         $id_order = (string)$info_shipment['id_order'];
+
+        $products = $this->getProductsOrder($id_order);
+
         $info_receiver = $info_shipment['info_customer'];
-        $info_shipper = $info_shipment['info_shop'];
         $info_package = $info_shipment['info_package'];
-        $info_receiver['referenceClient'] = $info_package['message'];
+        $info_receiver['notes'] = $info_package['message'];
 
         $receiver = $this->getReceiver($info_receiver);
-        $shipper = $this->getShipper($info_shipper);
         $pieces = $this->getPieces($info_package);
 
-        if($info_package['cash_ondelivery'] > 0){
-            $typeDelivery = [
-                "key"   => "COD_CASH",
-                "input" => $info_package['cash_ondelivery']
-            ];
-        } /* else {
-            $typeDelivery = [
-                "key"   => "DOOR"
-            ];
-        } */
+        $accountId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
 
-        $options = [
-            "key"   => "REFERENCE",
-            "input" => $id_order
-        ];
-
-        $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
-        
-        // $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
+        $services = '';
+        if(isset($info_shipment['info_package']['id_type_shipment'])) {
+            $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['info_package']['id_type_shipment']);
+            $services = explode(",", $type_shipment->id_bc);
+        }
         
         $data = [
-            "shipmentId" => $num_shipment,
-            "orderReference" => $id_order,
-            "receiver" => $receiver,
-            "shipper" => $shipper,
-            "accountId" => $accountId,
-            "options" => [$typeDelivery, $options],
-            "returnLabel" => false,
-            // 'product' => $type_shipment->id_bc,
-            "pieces" => $pieces
+            "order_id" => $id_order,
+            "store_id" => $accountId,
+            "services" => $services
         ];
 
-        return json_encode($data);
+        $array_data = array_merge($data,$receiver,$pieces,$products);
+
+        return json_encode($array_data);
+    }
+
+    public function getProductsOrder($id_order)
+    {
+        $order = new Order((int)$id_order);
+        $products = $order->getProductsDetail();
+
+        $array_products["retail_price"] = (float)$order->total_paid;
+
+        foreach ($products as $product) {
+            $volume = (float)$product['depth'] * (float)$product['width'] * (float)$product['height'];
+            $array_products["articles"][] = [
+                "id"=> $product["product_id"],
+                "name"=> $product["product_name"],
+                "metadata"=> ['reference' => $product["reference"]],
+                "quantity"=> (int)$product["product_quantity"],
+                "volume"=> (float)$volume,
+                "weight"=> (float)$product["weight"]
+            ];
+        }
+        
+        return $array_products;
     }
 
     public function getPieces($info)
     {
-        $weight = (float)$info['weight'] / (float)$info['quantity'];
-        return [
-            [
-                "parcelType" => "SMALL",
-                "quantity" => (int)$info['quantity'],
-                "weight" => (float)$weight,
-                "dimensions" => [
-                    "length" => (float)$info['length'],
-                    "width" => (float)$info['width'],
-                    "height" => (float)$info['height']
-                ]
-            ]
+        $volume = (float)$info['length'] * (float)$info['width'] * (float)$info['height'];
+
+        return  [
+            "weight" => (float)$info['weight'],
+            "volume" => (float)$volume,
+            "packages" => (int)$info['quantity'],
+            "commitment_date" => $info['date_delivery'],
+            "delivery_time_from" => $info['date_delivery_from'],
+            "delivery_time_to" => $info['date_delivery_to']
         ];
     }
 
@@ -227,27 +225,16 @@ Class ServiceDhl {
         }
 
         return [
-            "name" => [
-                "firstName"=> $info['firstname'],
-                "lastName"=> $info['lastname'],
-                "companyName"=> $info['company'],
-                "additionalName"=> $info['firstname']
-            ],
-            "address"=> [
-                "countryCode"=> $info['countrycode'],
-                "postalCode"=> $info['postcode'],
-                "city"=> $info['city'],
-                "street"=> $info['address1'],
-                "additionalAddressLine"=> $info['address2'],
-                "number"=> '',
-                "isBusiness"=> ($info['company'])?true:false,
-                "addition"=> $info['other']
-            ],
-            "email"=> $info['email'],
-            "phoneNumber"=> $phone,
-            "vatNumber"=> $info['vat_number'],
-            "eoriNumber"=> $info['dni'],
-            "reference"=> $info['referenceClient']
+            "customer_firstname"=> $info['firstname'],
+            "customer_lastname"=> $info['lastname'],
+            "customer_phone"=> $phone,
+            "customer_email"=> $info['email'],
+            "address"=> $info['address1'],
+            "additional_address"=> $info['address2'],
+            "city"=>$info['city'],
+            "zip"=> $info['postcode'],
+            "country_code"=> $info['countrycode'],
+            "notes"=> $info['notes']
         ];
     }
 
@@ -287,8 +274,8 @@ Class ServiceDhl {
     private function headerRequest()
     {
         if(!$this->accessToken){
-            if(isset($_COOKIE['accessToken']))
-                $this->accessToken = $_COOKIE['accessToken'];
+            if(isset($_COOKIE[$this->access_token]))
+                $this->accessToken = $_COOKIE[$this->access_token];
         }
 
         return array(
@@ -299,7 +286,7 @@ Class ServiceDhl {
     }
 
     /**
-     * request DHL
+     * request GOI
      *
      * @param string $requestMethod
      * @param string $urlparam

@@ -67,6 +67,9 @@ class RjcarrierInfoPackage extends \ObjectModel
             'message' =>	['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
             'hour_from' =>  ['type' => self::TYPE_NOTHING],
             'hour_until' => ['type' => self::TYPE_NOTHING],
+            'date_delivery' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'date_delivery_from' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'date_delivery_to' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
         ]

@@ -16,9 +16,7 @@
                 {/foreach}
             </select>
         </div>
-        
     </div>
-
     <div class="form-group row">
         <div class="col-4">
             <label class="form-control-label label-on-top col-12">{l s='Contrareembolso' mod='rj_carrier'}</label>
@@ -80,6 +78,20 @@
             {/if}
             </select>
         
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col">
+            <label class="form-control-label label-on-top col-12">{l s='Date delivery' mod='rj_carrier'}</label>
+            <input type="date" class="form-control" name="rj_date_delivery" id="rj_date_delivery" value="{$info_package.date_delivery}">
+        </div>
+        <div class="col">
+            <label class="form-control-label label-on-top col-12">{l s='Delivery time from' mod='rj_carrier'}</label>
+            <input type="datetime-local" class="form-control" name="rj_date_delivery_from" id="rj_date_delivery_from" value="{$info_package.date_delivery_from}">
+        </div>
+        <div class="col">
+            <label class="form-control-label label-on-top col-12">{l s='Delivery time to' mod='rj_carrier'}</label>
+            <input type="datetime-local" class="form-control" name="rj_date_delivery_to" id="rj_date_delivery_to" value="{$info_package.date_delivery_to}">
         </div>
     </div>
     <div class="form-group row">

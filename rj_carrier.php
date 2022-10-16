@@ -142,7 +142,7 @@ class Rj_Carrier extends Module
     {
         $this->name = 'rj_carrier';
         $this->tab = 'administration';
-        $this->version = '2.0.1';
+        $this->version = '2.0.2';
         $this->author = 'Roanja';
         $this->need_instance = 0;
         $this->bootstrap = true;
