@@ -310,13 +310,13 @@ class CarrierCex extends CarrierCompany
         $service_cex = new ServiceCex();
         $body_shipment = $service_cex->getBodyShipment($shipment);
 
-        $this->saveRequestShipment($id_shipment, $body_shipment);
-        
         $response = $service_cex->postShipment($shipment['info_config']['RJ_CEX_WSURL'], $body_shipment);
 
-        if(!isset($response)) {
+        if(!$response) {
             return false;
         }
+
+        $this->saveRequestShipment($id_shipment, $body_shipment);
 
         $response = $this->deletedEtiquetaResponse($response);
 

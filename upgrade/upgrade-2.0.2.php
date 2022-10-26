@@ -37,9 +37,16 @@ function upgrade_module_2_0_2($module)
     $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`name`, `shortname`, `icon`) VALUES
     (\'GOI\', \'GOI\', NULL);';
 
-    $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'rj_carrier_infopackage` ADD COLUMN `date_delivery` DATE NULL DEFAULT NULL AFTER `hour_until`; ';
-    $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'rj_carrier_infopackage` ADD COLUMN `date_delivery_from` DATETIME NULL DEFAULT NULL AFTER `date_delivery`; ';
-    $sql[] = 'ALTER TABLE `'._DB_PREFIX_.'rj_carrier_infopackage` ADD COLUMN `date_delivery_to` DATETIME NULL DEFAULT NULL AFTER `date_delivery_from`; ';
+    $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_log` (
+        `id_carrier_log` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+        `name` VARCHAR(250) NOT NULL,
+        `request` TEXT NULL DEFAULT NULL,
+        `response` TEXT NULL DEFAULT NULL,
+        `date_add` DATETIME NOT NULL,
+        `date_upd` DATETIME NOT NULL,
+        PRIMARY KEY (`id_carrier_log`)
+    ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
+
 
     foreach ($sql as $query) {
         if (Db::getInstance()->execute($query) == false) {

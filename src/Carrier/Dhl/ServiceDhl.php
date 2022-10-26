@@ -19,7 +19,7 @@
  */
 
 namespace Roanja\Module\RjCarrier\Carrier\Dhl;
-
+use Roanja\Module\RjCarrier\Carrier\Dhl\CarrierDhl;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
@@ -35,10 +35,11 @@ Class ServiceDhl {
     protected $urlLabels = '/labels';
     protected $urlRefresToken = '/authenticate/refresh-token';
     protected $accessToken = null;
+    protected $access_token = 'access_token_dhl';
+    protected $refresh_token = 'refresh_token_dhl';
 
     public function __construct()
     {
-        
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
         
@@ -83,33 +84,35 @@ Class ServiceDhl {
     private function setCookies($cookies)
     {
         setcookie(
-            "accessToken", 
-            $cookies->{'accessToken'}, 
-            $cookies->{'accessTokenExpiration'}
+            $this->access_token, 
+            $cookies->accessToken, 
+            $cookies->accessTokenExpiration
         );
 
         setcookie(
-            "refreshToken", 
-            $cookies->{'refreshToken'}, 
-            $cookies->{'refreshTokenExpiration'}
+            $this->refresh_token, 
+            $cookies->refreshToken, 
+            $cookies->refreshTokenExpiration
         );
 
-        $this->accessToken = $cookies->{'accessToken'};
+        $this->accessToken = $cookies->accessToken;
 
         return true;
     }
 
     public function getCookieToken()
     {
-        if(isset($_COOKIE['accessToken'])) {
-            $this->accessToken = $_COOKIE['accessToken'];
+        if(isset($_COOKIE[$this->access_token])) {
+            $this->accessToken = $_COOKIE[$this->access_token];
             return true;
-        } elseif (isset($_COOKIE['refreshToken'])) {
-            $refreshToken = json_encode(array('refreshToken' => $_COOKIE['refreshToken']));
+        } elseif (isset($_COOKIE[$this->refresh_token])) {
+            $refreshToken = json_encode(array($this->refresh_token => $_COOKIE[$this->refresh_token]));
             $resp = $this->request('POST', $this->urlRefresToken, $refreshToken);
+            
             if($resp){
                 return $this->setCookies($resp);
             }
+
             return false;
         }
         return false;
@@ -158,21 +161,17 @@ Class ServiceDhl {
         $shipper = $this->getShipper($info_shipper);
         $pieces = $this->getPieces($info_package);
 
-        if($info_package['cash_ondelivery'] > 0){
-            $typeDelivery = [
-                "key"   => "COD_CASH",
-                "input" => $info_package['cash_ondelivery']
-            ];
-        } /* else {
-            $typeDelivery = [
-                "key"   => "DOOR"
-            ];
-        } */
-
-        $options = [
+        $options[] = [
             "key"   => "REFERENCE",
             "input" => $id_order
         ];
+
+        if($info_package['cash_ondelivery'] > 0){
+            $options[] = [
+                "key"   => "COD_CASH",
+                "input" => $info_package['cash_ondelivery']
+            ];
+        }
 
         $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
         
@@ -184,7 +183,7 @@ Class ServiceDhl {
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" => $accountId,
-            "options" => [$typeDelivery, $options],
+            "options" => $options,
             "returnLabel" => false,
             // 'product' => $type_shipment->id_bc,
             "pieces" => $pieces
@@ -287,8 +286,8 @@ Class ServiceDhl {
     private function headerRequest()
     {
         if(!$this->accessToken){
-            if(isset($_COOKIE['accessToken']))
-                $this->accessToken = $_COOKIE['accessToken'];
+            if(isset($_COOKIE[$this->access_token]))
+                $this->accessToken = $_COOKIE[$this->access_token];
         }
 
         return array(
@@ -308,7 +307,6 @@ Class ServiceDhl {
      */
     private function request($method, $urlparam, $body = null)
     {
-
         $header = $this->headerRequest();
         $url = $this->base_url . $urlparam;
         
@@ -342,6 +340,7 @@ Class ServiceDhl {
         curl_close($ch);
         
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
+            CarrierDhl::saveLog($url, $body, $response);
             return false;
         }
 

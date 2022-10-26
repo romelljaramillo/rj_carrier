@@ -20,6 +20,7 @@
 
 namespace Roanja\Module\RjCarrier\Carrier\Goi;
 
+use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
@@ -184,7 +185,6 @@ Class ServiceGoi {
             $array_products["articles"][] = [
                 "id"=> $product["product_id"],
                 "name"=> $product["product_name"],
-                "metadata"=> ['reference' => $product["reference"]],
                 "quantity"=> (int)$product["product_quantity"],
                 "volume"=> (float)$volume,
                 "weight"=> (float)$product["weight"]
@@ -201,10 +201,7 @@ Class ServiceGoi {
         return  [
             "weight" => (float)$info['weight'],
             "volume" => (float)$volume,
-            "packages" => (int)$info['quantity'],
-            "commitment_date" => $info['date_delivery'],
-            "delivery_time_from" => $info['date_delivery_from'],
-            "delivery_time_to" => $info['date_delivery_to']
+            "packages" => (int)$info['quantity']
         ];
     }
 

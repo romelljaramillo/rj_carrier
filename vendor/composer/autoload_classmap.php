@@ -71,6 +71,7 @@ return array(
     'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoPackage' => $baseDir . '/src/Model/RjcarrierInfoPackage.php',
     'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoshop' => $baseDir . '/src/Model/RjcarrierInfoshop.php',
     'Roanja\\Module\\RjCarrier\\Model\\RjcarrierLabel' => $baseDir . '/src/Model/RjcarrierLabel.php',
+    'Roanja\\Module\\RjCarrier\\Model\\RjcarrierLog' => $baseDir . '/src/Model/RjcarrierLog.php',
     'Roanja\\Module\\RjCarrier\\Model\\RjcarrierShipment' => $baseDir . '/src/Model/RjcarrierShipment.php',
     'Roanja\\Module\\RjCarrier\\Model\\RjcarrierTypeShipment' => $baseDir . '/src/Model/RjcarrierTypeShipment.php',
     'Roanja\\Module\\RjCarrier\\lib\\Common' => $baseDir . '/src/lib/Common.php',

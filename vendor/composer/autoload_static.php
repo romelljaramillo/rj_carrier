@@ -120,6 +120,7 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoPackage' => __DIR__ . '/../..' . '/src/Model/RjcarrierInfoPackage.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoshop' => __DIR__ . '/../..' . '/src/Model/RjcarrierInfoshop.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierLabel' => __DIR__ . '/../..' . '/src/Model/RjcarrierLabel.php',
+        'Roanja\\Module\\RjCarrier\\Model\\RjcarrierLog' => __DIR__ . '/../..' . '/src/Model/RjcarrierLog.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierShipment' => __DIR__ . '/../..' . '/src/Model/RjcarrierShipment.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierTypeShipment' => __DIR__ . '/../..' . '/src/Model/RjcarrierTypeShipment.php',
         'Roanja\\Module\\RjCarrier\\lib\\Common' => __DIR__ . '/../..' . '/src/lib/Common.php',

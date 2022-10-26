@@ -173,14 +173,13 @@ class CarrierDhl extends CarrierCompany
 
         $service_dhl = new ServiceDhl();
         $body_shipment = $service_dhl->getBodyShipment($shipment);
-        
-        $this->saveRequestShipment($id_shipment, $body_shipment);
-        
         $response = $service_dhl->postShipment($body_shipment);
 
-        if(!isset($response->shipmentId)) {
+        if(!$response) {
             return false;
         }
+
+        $this->saveRequestShipment($id_shipment, $body_shipment);
 
         $this->saveResponseShipment($id_shipment, $response);
         

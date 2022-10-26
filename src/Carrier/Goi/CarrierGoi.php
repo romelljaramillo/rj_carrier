@@ -149,7 +149,7 @@ class CarrierGoi extends CarrierCompany
             return false;
         }
 
-        $this->saveResponseShipment($id_shipment, $response);
+        self::saveResponseShipment($id_shipment, $response);
         
         if($id_shipment){
             return $this->saveLabels($id_shipment, $response);

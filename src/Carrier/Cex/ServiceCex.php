@@ -21,6 +21,7 @@
 namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
 use Roanja\Module\RjCarrier\lib\Common;
+use Roanja\Module\RjCarrier\Carrier\Cex\CarrierCex;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
@@ -275,7 +276,7 @@ Class ServiceCex {
             $lista->idioma= $lang;
             $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
-            if(strcmp('true', $info_shipment['grabar_recogida'])==0){
+            if(strcmp('true', $info_shipment['grabar_recogida']) == 0){
                 $lista->creaRecogida = 'S';
                 $lista->fechaRecogida = $fecha;
                 $lista->horaDesdeRecogida = $info_shipment['fromHH_sender'].':'.$info_shipment['fromMM_sender'];
@@ -332,7 +333,7 @@ Class ServiceCex {
                 CURLOPT_SSL_VERIFYHOST  => false,
                 CURLOPT_SSL_VERIFYPEER  => false,
                 CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0)',
-                CURLOPT_URL             => $url ,
+                CURLOPT_URL             => $url,
                 CURLOPT_USERPWD         => $credenciales['user'].":".$credenciales['password'],
                 CURLOPT_CUSTOMREQUEST  => $method,
                 CURLOPT_POSTFIELDS      => mb_convert_encoding($body, mb_detect_encoding($body), "UTF-8"),
@@ -350,6 +351,7 @@ Class ServiceCex {
         curl_close($ch);
 
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
+            CarrierCex::saveLog($url, $body, $response);
             return false;
         }
 

@@ -27,6 +27,7 @@ use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
+use Roanja\Module\RjCarrier\Model\RjcarrierLog;
 use Roanja\Module\RjCarrier\lib\Pdf\RjPDF;
 
 use Configuration;
@@ -745,9 +746,6 @@ class CarrierCompany extends Module
         $rj_carrier_infopackage->hour_until = (self::validateFormatTime($hour_until))?$hour_until:'00:00:00';
         $rj_carrier_infopackage->width = Tools::getValue('rj_width');
         $rj_carrier_infopackage->height = Tools::getValue('rj_height');
-        $rj_carrier_infopackage->date_delivery = date('Y-m-d',strtotime(Tools::getValue('rj_date_delivery')));
-        $rj_carrier_infopackage->date_delivery_from = date('Y-m-d H:i:s',strtotime(Tools::getValue('rj_date_delivery_from')));
-        $rj_carrier_infopackage->date_delivery_to = date('Y-m-d H:i:s',strtotime(Tools::getValue('rj_date_delivery_to')));
 
         if (!Tools::getValue('id_infopackage'))
         {
@@ -797,5 +795,15 @@ class CarrierCompany extends Module
             return true;
         }
         return false;
+    }
+
+    public static function saveLog($name, $body, $response) 
+    {
+        $rjcarrierLog = new RjcarrierLog();
+        $rjcarrierLog->name = $name;
+        $rjcarrierLog->request = $body;
+        $rjcarrierLog->response = $response;
+
+        $rjcarrierLog->add();
     }
 }
