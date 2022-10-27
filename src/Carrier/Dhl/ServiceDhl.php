@@ -19,6 +19,7 @@
  */
 
 namespace Roanja\Module\RjCarrier\Carrier\Dhl;
+
 use Roanja\Module\RjCarrier\Carrier\Dhl\CarrierDhl;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
@@ -344,12 +345,6 @@ Class ServiceDhl {
             return false;
         }
 
-        $responses = json_decode($response);
-
-        if ($responses) {
-            return $responses;
-        } else {
-            return false;
-        }
+        return json_decode($response);
     }
 }

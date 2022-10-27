@@ -315,12 +315,10 @@ class CarrierCex extends CarrierCompany
         if(!$response) {
             return false;
         }
-
-        $this->saveRequestShipment($id_shipment, $body_shipment);
-
+        
         $response = $this->deletedEtiquetaResponse($response);
-
-        $this->saveResponseShipment($id_shipment, $response);
+        
+        $this->saveRequestShipment($id_shipment, $body_shipment, $response);
         
         if($response->codigoRetorno == 0){
 

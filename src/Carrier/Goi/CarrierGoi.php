@@ -25,6 +25,8 @@ use Roanja\Module\RjCarrier\Carrier\Goi\ServiceGoi;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\lib\Common;
 
+use Roanja\Module\RjCarrier\lib\Pdf\RjPDFGenerator;
+
 /**
  * Class CarrierGoi.
  */
@@ -54,8 +56,20 @@ class CarrierGoi extends CarrierCompany
         $this->fields_config = [
             [
                 'type' => 'text',
-                'label' => $this->l('user Id'),
+                'label' => $this->l('User Id'),
                 'name' => 'RJ_GOI_USERID',
+                'required' => true,
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Store Id'),
+                'name' => 'RJ_GOI_STOREID',
+                'required' => true,
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Store Id DEV'),
+                'name' => 'RJ_GOI_STOREID_DEV',
                 'required' => true,
             ],
             [
@@ -136,49 +150,26 @@ class CarrierGoi extends CarrierCompany
     public function createShipment($shipment)
     {
         $id_shipment = $shipment['info_shipment']['id_shipment'];
+        $num_shipment = $shipment['info_shipment']['num_shipment'];
 
         $service_goi = new ServiceGoi();
 
         $body_shipment = $service_goi->getBodyShipment($shipment);
-
-        $this->saveRequestShipment($id_shipment, $body_shipment);
         
         $response = $service_goi->postShipment($body_shipment);
 
-        if(!isset($response->shipmentId)) {
+        if($response === false) {
+            return false;
+        }
+        
+        $pdf = $service_goi->getLabel($num_shipment);
+
+        if(!$pdf){
             return false;
         }
 
-        self::saveResponseShipment($id_shipment, $response);
-        
-        if($id_shipment){
-            return $this->saveLabels($id_shipment, $response);
-        } 
+        $this->saveRequestShipment($id_shipment, $body_shipment, $response);
+        return $this->saveLabels($id_shipment, $pdf);
 
-        return false;
-    }
-
-    public function saveLabels($id_shipment, $response, $num_package = 1)
-    {
-        $info_labels = $response->pieces;
-        $service_goi = new ServiceGoi();
-        foreach ($info_labels as $label) {
-            $label_service = $service_goi->getLabel($label->labelId);
-            $rj_carrier_label = new RjcarrierLabel();
-            $rj_carrier_label->id_shipment = $id_shipment;
-            $rj_carrier_label->package_id = $label_service->labelId;
-            $rj_carrier_label->tracker_code = $label_service->trackerCode;
-            $rj_carrier_label->label_type = $label_service->labelType;
-            
-            $pdf = base64_decode($label_service->pdf);
-
-            if(Common::createFileLabel($pdf, $label_service->labelId)){
-                $rj_carrier_label->pdf = $label_service->labelId;
-            }
-            
-            if (!$rj_carrier_label->add())
-                return false;
-        }
-        return true;
     }
 }

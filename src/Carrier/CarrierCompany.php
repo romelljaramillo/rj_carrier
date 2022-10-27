@@ -588,7 +588,7 @@ class CarrierCompany extends Module
         
         $request = json_encode($shipment);
         
-        $this->saveRequestShipment($id_shipment, $request);
+        $this->saveRequestShipment($id_shipment, $request, '');
 
         $packages_qty = $shipment['info_package']['quantity'];
         
@@ -631,11 +631,12 @@ class CarrierCompany extends Module
      * @param json $request
      * @return void
      */
-    public function saveRequestShipment($id_shipment, $request)
+    public function saveRequestShipment($id_shipment, $request, $response)
     {
         $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
         
         $rj_carrier_shipment->request = $request;
+        $rj_carrier_shipment->response = json_encode($response);
 
         if (!$id_shipment){
             if (!$rj_carrier_shipment->add())
@@ -647,28 +648,6 @@ class CarrierCompany extends Module
         return true;
     }
 
-    /**
-     * Guarda el response que se hace al servicio
-     *
-     * @param array $id_shipment
-     * @param json $response
-     * @return void
-     */
-    public function saveResponseShipment($id_shipment, $response)
-    {
-        $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-
-        $rj_carrier_shipment->response = json_encode($response);
-
-        if (!$id_shipment){
-            if (!$rj_carrier_shipment->add())
-                return false;
-        } elseif(!$rj_carrier_shipment->update()){
-            return false;
-        }
-
-        return true;
-    }
 
     /**
      * save data db table rj_carrier_shipment

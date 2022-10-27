@@ -88,15 +88,16 @@ class Common {
         return $createdPdf;
     }
 
-    public static function createFileLabel($pdf, $package_id)
+    public static function createFileLabel($pdf, $id_label)
     {
-        file_put_contents(_PS_MODULE_DIR_.'rj_carrier/labels/'. $package_id .'.pdf', $pdf);
+        header('Content-Type: application/pdf');
+        file_put_contents(_PS_MODULE_DIR_.'rj_carrier/labels/'. $id_label .'.pdf', $pdf);
         return true;
     }
 
-    public static function getFileLabel($package_id)
+    public static function getFileLabel($id_label)
     {
-        $file = _PS_MODULE_DIR_.'rj_carrier/labels/' . $package_id . '.pdf';
+        $file = _PS_MODULE_DIR_.'rj_carrier/labels/' . $id_label . '.pdf';
         return $file;
     }
 }

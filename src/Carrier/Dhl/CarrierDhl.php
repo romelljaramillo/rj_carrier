@@ -179,10 +179,8 @@ class CarrierDhl extends CarrierCompany
             return false;
         }
 
-        $this->saveRequestShipment($id_shipment, $body_shipment);
+        $this->saveRequestShipment($id_shipment, $body_shipment, $response);
 
-        $this->saveResponseShipment($id_shipment, $response);
-        
         if($id_shipment){
             return $this->saveLabels($id_shipment, $response);
         } 

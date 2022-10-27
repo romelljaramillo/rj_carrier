@@ -20,7 +20,7 @@
 
 namespace Roanja\Module\RjCarrier\Carrier\Goi;
 
-use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
+use Roanja\Module\RjCarrier\Carrier\Goi\CarrierGoi;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
 use Configuration;
@@ -30,24 +30,25 @@ use Order;
 
 Class ServiceGoi {
     protected $userId;
+    protected $store_id;
     protected $key;
     protected $base_url = 'https://api-jaw.letsgoi.com';
     protected $urllogin = '/oauth/token';
     protected $urlShipments = '/integrations/import';
-    protected $urlLabels = '/labels';
+    protected $urlLabels = '/integrations/labels';
     protected $urlRefresToken = '/oauth/token';
     protected $accessToken = null;
     protected $access_token = 'access_token_goi';
     protected $refresh_token = 'refresh_token_goi';
+    protected $count = 0;
+    protected $repetir_request = 10;
 
     public function __construct()
     {
-        
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
-        
-        $this->getConfigurationGOI();
 
+        $this->getConfigurationGOI();
         $this->getCookieToken();
     }
 
@@ -58,9 +59,11 @@ Class ServiceGoi {
         if($env){
             $this->key = Configuration::get('RJ_GOI_KEY', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_GOI_URL_PRO', null, $this->id_shop_group, $this->id_shop);
+            $this->store_id = Configuration::get('RJ_GOI_STOREID', null, $this->id_shop_group, $this->id_shop);
         } else {
             $this->key = Configuration::get('RJ_GOI_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_GOI_URL_DEV', null, $this->id_shop_group, $this->id_shop);
+            $this->store_id = Configuration::get('RJ_GOI_STOREID_DEV', null, $this->id_shop_group, $this->id_shop);
         }
     }
 
@@ -135,16 +138,16 @@ Class ServiceGoi {
      * @param string $labelId
      * @return obj
      */
-    public function getLabel($labelId)
+    public function getLabel($num_shipment)
     {
-        $urlLabel = $this->urlLabels . '/' . $labelId;
+        $urlLabel = $this->urlLabels . '/' . $this->store_id . '/' . $num_shipment;
         return $this->request('GET', $urlLabel);
     }
 
     public function getBodyShipment($info_shipment)
     {
-        $id_order = (string)$info_shipment['id_order'];
-
+        $num_shipment = (string)$info_shipment['info_shipment']['num_shipment'];
+        $id_order = $info_shipment['id_order'];
         $products = $this->getProductsOrder($id_order);
 
         $info_receiver = $info_shipment['info_customer'];
@@ -154,17 +157,20 @@ Class ServiceGoi {
         $receiver = $this->getReceiver($info_receiver);
         $pieces = $this->getPieces($info_package);
 
-        $accountId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
-
         $services = '';
         if(isset($info_shipment['info_package']['id_type_shipment'])) {
             $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['info_package']['id_type_shipment']);
             $services = explode(",", $type_shipment->id_bc);
         }
+
+        $metadata = [
+            'id_order' => $id_order
+        ];
         
         $data = [
-            "order_id" => $id_order,
-            "store_id" => $accountId,
+            "order_id" => $num_shipment,
+            "store_id" => $this->store_id,
+            "metadata" => json_encode($metadata),
             "services" => $services
         ];
 
@@ -314,7 +320,7 @@ Class ServiceGoi {
             )
         );
         
-        $response = utf8_encode(curl_exec($ch));
+        $response = curl_exec($ch);
 
         if ($response === false) {
             return false;
@@ -325,16 +331,30 @@ Class ServiceGoi {
 
         curl_close($ch);
         
+        $res = strpos($urlparam, 'label');
+        
+        if($res) {
+            if($curl_info['content_type'] == "application/pdf") {
+                $this->count = 0;
+                return $response;
+            } else {
+                if($this->count == $this->repetir_request){
+                    CarrierGoi::saveLog($url, $body, $response);
+                    return false;
+                }
+                
+                $this->count++;
+                $response = $this->request($method, $urlparam);
+            }
+
+            return $response;
+        }
+
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
+            CarrierGoi::saveLog($url, $body, $response);
             return false;
         }
 
-        $responses = json_decode($response);
-
-        if ($responses) {
-            return $responses;
-        } else {
-            return false;
-        }
+        return json_decode($response);
     }
 }
