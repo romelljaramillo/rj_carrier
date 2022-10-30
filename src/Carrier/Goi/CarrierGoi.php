@@ -62,6 +62,12 @@ class CarrierGoi extends CarrierCompany
             ],
             [
                 'type' => 'text',
+                'label' => $this->l('User Id DEV'),
+                'name' => 'RJ_GOI_USERID_DEV',
+                'required' => false,
+            ],
+            [
+                'type' => 'text',
                 'label' => $this->l('Store Id'),
                 'name' => 'RJ_GOI_STOREID',
                 'required' => true,
@@ -70,7 +76,7 @@ class CarrierGoi extends CarrierCompany
                 'type' => 'text',
                 'label' => $this->l('Store Id DEV'),
                 'name' => 'RJ_GOI_STOREID_DEV',
-                'required' => true,
+                'required' => false,
             ],
             [
                 'type' => 'text',

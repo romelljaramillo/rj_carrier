@@ -54,13 +54,14 @@ Class ServiceGoi {
 
     private function getConfigurationGOI()
     {
-        $this->userId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
         $env = Configuration::get('RJ_GOI_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
+            $this->userId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
             $this->key = Configuration::get('RJ_GOI_KEY', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_GOI_URL_PRO', null, $this->id_shop_group, $this->id_shop);
             $this->store_id = Configuration::get('RJ_GOI_STOREID', null, $this->id_shop_group, $this->id_shop);
         } else {
+            $this->userId = Configuration::get('RJ_GOI_USERID_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->key = Configuration::get('RJ_GOI_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_GOI_URL_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->store_id = Configuration::get('RJ_GOI_STOREID_DEV', null, $this->id_shop_group, $this->id_shop);
