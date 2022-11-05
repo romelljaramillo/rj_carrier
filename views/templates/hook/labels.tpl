@@ -36,7 +36,7 @@
                     action="{$link->getAdminLink('AdminRjLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                     method="post" class="form-horizontal">
                     <input type="hidden" name="id_label" value="{$label.id_label}">
-                    <button type="submit" id="btnCreateLabel" name="submitCreateLabel" formtarget="_blank"
+                    <button type="submit" id="btnGetLabel" name="submitGetLabel" formtarget="_blank"
                     data-toggle="pstooltip" data-placement="top" data-original-title="print label" class="btn btn-sm tooltip-link js-rjShipment-delete-btn">
                         <i class="material-icons">receipt</i>
                     </button>

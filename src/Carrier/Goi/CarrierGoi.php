@@ -22,10 +22,6 @@ namespace Roanja\Module\RjCarrier\Carrier\Goi;
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Goi\ServiceGoi;
-use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
-use Roanja\Module\RjCarrier\lib\Common;
-
-use Roanja\Module\RjCarrier\lib\Pdf\RjPDFGenerator;
 
 /**
  * Class CarrierGoi.
@@ -35,12 +31,14 @@ class CarrierGoi extends CarrierCompany
 
     public function __construct()
     {
+        $this->show_create_label = true;
+
         $this->name_carrier = 'GOI';
         $this->shortname = 'GOI';
+        
         /**
          * Names of fields config GOI carrier used
          */
-
         $this->setFielConfig();
 
         parent::__construct();
@@ -156,7 +154,7 @@ class CarrierGoi extends CarrierCompany
     public function createShipment($shipment)
     {
         $id_shipment = $shipment['info_shipment']['id_shipment'];
-        $num_shipment = $shipment['info_shipment']['num_shipment'];
+        $id_order = (string)$shipment['id_order'];
 
         $service_goi = new ServiceGoi();
 
@@ -168,7 +166,7 @@ class CarrierGoi extends CarrierCompany
             return false;
         }
         
-        $pdf = $service_goi->getLabel($num_shipment);
+        $pdf = $service_goi->getLabel($id_order);
 
         if(!$pdf){
             return false;
@@ -177,5 +175,17 @@ class CarrierGoi extends CarrierCompany
         $this->saveRequestShipment($id_shipment, $body_shipment, $response);
         return $this->saveLabels($id_shipment, $pdf);
 
+    }
+
+    public function createLabel($id_shipment, $id_order)
+    {
+        $service_goi = new ServiceGoi();
+        $pdf = $service_goi->getLabel($id_order);
+
+        if(!$pdf){
+            return false;
+        }
+
+        return $this->saveLabels($id_shipment, $pdf);
     }
 }

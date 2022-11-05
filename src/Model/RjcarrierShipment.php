@@ -139,12 +139,10 @@ class RjcarrierShipment extends \ObjectModel
     public function delete()
 	{
         $this->delete = true;
-        // $order = new \Order($this->id_order);
-        // if($order->valid){
-        //     return false;
-        // }
+
         if(!$this->update())
             return false;
+            
         return true;
 	}
 }

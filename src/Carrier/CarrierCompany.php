@@ -57,6 +57,7 @@ class CarrierCompany extends Module
     public $shortname = 'DEF';
     public $display_pdf = 'S';
     public $label_type = 'B2X_Generic_A4_Third';
+    public $show_create_label = false;
 
     /** @var array Campos de configuración */
     protected $fields_config = [];
@@ -604,6 +605,20 @@ class CarrierCompany extends Module
         return true;
     }
 
+    /**
+     * Procesa el request a la api de carrier para obtener las etiquetas
+     * Se usa para GOI pero se podria sobreescribir para otro transportista
+     * Mirar el funcionamiento en transporte GOI
+     *
+     * @param int $id_shipment
+     * @param int $id_order
+     * @return boolean
+     */
+    public function createLabel($id_shipment, $id_order)
+    {
+        return true;
+    }
+
     public function saveLabels($id_shipment, $pdf, $num_package = 1)
     {
         $uuid = Common::getUUID();
@@ -647,7 +662,6 @@ class CarrierCompany extends Module
 
         return true;
     }
-
 
     /**
      * save data db table rj_carrier_shipment
@@ -784,5 +798,10 @@ class CarrierCompany extends Module
         $rjcarrierLog->response = $response;
 
         $rjcarrierLog->add();
+    }
+
+    public static function displayCreateLabel()
+    {
+        # code...
     }
 }

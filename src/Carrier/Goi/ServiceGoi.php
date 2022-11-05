@@ -139,16 +139,16 @@ Class ServiceGoi {
      * @param string $labelId
      * @return obj
      */
-    public function getLabel($num_shipment)
+    public function getLabel($id_order)
     {
-        $urlLabel = $this->urlLabels . '/' . $this->store_id . '/' . $num_shipment;
+        $urlLabel = $this->urlLabels . '/' . $this->store_id . '/' . $id_order;
         return $this->request('GET', $urlLabel);
     }
 
     public function getBodyShipment($info_shipment)
     {
-        $num_shipment = (string)$info_shipment['info_shipment']['num_shipment'];
-        $id_order = $info_shipment['id_order'];
+        // $num_shipment = (string)$info_shipment['info_shipment']['num_shipment'];
+        $id_order = (string)$info_shipment['id_order'];
         $products = $this->getProductsOrder($id_order);
 
         $info_receiver = $info_shipment['info_customer'];
@@ -169,7 +169,7 @@ Class ServiceGoi {
         ];
         
         $data = [
-            "order_id" => $num_shipment,
+            "order_id" => $id_order,
             "store_id" => $this->store_id,
             "metadata" => json_encode($metadata),
             "services" => $services

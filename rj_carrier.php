@@ -424,6 +424,11 @@ class Rj_Carrier extends Module
             $this->_errors[] = $this->l('No se puede eliminar el envío revisar su estado!.');
             return false;
         }
+
+        if(!RjcarrierLabel::deleteLabelsByIdShipment($id_shipment)){
+            $this->_errors[] = $this->l('No se eliminaron las etiquetas del envio!.');
+            return false;
+        }
             
         $this->_success[] = $this->l('Se ha eliminado el envío.');
         return true;
@@ -513,7 +518,10 @@ class Rj_Carrier extends Module
             $this->_warning[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
                 'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
                 $this->l('Go to configuration!. ').'</a>';
+                return false;
         }
+
+        return true;
     }
 
     /**
@@ -568,7 +576,8 @@ class Rj_Carrier extends Module
 
         $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
 
-        $this->selectShipment($shipment);
+        $class_carrier = $this->getClassCarrier($info_company_carrier["shortname"]);
+        $class_carrier->createShipment($shipment);
     }
 
     /**
@@ -583,31 +592,28 @@ class Rj_Carrier extends Module
         $id_order = (int)$params['id_order'];
         $info_package = [];
         $info_company_carrier = [];
+        $name_carrier = '';
 
-        $this->validationConfigurationCarrier();
+        $validate_config = $this->validationConfigurationCarrier();
 
         $info_shipment = RjcarrierShipment::getShipmentByIdOrder($id_order);
+        $id_shipment = $info_shipment['id_shipment'];
 
         if (Tools::isSubmit('submitDeleteShipment')) {
             if($this->deleteShipment(Tools::getValue('id_shipment'))){
                 $info_shipment = [];
             }
             $info_package = $this->getInfoPackage($id_order);
-        } elseif ((Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) && empty($this->_warning)){
-            
-            if(Tools::getValue('id_reference_carrier') && $info_shipment['id_shipment']){
-                if($this->deleteShitmentChangeCarrier($id_order, $info_shipment['id_shipment'], Tools::getValue('id_reference_carrier')))
+        } elseif ((Tools::isSubmit('submitFormPackCarrier') || Tools::isSubmit('submitSavePackSend')) && $validate_config){
+            if(Tools::getValue('id_reference_carrier') && $id_shipment){
+                if($this->deleteShitmentChangeCarrier($id_order, $id_shipment, Tools::getValue('id_reference_carrier')))
                     $info_shipment = [];
             }
-
             $info_package = CarrierCompany::saveInfoPackage($id_order);
-
         } else {
             $info_package = $this->getInfoPackage($id_order);
         }
         
-        $name_carrier = '';
-
         if(!$info_package['id_reference_carrier']){
             $info_package['id_reference_carrier'] = $this->getIdReferenceCarrierByIdOrder($id_order);
         }
@@ -630,13 +636,17 @@ class Rj_Carrier extends Module
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRjCarrier'),
         ];
 
-        if(!$info_shipment['id_shipment']){
+        if(isset($info_company_carrier["shortname"])){
+            $class_carrier = $this->getClassCarrier($info_company_carrier["shortname"]);
+            $shipment['show_create_label'] = $class_carrier->show_create_label;
+        }
+
+        if(!$id_shipment){
             if ((Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend'))){
-                if(empty($this->_warning)){
+                if($validate_config){
                     $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
                     $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
-                    $info_shipment = $shipment['info_shipment'];
-                    $this->selectShipment($shipment);
+                    $class_carrier->createShipment($shipment);
                 } else {
                     $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
                         'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 
@@ -644,9 +654,15 @@ class Rj_Carrier extends Module
                 }
             } 
         }
-        
-        if($info_shipment['id_shipment']){
-            $shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($info_shipment['id_shipment']);
+
+        if($id_shipment){
+            if (Tools::isSubmit('submitCreateLabel')) {
+                if(!RjcarrierLabel::getIdsLabelsByIdShipment($id_shipment)) {
+                    $class_carrier->createLabel($id_shipment, $id_order);
+                }
+            }
+
+            $shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($id_shipment);
         }
 
         $shipment['notifications'] = $this->prepareNotifications();
@@ -659,32 +675,30 @@ class Rj_Carrier extends Module
     }
 
     /**
-     * Crea envío según la compañia seleccionada
+     * Obtiene la class según transportista seleccionado
      *
-     * @param array $infoOrder
-     * @return void
+     * @param array $shipment
+     * @return obj
      */
-    protected function selectShipment($shipment)
+    protected function getClassCarrier($shortname = null)
     {
-        $shortname = $shipment['info_company_carrier']["shortname"];
-
+        $class = null;
         if($shortname) {
             $shortname = strtolower($shortname);
             $class_name = 'Carrier' . ucfirst($shortname);
             if (file_exists(_PS_MODULE_DIR_.'rj_carrier/src/Carrier/'. ucfirst($shortname) .'/'.$class_name.'.php')) {
-                $Class = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
-                if (class_exists($Class)) {
-                    $class = new $Class();
-                    $class->createShipment($shipment);
+                $obj = '\Roanja\Module\RjCarrier\Carrier\\'. ucfirst($shortname) .'\\' . $class_name;
+                if (class_exists($obj)) {
+                    $class = new $obj();
                 }
             } else {
-                $carrier_company = new CarrierCompany();
-                $carrier_company->createShipment($shipment);
+                $class = new CarrierCompany();
             }
         } else {
-            $carrier_company = new CarrierCompany();
-            $carrier_company->createShipment($shipment);
+            $class = new CarrierCompany();
         }
+
+        return $class;
     }
 
     protected function _postProcess()

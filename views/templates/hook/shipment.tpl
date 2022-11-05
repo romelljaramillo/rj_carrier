@@ -39,7 +39,7 @@
                     <form action="{$link->getAdminLink('AdminRjLabel', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                         method="post" class="form-horizontal">
                         <input type="hidden" name="id_shipment" value="{$info_shipment.id_shipment}">
-                        <button type="submit" id="btnCreateLabelsShipment" name="submitCreateLabelsShipment" formtarget="_blank"
+                        <button type="submit" id="btnGetLabelsShipment" name="submitGetLabelsShipment" formtarget="_blank"
                             data-toggle="pstooltip" data-placement="top" data-original-title="print labels" class="btn btn-sm tooltip-link js-rjShipment-delete-btn">
                             <i class="material-icons">receipt</i>
                         </button>

@@ -38,11 +38,11 @@ class AdminRjLabelController extends ModuleAdminController
         parent::initProcess();
         $this->checkCacheFolder();
         
-        if (Tools::isSubmit('submitCreateLabel')) {
+        if (Tools::isSubmit('submitGetLabel')) {
             if(Tools::getValue('id_label')){
                 $this->printLabel(Tools::getValue('id_label'));
             }
-        } elseif (Tools::isSubmit('submitCreateLabelsShipment')) {
+        } elseif (Tools::isSubmit('submitGetLabelsShipment')) {
             if(Tools::getValue('id_shipment')){
                 self::printLabelsShipment(Tools::getValue('id_shipment'));
             }

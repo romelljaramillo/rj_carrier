@@ -86,10 +86,22 @@ class RjcarrierLabel extends \ObjectModel
 
     public static function getIdsLabelsByIdShipment($id_shipment)
     {
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
+        $ids = [];
+
+        $id_labels = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
 		SELECT l.id_label as id
 		FROM `' . _DB_PREFIX_ . 'rj_carrier_label` l
 		WHERE l.`id_shipment` = ' . (int)$id_shipment);
+
+        if(!$id_labels) {
+            return false;
+        }
+
+        foreach ($id_labels as $id_label) {
+            $ids[] = $id_label['id'];
+        }
+
+        return $ids;
     }
 
     public static function isPrintedIdShipment($id_shipment)
@@ -104,5 +116,19 @@ class RjcarrierLabel extends \ObjectModel
             return $res['print'];
         }
         return false;
+    }
+
+    public static function deleteLabelsByIdShipment($id_shipment)
+    {
+        $id_labels = self::getIdsLabelsByIdShipment($id_shipment);
+
+        foreach ($id_labels as $id_label) {
+            $rjcarrierLabel = new RjcarrierLabel((int)$id_label);
+            if(!$rjcarrierLabel->delete()){
+                return false;
+            }
+        }
+
+        return true;
     }
 }
