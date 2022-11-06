@@ -299,27 +299,20 @@ class CarrierCex extends CarrierCompany
 
     public function createShipment($shipment)
     {
-        $id_shipment = $shipment['info_shipment']['id_shipment'];
-
-        if(!$id_shipment){
-            return false;
-        }
-
-        $shipment['info_config'] = $this->getConfigFieldsValues();
-
         $service_cex = new ServiceCex();
         $body_shipment = $service_cex->getBodyShipment($shipment);
 
-        $response = $service_cex->postShipment($shipment['info_config']['RJ_CEX_WSURL'], $body_shipment);
+        $response = $service_cex->postShipment($body_shipment);
 
         if(!$response) {
             return false;
         }
         
         $response = $this->deletedEtiquetaResponse($response);
-        
-        $this->saveRequestShipment($id_shipment, $body_shipment, $response);
-        
+
+        $info_shipment = $this->saveShipment($shipment, $response);
+        $shipment['info_shipment'] = $info_shipment;
+
         if($response->codigoRetorno == 0){
 
             $packages_qty = (int)$shipment['info_package']['quantity'];
@@ -334,7 +327,7 @@ class CarrierCex extends CarrierCompany
                 if ($pdf) {
                     $response->listaBultos[$num_package - 1]->pdf = $pdf;
                     $reponse_pdf = $response->listaBultos[$num_package - 1];
-                    $this->saveLabels($id_shipment, $reponse_pdf);
+                    $this->saveLabels($info_shipment['id_shipment'], $reponse_pdf);
                 }
             }
 

@@ -30,7 +30,7 @@ use Country;
 Class ServiceDhl {
     protected $userId;
     protected $key;
-    protected $base_url = 'https://api-gw.dhlparcel.nl';
+    protected $base_url = 'https://clientesparcel.dhl.es/ac.core/gateway/a/api/v1';
     protected $urllogin = '/authenticate/api-key';
     protected $urlShipments = '/shipments';
     protected $urlLabels = '/labels';
@@ -50,12 +50,13 @@ Class ServiceDhl {
 
     private function getConfigurationDHL()
     {
-        $this->userId = Configuration::get('RJ_DHL_USERID', null, $this->id_shop_group, $this->id_shop);
         $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
+            $this->userId = Configuration::get('RJ_DHL_USERID', null, $this->id_shop_group, $this->id_shop);
             $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
         } else {
+            $this->userId = Configuration::get('RJ_DHL_USERID_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
             $this->base_url = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
         }

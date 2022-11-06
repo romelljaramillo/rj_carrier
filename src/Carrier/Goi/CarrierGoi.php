@@ -156,7 +156,7 @@ class CarrierGoi extends CarrierCompany
         $id_shipment = $shipment['info_shipment']['id_shipment'];
         $id_order = (string)$shipment['id_order'];
 
-        $service_goi = new ServiceGoi();
+        $service_goi = new ServiceGoi($id_order);
 
         $body_shipment = $service_goi->getBodyShipment($shipment);
         

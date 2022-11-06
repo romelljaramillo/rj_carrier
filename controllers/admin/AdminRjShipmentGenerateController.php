@@ -256,7 +256,8 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
         Tools::redirectAdmin($this->context->link->getAdminLink('AdminRjShipmentGenerate', true, [], ['conf' => 3]));
     }
 
-    protected function querySql(){
+    protected function querySql()
+    {
         $this->_select = "a.id_order,
                             c.name,
                             a.quantity,

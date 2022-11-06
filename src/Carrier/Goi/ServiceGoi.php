@@ -48,11 +48,11 @@ Class ServiceGoi {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
 
-        $this->getConfigurationGOI();
+        $this->getConfiguration();
         $this->getCookieToken();
     }
 
-    private function getConfigurationGOI()
+    private function getConfiguration()
     {
         $env = Configuration::get('RJ_GOI_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
@@ -340,6 +340,7 @@ Class ServiceGoi {
                 return $response;
             } else {
                 if($this->count == $this->repetir_request){
+                    // $id_shipment = RjcarrierShipment::getIdByIdOrder($this->id_order);
                     CarrierGoi::saveLog($url, $body, $response);
                     return false;
                 }

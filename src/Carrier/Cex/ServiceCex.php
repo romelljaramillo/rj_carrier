@@ -20,11 +20,9 @@
 
 namespace Roanja\Module\RjCarrier\Carrier\Cex;
 
-use Roanja\Module\RjCarrier\lib\Common;
 use Roanja\Module\RjCarrier\Carrier\Cex\CarrierCex;
 use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
-use Configuration;
 use Shop;
 use Country;
 
@@ -34,19 +32,13 @@ Class ServiceCex {
     {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
+        $this->getConfiguration();
     }
 
-    /**
-     * obtiene la información de las credenciales del servicio
-     *
-     * @return void
-     */
-    private function getUserCredentials()
+    private function getConfiguration()
     {
-        return [
-            'user'  => Configuration::get('RJ_CEX_USER', null, $this->id_shop_group, $this->id_shop),
-            'password' => Common::encrypt('decrypt',Configuration::get('RJ_CEX_PASS', null, $this->id_shop_group, $this->id_shop))
-        ];
+        $carrierCex = new CarrierCex();
+        $this->configuration = $carrierCex->getConfigFieldsValues();
     }
 
     /**
@@ -75,16 +67,14 @@ Class ServiceCex {
      */
     public function getBodyShipment($info_shipment)
     {
-        $info_config = $info_shipment['info_config'];
-
         $data = [
-            "solicitante"   => $this->transformCodeClient($info_config['RJ_CEX_COD_CLIENT']),
+            "solicitante"   => $this->transformCodeClient($this->configuration['RJ_CEX_COD_CLIENT']),
             "canalEntrada"  => "",
             "numEnvio"      => "",
             "ref"           => (string)$info_shipment['id_order'],
             "refCliente"    => (string)$info_shipment['id_order'],
             "fecha"         => date("dmY"),
-            "codRte"        => $info_config['RJ_CEX_COD_CLIENT']
+            "codRte"        => $this->configuration['RJ_CEX_COD_CLIENT']
         ];
 
         $shipper = $this->getShipper($info_shipment['info_shop']);
@@ -175,15 +165,15 @@ Class ServiceCex {
     /**
      * Crea el formato del la información de los paquetes
      *
-     * @param array $info
+     * @param array $info_shipment
      * @return void
      */
-    public function getPieces($info)
+    public function getPieces($info_shipment)
     {
-        $weight = (string)$info['weight'] / (float)$info['quantity'];
+        $weight = (string)$info_shipment['weight'] / (float)$info_shipment['quantity'];
         
         //Lista adicional de bultos
-        for ($i = 1; $i <= $info['quantity']; $i++) {
+        for ($i = 1; $i <= $info_shipment['quantity']; $i++) {
             $interior = new \stdClass();
             $interior->alto = "";
             $interior->ancho = "";
@@ -199,29 +189,29 @@ Class ServiceCex {
             $list_packages[] = $interior;
         }
 
-        $type_shipment = new RjcarrierTypeShipment((int)$info['id_type_shipment']);
+        $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['id_type_shipment']);
         
         $reembolso = "";
-        if(doubleval($info['cash_ondelivery'])){
-            $reembolso = (string)round($info['cash_ondelivery'],2);
+        if(doubleval($info_shipment['cash_ondelivery'])){
+            $reembolso = (string)round($info_shipment['cash_ondelivery'],2);
         }
 
         return [
-            "observac"      => $info['message'],
-            "numBultos"     => (string)$info['quantity'],
+            "observac"      => $info_shipment['message'],
+            "numBultos"     => (string)$info_shipment['quantity'],
             "kilos"         => (string)round($weight,2),
             "volumen"       => "",
-            "alto"          => (string)round($info['height'],2),
-            "largo"         => (string)round($info['length'],2),
-            "ancho"         => (string)round($info['width'],2),
+            "alto"          => (string)round($info_shipment['height'],2),
+            "largo"         => (string)round($info_shipment['length'],2),
+            "ancho"         => (string)round($info_shipment['width'],2),
             "producto"      => (string)$type_shipment->id_bc,
             "portes"        => "P",
             "reembolso"     => $reembolso,
-            "entrSabado"    => ($info['deliver_sat'])?"S":"",
-            "seguro"        => (string)$info['insured_value'],
+            "entrSabado"    => "",
+            "seguro"        => "",
             "numEnvioVuelta" => "",
             "listaBultos"   => $list_packages,
-            "codDirecDestino" => ($info['delivery_office'])?$info['cod_office']:"",
+            "codDirecDestino" => (isset($info_shipment['delivery_office']))?$info_shipment['cod_office']:"",
             "password"      => "",
         ];
 
@@ -230,6 +220,8 @@ Class ServiceCex {
     public function obtenerListaAdicional($info_shipment, $esMasiva=false)
     {
         $fecha = date("d-m-Y");
+        $info_shipment['tipoEtiqueta'] = "3";
+        $info_shipment['grabar_recogida'] = 0;
 
         $iso_lang = \Context::getContext()->language->iso_code;
         $lang = $this->obtenerIdioma($iso_lang);
@@ -301,12 +293,12 @@ Class ServiceCex {
     /**
      * Ejecuta el request
      *
-     * @param array $body
+     * @param array $body_shipment
      * @return obj
      */
-    public function postShipment($url_ws, $body_shipment)
+    public function postShipment($body_shipment)
     {
-        return $this->request('POST', $url_ws, $body_shipment);
+        return $this->request('POST', $this->configuration['RJ_CEX_WSURL'], $body_shipment);
     }
 
     private function headerRequest($body)
@@ -320,8 +312,6 @@ Class ServiceCex {
 
     protected function request($method, $url, $body = null)
     {
- 
-        $credenciales   = $this->getUserCredentials();
         $header = $this->headerRequest($body);
         
         $ch = curl_init();
@@ -334,7 +324,7 @@ Class ServiceCex {
                 CURLOPT_SSL_VERIFYPEER  => false,
                 CURLOPT_USERAGENT       => 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:21.0) Gecko/20100101 Firefox/21.0)',
                 CURLOPT_URL             => $url,
-                CURLOPT_USERPWD         => $credenciales['user'].":".$credenciales['password'],
+                CURLOPT_USERPWD         => $this->configuration['RJ_CEX_USER'].":".$this->configuration['RJ_CEX_PASS'],
                 CURLOPT_CUSTOMREQUEST  => $method,
                 CURLOPT_POSTFIELDS      => mb_convert_encoding($body, mb_detect_encoding($body), "UTF-8"),
                 CURLOPT_HTTPHEADER      => $header,
@@ -366,9 +356,8 @@ Class ServiceCex {
 
     // para pruebas
 
-    /*protected function request($method, $url, $body = null)
+    /* protected function request($method, $url, $body = null)
     {
-        $credenciales   = $this->getUserCredentials();
         $response = '{
             "codigoRetorno": 0,
             "mensajeRetorno": "",
@@ -397,6 +386,6 @@ Class ServiceCex {
         }';
 
         return json_decode($response);
-    }*/
+    } */
 
 }

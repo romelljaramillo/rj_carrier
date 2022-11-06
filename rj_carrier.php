@@ -110,6 +110,13 @@ class Rj_Carrier extends Module
             'parent_class_name' => 'AdminParentTabRjCarrier',
             'icon' => 'local_shipping'
         ],
+        'AdminRjLogs' => [
+            'name' => 'Log errors',
+            'visible' => true,
+            'class_name' => 'AdminRjLogs',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'warning'
+        ],
         'AdminRjLabel' => [
             'name' => 'AdminRJLabel',
             'visible' => true,
@@ -142,7 +149,7 @@ class Rj_Carrier extends Module
     {
         $this->name = 'rj_carrier';
         $this->tab = 'administration';
-        $this->version = '2.0.2';
+        $this->version = '2.0.3';
         $this->author = 'Roanja';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -535,6 +542,7 @@ class Rj_Carrier extends Module
         if(!$id_infopackage){
             return;
         }
+        $name_carrier = '';
 
         $rjcarrier_infoPackage = new RjcarrierInfoPackage((int)$id_infopackage);
         $info_package = $rjcarrier_infoPackage->getFields();
@@ -553,13 +561,7 @@ class Rj_Carrier extends Module
             $info_package['id_reference_carrier'] = $this->getIdReferenceCarrierByIdOrder($id_order);
         }
 
-        $carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
-
-        $name_carrier = '';
-        if($carrier->name){
-            $name_carrier = $carrier->name;
-        }
-
+        $name_carrier = Carrier::getCarrierByReference((int)$info_package['id_reference_carrier'], $id_lang);
         $info_company_carrier = CarrierCompany::getInfoCompanyByIdReferenceCarrier($info_package['id_reference_carrier']);
         $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdCarrierCompany($info_company_carrier['id_carrier_company']);
 
@@ -568,13 +570,12 @@ class Rj_Carrier extends Module
             'info_package' => $info_package,
             'info_customer' => $this->getInfoCustomer($id_order),
             'info_shop' => RjcarrierInfoshop::getShopData(),
-            'name_carrier' => $name_carrier,
+            'carriers' => Carrier::getCarriers((int)$id_lang),
+            'name_carrier' => $name_carrier->name,
             'info_company_carrier' => $info_company_carrier,
             'info_type_shipment' => $info_type_shipment,
             'config_extra_info' => $this->getConfigExtraFieldsValues()
         ];
-
-        $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
 
         $class_carrier = $this->getClassCarrier($info_company_carrier["shortname"]);
         $class_carrier->createShipment($shipment);
@@ -610,9 +611,11 @@ class Rj_Carrier extends Module
                     $info_shipment = [];
             }
             $info_package = CarrierCompany::saveInfoPackage($id_order);
+
         } else {
             $info_package = $this->getInfoPackage($id_order);
         }
+
         
         if(!$info_package['id_reference_carrier']){
             $info_package['id_reference_carrier'] = $this->getIdReferenceCarrierByIdOrder($id_order);
@@ -634,6 +637,7 @@ class Rj_Carrier extends Module
             'info_company_carrier' => $info_company_carrier,
             'info_type_shipment' => $info_type_shipment,
             'url_ajax' => $this->context->link->getAdminLink('AdminAjaxRjCarrier'),
+            'config_extra_info' => $this->getConfigExtraFieldsValues()
         ];
 
         if(isset($info_company_carrier["shortname"])){
@@ -644,9 +648,9 @@ class Rj_Carrier extends Module
         if(!$id_shipment){
             if ((Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend'))){
                 if($validate_config){
-                    $shipment['config_extra_info'] = $this->getConfigExtraFieldsValues();
-                    $shipment['info_shipment'] = CarrierCompany::saveShipment($shipment);
                     $class_carrier->createShipment($shipment);
+                    $shipment['info_shipment'] = RjcarrierShipment::getShipmentByIdOrder($id_order);
+                    $id_shipment = $shipment['info_shipment']['id_shipment'];
                 } else {
                     $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="'.$this->context->link->getAdminLink(
                         'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]).'">'. 

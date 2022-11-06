@@ -50,6 +50,7 @@ abstract class TemplateLabel
     public $shop;
 
     public $shipment;
+    public $response;
 
     public $company_shortname;
     public $pdf_class;
@@ -63,6 +64,13 @@ abstract class TemplateLabel
     public function __construct($shipment, $pdf_class, $num_package = '')
     {
         $this->shipment = $shipment;
+
+        if(isset($this->shipment["response"])){
+            $this->response = $this->shipment["response"];
+            $this->datosResultado = $this->response->datosResultado;
+            $this->cod_package = $this->response->listaBultos[$num_package - 1];
+        }
+        
         $this->pdf_class = $pdf_class;
         $this->num_package = $num_package;
     }
@@ -212,7 +220,7 @@ abstract class TemplateLabel
 
         $this->pdf_class->Cell(10, 0, 'ES', 0, 0, 'C', 1);
         $this->pdf_class->Cell(25, 0, $type_shipment->name, 0, 0, 'C', 1);
-        $this->pdf_class->Cell(60, 0, 'Env.: ' . $this->shipment['response']->datosResultado, 0, 0, 'C', 1);
+        $this->pdf_class->Cell(60, 0, 'Env.: ' . $this->datosResultado, 0, 0, 'C', 1);
 
         $this->pdf_class->Line(15, 107, 15, 118, $style2);
         $this->pdf_class->Line(45, 107, 45, 118, $style2);
@@ -244,13 +252,11 @@ abstract class TemplateLabel
         );
         $style2 = array('width' => 0.2, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0));
 
-        $cod_package = $this->shipment['response']->listaBultos[$this->num_package - 1];
-        
         $this->pdf_class->SetFont('dejavusans', '', 11, '', true);
-        $this->pdf_class->write1DBarcode($cod_package->codUnico, 'C128', 6, 125, 98, 26, 0.4, $style, 'C');
+        $this->pdf_class->write1DBarcode($this->cod_package->codUnico, 'C128', 6, 125, 98, 26, 0.4, $style, 'C');
         $this->pdf_class->ln();
         $this->pdf_class->setY(145);
-        $this->pdf_class->Cell(100, 0, 'Pack.: ' . $cod_package->codUnico, 0, 1, 'C');
+        $this->pdf_class->Cell(100, 0, 'Pack.: ' . $this->cod_package->codUnico, 0, 1, 'C');
         $this->pdf_class->Line(5, 155, 105, 155, $style2);
     }
 
@@ -299,8 +305,14 @@ abstract class TemplateLabel
         $this->zoneShipper();
         $this->zoneReceiver();
         $this->zonePackage();
-        $this->zoneInfoShipment();
-        $this->zoneBarcode();
+
+        if(isset($this->datosResultado)){
+            $this->zoneInfoShipment();
+        }
+
+        if(isset($this->cod_package)){
+            $this->zoneBarcode();
+        }
     }
 
     /**

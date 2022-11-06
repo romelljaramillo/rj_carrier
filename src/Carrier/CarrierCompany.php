@@ -581,16 +581,8 @@ class CarrierCompany extends Module
 
     public function createShipment($shipment)
     {
-        $id_shipment = $shipment['info_shipment']['id_shipment'];
-        
-        if(!$id_shipment){
-            return false;
-        }
-        
-        $request = json_encode($shipment);
-        
-        $this->saveRequestShipment($id_shipment, $request, '');
-
+        $info_shipment = $this->saveShipment($shipment);
+        $shipment['info_shipment'] = $info_shipment;
         $packages_qty = $shipment['info_package']['quantity'];
         
         for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
@@ -598,7 +590,7 @@ class CarrierCompany extends Module
             $pdf = $rjpdf->render($this->display_pdf);
 
             if ($pdf) {
-                $this->saveLabels($id_shipment, $pdf, $num_package);
+                $this->saveLabels($info_shipment['id_shipment'], $pdf, $num_package);
             }
         }
         
@@ -669,7 +661,7 @@ class CarrierCompany extends Module
      * @param array $info_shipment
      * @return obj || boolean
      */
-    public static function saveShipment($info_shipment)
+    public function saveShipment($info_shipment, $response = null)
     {
         $id_order = $info_shipment['id_order'];
         $id_infopackage = $info_shipment['info_package']['id_infopackage'];
@@ -694,6 +686,8 @@ class CarrierCompany extends Module
         $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
         $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
         $rj_carrier_shipment->product = $info_shipment['name_carrier'];
+        $rj_carrier_shipment->request = json_encode($info_shipment);
+        $rj_carrier_shipment->response = ($response) ? json_encode($response) : null;
 
         if (!$id_shipment) {
             if (!$rj_carrier_shipment->add())
@@ -798,10 +792,5 @@ class CarrierCompany extends Module
         $rjcarrierLog->response = $response;
 
         $rjcarrierLog->add();
-    }
-
-    public static function displayCreateLabel()
-    {
-        # code...
     }
 }

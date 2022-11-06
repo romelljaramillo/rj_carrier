@@ -26,24 +26,24 @@
 $sql = array();
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
-    `id_infoshop` int(11) NOT NULL AUTO_INCREMENT,
-    `firstname` varchar(100) NOT NULL,
-    `lastname` varchar(100) NULL,
-    `company` varchar(100) NULL,
-    `additionalname` varchar(100) NULL,
-    `id_country` INT(10) UNSIGNED NOT NULL,
-	`state` varchar(255) NULL,
-	`city` varchar(255) NULL,
-    `street` varchar(255) NOT NULL,
-    `number` varchar(10) NULL,
-    `postcode` varchar(10) NULL,
-    `additionaladdress` varchar(100) NULL,
-    `isbusiness` tinyint(1) unsigned NOT NULL DEFAULT \'0\',
-    `email` varchar(150) NULL,
-    `phone` varchar(20) NULL,
-    `vatnumber` varchar(20) NULL,
-    `date_add` datetime NOT NULL,
-	`date_upd` datetime NOT NULL,
+    `id_infoshop` INT(11) NOT NULL AUTO_INCREMENT,
+	`firstname` VARCHAR(100) NOT NULL,
+	`lastname` VARCHAR(100) NULL DEFAULT NULL,
+	`company` VARCHAR(100) NULL DEFAULT NULL,
+	`additionalname` VARCHAR(100) NULL DEFAULT NULL,
+	`id_country` INT(10) UNSIGNED NOT NULL,
+	`state` VARCHAR(255) NULL DEFAULT NULL,
+	`city` VARCHAR(255) NOT NULL,
+	`street` VARCHAR(255) NOT NULL,
+	`number` VARCHAR(10) NULL DEFAULT NULL,
+	`postcode` VARCHAR(10) NULL DEFAULT NULL,
+	`additionaladdress` VARCHAR(100) NULL DEFAULT NULL,
+	`isbusiness` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
+	`email` VARCHAR(150) NULL DEFAULT NULL,
+	`phone` VARCHAR(20) NULL DEFAULT NULL,
+	`vatnumber` VARCHAR(20) NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY  (`id_infoshop`),
     INDEX `id_country` (`id_country`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
@@ -55,18 +55,18 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infoshop_shop` (
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
-    `id_infopackage` INT(11) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `id_order` INT(10) UNSIGNED NOT NULL,
-    `id_reference_carrier` INT(10) UNSIGNED NOT NULL,
-	`id_type_shipment` INT(10) UNSIGNED NOT NULL,
+    `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
+	`id_order` INT(10) NOT NULL,
+	`id_reference_carrier` INT(10) NOT NULL,
+	`id_type_shipment` INT(10) NULL DEFAULT NULL,
 	`quantity` INT(10) UNSIGNED NOT NULL DEFAULT 1,
+	`cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
 	`weight` DECIMAL(20,6) NULL DEFAULT NULL,
 	`length` DECIMAL(20,6) NULL DEFAULT NULL,
 	`width` DECIMAL(20,6) NULL DEFAULT NULL,
 	`height` DECIMAL(20,6) NULL DEFAULT NULL,
-    `cash_ondelivery` DECIMAL(20,6) NULL DEFAULT \'0.000000\',
-	`message` VARCHAR(255) NULL,
-    `hour_from` TIME NULL DEFAULT NULL,
+	`message` VARCHAR(255) NULL DEFAULT NULL,
+	`hour_from` TIME NULL DEFAULT NULL,
 	`hour_until` TIME NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
@@ -85,9 +85,9 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
 	`id_order` INT(10) UNSIGNED NOT NULL,
 	`reference_order` VARCHAR(100) NOT NULL,
 	`num_shipment` CHAR(36) NOT NULL,
-	`id_carrier_company` INT(10) UNSIGNED NOT NULL,
+	`id_carrier_company` INT(10) NOT NULL,
 	`id_infopackage` INT(10) UNSIGNED NOT NULL,
-	`account` VARCHAR(100),
+	`account` VARCHAR(100) NULL DEFAULT NULL,
 	`product` VARCHAR(100) NOT NULL,
 	`request` TEXT NULL DEFAULT NULL,
 	`response` TEXT NULL DEFAULT NULL,
@@ -125,33 +125,46 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
-    `id_carrier_company` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `shortname` varchar(4) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `icon` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-    `date_add` DATETIME NOT NULL,
+    `id_carrier_company` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`name` VARCHAR(50) NOT NULL,
+	`shortname` VARCHAR(4) NOT NULL,
+	`icon` VARCHAR(250) NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_carrier_company`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
-    `id_type_shipment` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `id_carrier_company` INT(10) UNSIGNED NOT NULL,
-    `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `id_bc` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-    `id_reference_carrier` INT(10) DEFAULT NULL,
-    `active` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
-    `date_add` DATETIME NOT NULL,
+    `id_type_shipment` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`id_carrier_company` INT(10) NOT NULL,
+	`name` VARCHAR(50) NOT NULL,
+	`id_bc` VARCHAR(50) NOT NULL,
+	`id_reference_carrier` INT(10) NULL DEFAULT NULL,
+	`active` TINYINT(1) UNSIGNED NOT NULL DEFAULT \'0\',
+	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_type_shipment`),
     INDEX `id_type_shipment` (`id_type_shipment`,`id_carrier_company`,`id_reference_carrier`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
+$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_log` (
+    `id_carrier_log` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id_shipment` INT(11) UNSIGNED NOT NULL,
+	`name` VARCHAR(250) NOT NULL,
+	`request` TEXT NULL DEFAULT NULL,
+	`response` TEXT NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL,
+	`date_upd` DATETIME NOT NULL,
+    PRIMARY KEY (`id_carrier_log`),
+    INDEX `id_shipment` (`id_shipment`)
+) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
 	(1, \'Default Carrier\', \'DEF\', NULL),
 	(2, \'DHL\', \'DHL\', NULL),
-	(3, \'Correo Express\', \'CEX\', NULL);';
-    
+	(3, \'Correo Express\', \'CEX\', NULL),
+	(4, \'GOI\', \'GOI\', NULL);';
+
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipment`, `id_carrier_company`, `name`, `id_bc`, `id_reference_carrier`, `active`) VALUES
     (1,3,\'PAQ 10\',61,NULL,0),
     (2,3,\'PAQ 14\',62,NULL,0),
@@ -170,7 +183,9 @@ $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipme
     (15,3,\'Entrega en Oficina\',44,NULL,0),
     (16,3,\'Entrega + Recogida Multichrono\',54,NULL,0),
     (17,3,\'Entrega + recogida + Manip Multichrono\',55,NULL,0),
-    (18,2,\'DHL PARCEL IBERIA\', \'IBERIA\',NULL,0);';
+    (18,2,\'DHL PARCEL IBERIA\', \'IBERIA\',NULL,0),
+    (19, 4, \'Goi carrier\', \'T,M\', 2, 0),
+    (20, 4, \'GOI - Montaje\', \'T,I,M\', 1, 0);';
 
 foreach ($sql as $query) {
     if (Db::getInstance()->execute($query) == false) {
