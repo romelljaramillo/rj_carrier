@@ -53,8 +53,8 @@ function upgrade_module_2_0_3($module)
 
     $module->installTabs();
     
-    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_log` ADD COLUMN `id_shipment` INT(10) UNSIGNED NOT NULL AFTER `id_carrier_log`';
-    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_log` ADD INDEX `id_shipment` (`id_shipment`)';
+    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_log` ADD COLUMN `id_order` INT(10) UNSIGNED NOT NULL AFTER `id_carrier_log`';
+    $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_log` ADD INDEX `id_order` (`id_order`)';
 
     foreach ($sql as $query) {
         if (Db::getInstance()->execute($query) == false) {

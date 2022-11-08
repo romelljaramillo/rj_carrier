@@ -31,7 +31,7 @@ use Db;
 class RjcarrierLog extends \ObjectModel
 {
     public $name;
-    public $id_shipment;
+    public $id_order;
     public $request;
     public $response;
     public $date_add;
@@ -45,7 +45,7 @@ class RjcarrierLog extends \ObjectModel
         'table' => 'rj_carrier_log',
         'primary' => 'id_carrier_log',
         'fields' => [
-            'id_shipment' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
+            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
             'name'     => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 250, 'required' => true],
             'request'  => ['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],
             'response' => ['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],

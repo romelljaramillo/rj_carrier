@@ -149,14 +149,14 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_log` (
     `id_carrier_log` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `id_shipment` INT(11) UNSIGNED NOT NULL,
+    `id_order` INT(10) UNSIGNED NOT NULL,
 	`name` VARCHAR(250) NOT NULL,
 	`request` TEXT NULL DEFAULT NULL,
 	`response` TEXT NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_carrier_log`),
-    INDEX `id_shipment` (`id_shipment`)
+    INDEX `id_order` (`id_order`)
 ) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES

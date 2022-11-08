@@ -784,10 +784,11 @@ class CarrierCompany extends Module
         return false;
     }
 
-    public static function saveLog($name, $body, $response) 
+    public static function saveLog($name,$id_order, $body, $response) 
     {
         $rjcarrierLog = new RjcarrierLog();
         $rjcarrierLog->name = $name;
+        $rjcarrierLog->id_order = $id_order;
         $rjcarrierLog->request = $body;
         $rjcarrierLog->response = $response;
 

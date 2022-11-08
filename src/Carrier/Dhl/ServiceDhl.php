@@ -38,17 +38,22 @@ Class ServiceDhl {
     protected $accessToken = null;
     protected $access_token = 'access_token_dhl';
     protected $refresh_token = 'refresh_token_dhl';
+    protected $body;
+    protected $id_order;
 
-    public function __construct()
+    public function __construct($shipment)
     {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
+
+        $this->id_order = $shipment['id_order'];
         
-        $this->getConfigurationDHL();
+        $this->getConfiguration();
         $this->postLogin();
+        $this->getBodyShipment($shipment);
     }
 
-    private function getConfigurationDHL()
+    private function getConfiguration()
     {
         $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
         if($env){
@@ -126,9 +131,9 @@ Class ServiceDhl {
      * @param array $body
      * @return obj
      */
-    public function postShipment($body_shipment)
+    public function postShipment()
     {
-        $resp = $this->request('POST', $this->urlShipments, $body_shipment);
+        $resp = $this->request('POST', $this->urlShipments, $this->body);
         return $resp;
     }
 
@@ -191,7 +196,7 @@ Class ServiceDhl {
             "pieces" => $pieces
         ];
 
-        return json_encode($data);
+        $this->body = json_encode($data);
     }
 
     public function getPieces($info)
@@ -342,7 +347,7 @@ Class ServiceDhl {
         curl_close($ch);
         
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
-            CarrierDhl::saveLog($url, $body, $response);
+            CarrierDhl::saveLog($url, $this->id_order, $body, $response);
             return false;
         }
 

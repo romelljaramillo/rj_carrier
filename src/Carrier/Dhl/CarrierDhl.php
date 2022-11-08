@@ -145,14 +145,14 @@ class CarrierDhl extends CarrierCompany
     /**
      * Crea envío DHL
      *
-     * @param array $infoOrder
+     * @param array $shipment
      * @return void
      */
     public function createShipment($shipment)
     {
-        $service_dhl = new ServiceDhl();
-        $body_shipment = $service_dhl->getBodyShipment($shipment);
-        $response = $service_dhl->postShipment($body_shipment);
+        
+        $service_dhl = new ServiceDhl($shipment);
+        $response = $service_dhl->postShipment();
 
         if(!$response) {
             return false;

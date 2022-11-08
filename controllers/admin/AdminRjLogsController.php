@@ -67,7 +67,7 @@ class AdminRjLogsController extends ModuleAdminController
     protected function querySql()
     {
         $this->_select = "a.id_carrier_log,
-                            a.id_shipment,
+                            a.id_order,
                             a.name,
                             a.request,
                             a.response,
@@ -90,10 +90,10 @@ class AdminRjLogsController extends ModuleAdminController
                 'havingFilter' => true,
                 'filter_key' => 'a!id_carrier_log'
             ],
-            'id_shipment' => [
-                'title' => $this->l('id_shipment'),
+            'id_order' => [
+                'title' => $this->l('id_order'),
                 'havingFilter' => true,
-                'filter_key' => 'cc!id_shipment',
+                'filter_key' => 'cc!id_order',
             ],
             'name' => [
                 'title' => $this->l('name'),
