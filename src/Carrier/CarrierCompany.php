@@ -566,17 +566,17 @@ class CarrierCompany extends Module
 	{
 		$id_shop_group = Shop::getContextShopGroupID();
 		$id_shop = Shop::getContextShopID();
-        $arry_fields = [];
+        $fields = [];
 
         foreach ($this->fields_config as $field) {
             if($field['type'] === 'password'){
-                $arry_fields[$field['name']] = Tools::getValue($field['name'], Common::encrypt('decrypt',Configuration::get($field['name'], null, $id_shop_group, $id_shop)));
+                $fields[$field['name']] = Tools::getValue($field['name'], Common::encrypt('decrypt',Configuration::get($field['name'], null, $id_shop_group, $id_shop)));
             }  else {
-                $arry_fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
+                $fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
             }
         }
 
-        return $arry_fields;
+        return $fields;
 	}
 
     public function createShipment($shipment)
@@ -784,7 +784,7 @@ class CarrierCompany extends Module
         return false;
     }
 
-    public static function saveLog($name,$id_order, $body, $response) 
+    public static function saveLog($name, $id_order, $body, $response) 
     {
         $rjcarrierLog = new RjcarrierLog();
         $rjcarrierLog->name = $name;

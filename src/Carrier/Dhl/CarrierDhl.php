@@ -88,7 +88,7 @@ class CarrierDhl extends CarrierCompany
             [
                 'type' => 'text',
                 'label' => $this->l('Url Production'),
-                'name' => 'RJ_DHL_URL_PRO',
+                'name' => 'RJ_DHL_URL',
                 'required' => true,
                 'desc' => $this->l('Format url http:// or https:// .'),
             ],
@@ -98,6 +98,34 @@ class CarrierDhl extends CarrierCompany
                 'name' => 'RJ_DHL_URL_DEV',
                 'required' => true,
                 'desc' => $this->l('Format url http:// or https:// .'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint login'),
+                'name' => 'RJ_DHL_ENDPOINT_LOGIN',
+                'required' => true,
+                'desc' => $this->l('Example: /authenticate/api-key'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint refresh token'),
+                'name' => 'RJ_DHL_ENDPOINT_REFRESH_TOKEN',
+                'required' => true,
+                'desc' => $this->l('Example: /authenticate/refresh-token'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint Shipment'),
+                'name' => 'RJ_DHL_ENDPOINT_SHIPMENT',
+                'required' => true,
+                'desc' => $this->l('Example: /shipments'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint Label'),
+                'name' => 'RJ_DHL_ENDPOINT_LABEL',
+                'required' => true,
+                'desc' => $this->l('Example: /labels'),
             ],
             [
                 'type' => 'switch',
@@ -159,10 +187,14 @@ class CarrierDhl extends CarrierCompany
         }
 
         $info_shipment = $this->saveShipment($shipment, $response);
-        $shipment['info_shipment'] = $info_shipment;
+        // $shipment['info_shipment'] = $info_shipment;
 
         if($info_shipment['id_shipment']){
-            return $this->saveLabels($info_shipment['id_shipment'], $response);
+            $labels = $response->pieces;
+            foreach ($labels as $label) {
+                $label_response = $service_dhl->getLabel($label->labelId);
+                $this->saveLabels($info_shipment['id_shipment'], $label_response);
+            }
         } 
 
         return false;
@@ -170,25 +202,21 @@ class CarrierDhl extends CarrierCompany
 
     public function saveLabels($id_shipment, $response, $num_package = 1)
     {
-        $info_labels = $response->pieces;
-        $service_dhl = new ServiceDhl();
-        foreach ($info_labels as $label) {
-            $label_service = $service_dhl->getLabel($label->labelId);
-            $rj_carrier_label = new RjcarrierLabel();
-            $rj_carrier_label->id_shipment = $id_shipment;
-            $rj_carrier_label->package_id = $label_service->labelId;
-            $rj_carrier_label->tracker_code = $label_service->trackerCode;
-            $rj_carrier_label->label_type = $label_service->labelType;
-            
-            $pdf = base64_decode($label_service->pdf);
+        $rj_carrier_label = new RjcarrierLabel();
+        $rj_carrier_label->id_shipment = $id_shipment;
+        $rj_carrier_label->package_id = $response->labelId;
+        $rj_carrier_label->tracker_code = $response->trackerCode;
+        $rj_carrier_label->label_type = $response->labelType;
+        
+        $pdf = base64_decode($response->pdf);
 
-            if(Common::createFileLabel($pdf, $label_service->labelId)){
-                $rj_carrier_label->pdf = $label_service->labelId;
-            }
-            
-            if (!$rj_carrier_label->add())
-                return false;
+        if(Common::createFileLabel($pdf, $response->labelId)){
+            $rj_carrier_label->pdf = $response->labelId;
         }
+        
+        if (!$rj_carrier_label->add())
+            return false;
+            
         return true;
     }
 }

@@ -42,6 +42,8 @@ Class ServiceGoi {
     protected $refresh_token = 'refresh_token_goi';
     protected $count = 0;
     protected $repetir_request = 10;
+    protected $body;
+    protected $id_order;
 
     public function __construct()
     {
@@ -121,9 +123,9 @@ Class ServiceGoi {
      * @param array $body
      * @return obj
      */
-    public function postShipment($body_shipment)
+    public function postShipment()
     {
-        $resp = $this->request('POST', $this->urlShipments, $body_shipment);
+        $resp = $this->request('POST', $this->urlShipments, $this->body);
         return $resp;
     }
 
@@ -341,7 +343,7 @@ Class ServiceGoi {
             } else {
                 if($this->count == $this->repetir_request){
                     // $id_shipment = RjcarrierShipment::getIdByIdOrder($this->id_order);
-                    CarrierGoi::saveLog($url, $body, $response);
+                    CarrierGoi::saveLog($url $this->id_order,, $body, $response);
                     return false;
                 }
                 
@@ -353,7 +355,7 @@ Class ServiceGoi {
         }
 
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
-            CarrierGoi::saveLog($url, $body, $response);
+            CarrierGoi::saveLog($url, $this->id_order, $body, $response);
             return false;
         }
 

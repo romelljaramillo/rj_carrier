@@ -299,10 +299,8 @@ class CarrierCex extends CarrierCompany
 
     public function createShipment($shipment)
     {
-        $service_cex = new ServiceCex();
-        $body_shipment = $service_cex->getBodyShipment($shipment);
-
-        $response = $service_cex->postShipment($body_shipment);
+        $service_cex = new ServiceCex($shipment);
+        $response = $service_cex->postShipment();
 
         if(!$response) {
             return false;

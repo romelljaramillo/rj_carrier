@@ -153,16 +153,12 @@ class CarrierGoi extends CarrierCompany
      */
     public function createShipment($shipment)
     {
-        $id_shipment = $shipment['info_shipment']['id_shipment'];
         $id_order = (string)$shipment['id_order'];
 
-        $service_goi = new ServiceGoi($id_order);
+        $service_goi = new ServiceGoi($shipment);
+        $response = $service_goi->postShipment();
 
-        $body_shipment = $service_goi->getBodyShipment($shipment);
-        
-        $response = $service_goi->postShipment($body_shipment);
-
-        if($response === false) {
+        if(!$response) {
             return false;
         }
         
@@ -172,9 +168,14 @@ class CarrierGoi extends CarrierCompany
             return false;
         }
 
-        $this->saveRequestShipment($id_shipment, $body_shipment, $response);
-        return $this->saveLabels($id_shipment, $pdf);
+        $info_shipment = $this->saveShipment($shipment, $response);
+        $shipment['info_shipment'] = $info_shipment;
 
+        if($info_shipment['id_shipment']){
+            return $this->saveLabels($info_shipment['id_shipment'], $response);
+        } 
+
+        return false;
     }
 
     public function createLabel($id_shipment, $id_order)

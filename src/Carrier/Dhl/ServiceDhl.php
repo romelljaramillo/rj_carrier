@@ -28,18 +28,20 @@ use Shop;
 use Country;
 
 Class ServiceDhl {
-    protected $userId;
+    protected $user_id;
+    protected $account_id;
     protected $key;
-    protected $base_url = 'https://clientesparcel.dhl.es/ac.core/gateway/a/api/v1';
-    protected $urllogin = '/authenticate/api-key';
-    protected $urlShipments = '/shipments';
-    protected $urlLabels = '/labels';
-    protected $urlRefresToken = '/authenticate/refresh-token';
-    protected $accessToken = null;
-    protected $access_token = 'access_token_dhl';
-    protected $refresh_token = 'refresh_token_dhl';
+    protected $base_url;
+    protected $endpoint_login;
+    protected $endpoint_refresh_token;
+    protected $endpoint_shipments;
+    protected $endpoint_labels;
+
     protected $body;
     protected $id_order;
+    protected $token = null;
+    protected $access_token = 'access_token_dhl';
+    protected $refresh_token = 'refresh_token_dhl';
 
     public function __construct($shipment)
     {
@@ -55,25 +57,32 @@ Class ServiceDhl {
 
     private function getConfiguration()
     {
-        $env = Configuration::get('RJ_DHL_ENV', null, $this->id_shop_group, $this->id_shop);
-        if($env){
-            $this->userId = Configuration::get('RJ_DHL_USERID', null, $this->id_shop_group, $this->id_shop);
-            $this->key = Configuration::get('RJ_DHL_KEY', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_DHL_URL_PRO', null, $this->id_shop_group, $this->id_shop);
-        } else {
-            $this->userId = Configuration::get('RJ_DHL_USERID_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->key = Configuration::get('RJ_DHL_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_DHL_URL_DEV', null, $this->id_shop_group, $this->id_shop);
+        $dev = '';
+
+        $carrierCex = new CarrierDhl();
+        $this->configuration = $carrierCex->getConfigFieldsValues();
+
+        if(!$this->configuration['RJ_DHL_ENV']){
+            $dev = '_DEV';
         }
+
+        $this->account_id = $this->configuration['RJ_DHL_ACCOUNID'];
+        $this->user_id = $this->configuration['RJ_DHL_USERID'. $dev];
+        $this->key = $this->configuration['RJ_DHL_KEY'. $dev];
+        $this->base_url = $this->configuration['RJ_DHL_URL'. $dev];
+        $this->endpoint_login = $this->configuration['RJ_DHL_ENDPOINT_LOGIN'];
+        $this->endpoint_refresh_token = $this->configuration['RJ_DHL_ENDPOINT_REFRESH_TOKEN'];
+        $this->endpoint_shipments = $this->configuration['RJ_DHL_ENDPOINT_SHIPMENT'];
+        $this->endpoint_labels = $this->configuration['RJ_DHL_ENDPOINT_LABEL'];
     }
 
     public function postLogin()
     {
         if(!$this->getCookieToken()){
             $body = $this->bodyLogin();
-            $resp = $this->request('POST', $this->urllogin, $body);
+            $resp = $this->request('POST', $this->endpoint_login , $body);
             if($resp){
-                return $this->setCookies($resp);
+                $this->setCookies($resp);
             }
         }
     }
@@ -81,7 +90,7 @@ Class ServiceDhl {
     private function bodyLogin()
     {
         $body = array(
-            "userId"=> $this->userId, 
+            "userId"=> $this->user_id, 
             "key"=> $this->key
         );
 
@@ -102,19 +111,17 @@ Class ServiceDhl {
             $cookies->refreshTokenExpiration
         );
 
-        $this->accessToken = $cookies->accessToken;
-
-        return true;
+        $this->token = $cookies->accessToken;
     }
 
     public function getCookieToken()
     {
         if(isset($_COOKIE[$this->access_token])) {
-            $this->accessToken = $_COOKIE[$this->access_token];
+            $this->token = $_COOKIE[$this->access_token];
             return true;
         } elseif (isset($_COOKIE[$this->refresh_token])) {
-            $refreshToken = json_encode(array($this->refresh_token => $_COOKIE[$this->refresh_token]));
-            $resp = $this->request('POST', $this->urlRefresToken, $refreshToken);
+            $refresh_token = json_encode(array($this->refresh_token => $_COOKIE[$this->refresh_token]));
+            $resp = $this->request('POST', $this->endpoint_refresh_token, $refresh_token);
             
             if($resp){
                 return $this->setCookies($resp);
@@ -133,14 +140,14 @@ Class ServiceDhl {
      */
     public function postShipment()
     {
-        $resp = $this->request('POST', $this->urlShipments, $this->body);
+        $resp = $this->request('POST', $this->endpoint_shipments, $this->body);
         return $resp;
     }
 
-    public function getShipment($shipmentId)
+    public function getShipment($id_shipment)
     {
-        $urlShipments = $this->urlShipments . '/' . $shipmentId;
-        return $this->request('GET', $urlShipments);
+        $endpoint_shipments = $this->endpoint_shipments . '/' . $id_shipment;
+        return $this->request('GET', $endpoint_shipments);
     }
 
     /**
@@ -149,16 +156,15 @@ Class ServiceDhl {
      * @param string $labelId
      * @return obj
      */
-    public function getLabel($labelId)
+    public function getLabel($id_label)
     {
-        $urlLabel = $this->urlLabels . '/' . $labelId;
-        return $this->request('GET', $urlLabel);
+        $endpoint_label = $this->endpoint_labels . '/' . $id_label;
+        return $this->request('GET', $endpoint_label);
     }
 
     public function getBodyShipment($info_shipment)
     {
         $num_shipment = $info_shipment['info_shipment']['num_shipment'];
-        $id_order = (string)$info_shipment['id_order'];
         $info_receiver = $info_shipment['info_customer'];
         $info_shipper = $info_shipment['info_shop'];
         $info_package = $info_shipment['info_package'];
@@ -170,7 +176,7 @@ Class ServiceDhl {
 
         $options[] = [
             "key"   => "REFERENCE",
-            "input" => $id_order
+            "input" => $this->id_order
         ];
 
         if($info_package['cash_ondelivery'] > 0){
@@ -180,16 +186,14 @@ Class ServiceDhl {
             ];
         }
 
-        $accountId = Configuration::get('RJ_DHL_ACCOUNID', null, $this->id_shop_group, $this->id_shop);
-        
         // $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
         
         $data = [
             "shipmentId" => $num_shipment,
-            "orderReference" => $id_order,
+            "orderReference" => $this->id_order,
             "receiver" => $receiver,
             "shipper" => $shipper,
-            "accountId" => $accountId,
+            "accountId" =>  $this->account_id,
             "options" => $options,
             "returnLabel" => false,
             // 'product' => $type_shipment->id_bc,
@@ -292,15 +296,15 @@ Class ServiceDhl {
 
     private function headerRequest()
     {
-        if(!$this->accessToken){
+        if(!$this->token){
             if(isset($_COOKIE[$this->access_token]))
-                $this->accessToken = $_COOKIE[$this->access_token];
+                $this->token = $_COOKIE[$this->access_token];
         }
 
         return array(
             'Content-Type: application/json',
             'Accept:application/json',
-            'Authorization: Bearer ' . $this->accessToken
+            'Authorization: Bearer ' . $this->token
         );
     }
 
@@ -312,10 +316,10 @@ Class ServiceDhl {
      * @param json $body
      * @return array
      */
-    private function request($method, $urlparam, $body = null)
+    private function request($method, $endpoin, $body = null)
     {
         $header = $this->headerRequest();
-        $url = $this->base_url . $urlparam;
+        $url = $this->base_url . $endpoin;
         
         $ch = curl_init();
 

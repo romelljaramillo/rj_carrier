@@ -28,11 +28,18 @@ use Country;
 
 Class ServiceCex {
 
-    public function __construct()
+    protected $body;
+    protected $id_order;
+
+    public function __construct($shipment)
     {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
+
+        $this->id_order = $shipment['id_order'];
+
         $this->getConfiguration();
+        $this->getBodyShipment($shipment);
     }
 
     private function getConfiguration()
@@ -296,9 +303,9 @@ Class ServiceCex {
      * @param array $body_shipment
      * @return obj
      */
-    public function postShipment($body_shipment)
+    public function postShipment()
     {
-        return $this->request('POST', $this->configuration['RJ_CEX_WSURL'], $body_shipment);
+        return $this->request('POST', $this->configuration['RJ_CEX_WSURL'], $this->body);
     }
 
     private function headerRequest($body)
@@ -341,7 +348,7 @@ Class ServiceCex {
         curl_close($ch);
 
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
-            CarrierCex::saveLog($url, $body, $response);
+            CarrierCex::saveLog($url, $this->id_order, $body, $response);
             return false;
         }
 
