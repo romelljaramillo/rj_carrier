@@ -178,7 +178,7 @@ class CarrierDhl extends CarrierCompany
      */
     public function createShipment($shipment)
     {
-        
+        $shipment['num_shipment'] = Common::getUUID();
         $service_dhl = new ServiceDhl($shipment);
         $response = $service_dhl->postShipment();
 
@@ -187,7 +187,6 @@ class CarrierDhl extends CarrierCompany
         }
 
         $info_shipment = $this->saveShipment($shipment, $response);
-        // $shipment['info_shipment'] = $info_shipment;
 
         if($info_shipment['id_shipment']){
             $labels = $response->pieces;

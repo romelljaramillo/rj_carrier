@@ -48,7 +48,7 @@ Class ServiceDhl {
         $this->id_shop_group = Shop::getContextShopGroupID();
 		$this->id_shop = Shop::getContextShopID();
 
-        $this->id_order = $shipment['id_order'];
+        $this->id_order = (string)$shipment['id_order'];
         
         $this->getConfiguration();
         $this->postLogin();
@@ -164,7 +164,7 @@ Class ServiceDhl {
 
     public function getBodyShipment($info_shipment)
     {
-        $num_shipment = $info_shipment['info_shipment']['num_shipment'];
+        $num_shipment = $info_shipment['num_shipment'];
         $info_receiver = $info_shipment['info_customer'];
         $info_shipper = $info_shipment['info_shop'];
         $info_package = $info_shipment['info_package'];
@@ -311,8 +311,8 @@ Class ServiceDhl {
     /**
      * request DHL
      *
-     * @param string $requestMethod
-     * @param string $urlparam
+     * @param string $method
+     * @param string $endpoin
      * @param json $body
      * @return array
      */

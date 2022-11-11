@@ -581,6 +581,7 @@ class CarrierCompany extends Module
 
     public function createShipment($shipment)
     {
+        $shipment['num_shipment'] = Common::getUUID();
         $info_shipment = $this->saveShipment($shipment);
         $shipment['info_shipment'] = $info_shipment;
         $packages_qty = $shipment['info_package']['quantity'];
@@ -664,6 +665,7 @@ class CarrierCompany extends Module
     public function saveShipment($info_shipment, $response = null)
     {
         $id_order = $info_shipment['id_order'];
+        $num_shipment = $info_shipment['num_shipment'];
         $id_infopackage = $info_shipment['info_package']['id_infopackage'];
         $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
 
@@ -682,7 +684,7 @@ class CarrierCompany extends Module
 
         $rj_carrier_shipment->id_order = (int)$id_order;
         $rj_carrier_shipment->reference_order = $order->reference;
-        $rj_carrier_shipment->num_shipment = Common::getUUID();
+        $rj_carrier_shipment->num_shipment = $num_shipment;
         $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
         $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
         $rj_carrier_shipment->product = $info_shipment['name_carrier'];
