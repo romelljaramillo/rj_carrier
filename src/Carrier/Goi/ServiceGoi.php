@@ -29,62 +29,63 @@ use Country;
 use Order;
 
 Class ServiceGoi {
-    protected $userId;
+    protected $user_id;
     protected $store_id;
     protected $key;
-    protected $base_url = 'https://api-jaw.letsgoi.com';
-    protected $urllogin = '/oauth/token';
-    protected $urlShipments = '/integrations/import';
-    protected $urlLabels = '/integrations/labels';
-    protected $urlRefresToken = '/oauth/token';
-    protected $accessToken = null;
+    protected $base_url;
+    protected $endpoint_login;
+    protected $endpoint_shipments;
+    protected $endpoint_labels;
+    
+    protected $id_order;
+    protected $token = null;
     protected $access_token = 'access_token_goi';
     protected $refresh_token = 'refresh_token_goi';
     protected $count = 0;
     protected $repetir_request = 10;
-    protected $body;
-    protected $id_order;
 
-    public function __construct()
+    public function __construct($id_order)
     {
-        $this->id_shop_group = Shop::getContextShopGroupID();
-		$this->id_shop = Shop::getContextShopID();
+        $this->id_order = $id_order;
 
         $this->getConfiguration();
-        $this->getCookieToken();
+        $this->postLogin();
     }
 
     private function getConfiguration()
     {
-        $env = Configuration::get('RJ_GOI_ENV', null, $this->id_shop_group, $this->id_shop);
-        if($env){
-            $this->userId = Configuration::get('RJ_GOI_USERID', null, $this->id_shop_group, $this->id_shop);
-            $this->key = Configuration::get('RJ_GOI_KEY', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_GOI_URL_PRO', null, $this->id_shop_group, $this->id_shop);
-            $this->store_id = Configuration::get('RJ_GOI_STOREID', null, $this->id_shop_group, $this->id_shop);
-        } else {
-            $this->userId = Configuration::get('RJ_GOI_USERID_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->key = Configuration::get('RJ_GOI_KEY_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->base_url = Configuration::get('RJ_GOI_URL_DEV', null, $this->id_shop_group, $this->id_shop);
-            $this->store_id = Configuration::get('RJ_GOI_STOREID_DEV', null, $this->id_shop_group, $this->id_shop);
+        $dev = '';
+        $carrier = new CarrierGoi();
+        $this->configuration = $carrier->getConfigFieldsValues();
+
+        if(!$this->configuration['RJ_GOI_ENV']){
+            $dev = '_DEV';
         }
+
+        $this->user_id = $this->configuration['RJ_GOI_USERID'. $dev];
+        $this->store_id = $this->configuration['RJ_GOI_STOREID'. $dev];
+        $this->key = $this->configuration['RJ_GOI_KEY'. $dev];
+        $this->base_url = $this->configuration['RJ_GOI_URL'. $dev];
+        $this->endpoint_login = $this->configuration['RJ_GOI_ENDPOINT_LOGIN'];
+        $this->endpoint_shipments = $this->configuration['RJ_GOI_ENDPOINT_SHIPMENT'];
+        $this->endpoint_labels = $this->configuration['RJ_GOI_ENDPOINT_LABEL'];
     }
 
     public function postLogin()
     {
-        $body = $this->bodyLogin();
-        $resp = $this->request('POST', $this->urllogin, $body);
-
-        if($resp){
-            return $this->setCookies($resp);
+        if(!$this->getCookieToken()){
+            $body = $this->bodyLogin();
+            $resp = $this->request('POST', $this->endpoint_login , $body);
+            if($resp){
+                $this->setCookies($resp);
+            }
         }
-        return false;
     }
 
     private function bodyLogin()
     {
         $body = array(
-            "client_id"=> $this->userId, 
+            "client_id"=> $this->user_id, 
             "client_secret"=> $this->key,
             "grant_type"=> 'client_credentials'
         );
@@ -100,7 +101,7 @@ Class ServiceGoi {
             $cookies->expires_in
         );
 
-        $this->accessToken = $cookies->access_token;
+        $this->token = $cookies->access_token;
 
         return true;
     }
@@ -108,10 +109,8 @@ Class ServiceGoi {
     public function getCookieToken()
     {
         if(isset($_COOKIE[$this->access_token])) {
-            $this->accessToken = $_COOKIE[$this->access_token];
+            $this->token = $_COOKIE[$this->access_token];
             return true;
-        } else {
-            return $this->postLogin();
         }
 
         return false;
@@ -123,16 +122,10 @@ Class ServiceGoi {
      * @param array $body
      * @return obj
      */
-    public function postShipment()
+    public function postShipment($shipment)
     {
-        $resp = $this->request('POST', $this->urlShipments, $this->body);
-        return $resp;
-    }
-
-    public function getShipment($shipmentId)
-    {
-        $urlShipments = $this->urlShipments . '/' . $shipmentId;
-        return $this->request('GET', $urlShipments);
+        $body = $this->getBodyShipment($shipment);
+        return $this->request('POST', $this->endpoint_shipments, $body);
     }
 
     /**
@@ -143,20 +136,17 @@ Class ServiceGoi {
      */
     public function getLabel($id_order)
     {
-        $urlLabel = $this->urlLabels . '/' . $this->store_id . '/' . $id_order;
-        return $this->request('GET', $urlLabel);
+        $endpoint_labels = $this->endpoint_labels . '/' . $this->store_id . '/' . $id_order;
+        return $this->request('GET', $endpoint_labels);
     }
 
     public function getBodyShipment($info_shipment)
     {
-        // $num_shipment = (string)$info_shipment['info_shipment']['num_shipment'];
-        $id_order = (string)$info_shipment['id_order'];
-        $products = $this->getProductsOrder($id_order);
-
         $info_receiver = $info_shipment['info_customer'];
         $info_package = $info_shipment['info_package'];
         $info_receiver['notes'] = $info_package['message'];
-
+        
+        $products = $this->getProductsOrder();
         $receiver = $this->getReceiver($info_receiver);
         $pieces = $this->getPieces($info_package);
 
@@ -167,24 +157,24 @@ Class ServiceGoi {
         }
 
         $metadata = [
-            'id_order' => $id_order
+            'id_order' => (string)$this->id_order
         ];
         
         $data = [
-            "order_id" => $id_order,
+            "order_id" => (string)$this->id_order,
             "store_id" => $this->store_id,
             "metadata" => json_encode($metadata),
             "services" => $services
         ];
 
-        $array_data = array_merge($data,$receiver,$pieces,$products);
+        $array_data = array_merge($data, $receiver, $pieces, $products);
 
         return json_encode($array_data);
     }
 
-    public function getProductsOrder($id_order)
+    public function getProductsOrder()
     {
-        $order = new Order((int)$id_order);
+        $order = new Order((int)$this->id_order);
         $products = $order->getProductsDetail();
 
         $array_products["retail_price"] = (float)$order->total_paid;
@@ -244,66 +234,32 @@ Class ServiceGoi {
         ];
     }
 
-    /**
-     * Crea el formato de quien envia
-     *
-     * @param [array] $infoReceiver nota: hacer una interface
-     * @return void
-     */
-    public function getShipper($info)
-    {
-        $countrycode = Country::getIsoById($info['id_country']);
-        return [
-            "name" => [
-                "firstName"=> $info['firstname'],
-                "lastName"=> $info['lastname'],
-                "companyName"=> $info['company'],
-                "additionalName"=> $info['additionalname']
-            ],
-            "address"=> [
-                "countryCode"=> $countrycode,
-                "postalCode"=> $info['postcode'],
-                "city"=> $info['state'],
-                "street"=> $info['street'] . ' ' . $info['city'],
-                "additionalAddressLine"=> $info['additionaladdress'],
-                "number"=> $info['number'],
-                "isBusiness"=> ($info['company'])?true:false,
-                "addition"=> ''
-            ],
-            "email"=> $info['email'],
-            "phoneNumber"=> $info['phone'],
-            "vatNumber"=> $info['vatnumber'],
-            "eoriNumber"=> ''
-        ];
-    }
-
     private function headerRequest()
     {
-        if(!$this->accessToken){
+        if(!$this->token){
             if(isset($_COOKIE[$this->access_token]))
-                $this->accessToken = $_COOKIE[$this->access_token];
+                $this->token = $_COOKIE[$this->access_token];
         }
 
         return array(
             'Content-Type: application/json',
             'Accept:application/json',
-            'Authorization: Bearer ' . $this->accessToken
+            'Authorization: Bearer ' . $this->token
         );
     }
 
     /**
      * request GOI
      *
-     * @param string $requestMethod
-     * @param string $urlparam
+     * @param string $method
+     * @param string $endpoin
      * @param json $body
      * @return array
      */
-    private function request($method, $urlparam, $body = null)
+    private function request($method, $endpoin, $body = null)
     {
-
         $header = $this->headerRequest();
-        $url = $this->base_url . $urlparam;
+        $url = $this->base_url . $endpoin;
         
         $ch = curl_init();
 
@@ -334,7 +290,7 @@ Class ServiceGoi {
 
         curl_close($ch);
         
-        $res = strpos($urlparam, 'label');
+        $res = strpos($endpoin, 'label');
         
         if($res) {
             if($curl_info['content_type'] == "application/pdf") {
@@ -342,13 +298,12 @@ Class ServiceGoi {
                 return $response;
             } else {
                 if($this->count == $this->repetir_request){
-                    // $id_shipment = RjcarrierShipment::getIdByIdOrder($this->id_order);
-                    CarrierGoi::saveLog($url $this->id_order,, $body, $response);
+                    CarrierGoi::saveLog($url, $this->id_order, $body, $response);
                     return false;
                 }
                 
                 $this->count++;
-                $response = $this->request($method, $urlparam);
+                $response = $this->request($method, $endpoin);
             }
 
             return $response;

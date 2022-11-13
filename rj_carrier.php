@@ -110,13 +110,6 @@ class Rj_Carrier extends Module
             'parent_class_name' => 'AdminParentTabRjCarrier',
             'icon' => 'local_shipping'
         ],
-        'AdminRjLogs' => [
-            'name' => 'Log errors',
-            'visible' => true,
-            'class_name' => 'AdminRjLogs',
-            'parent_class_name' => 'AdminParentTabRjCarrier',
-            'icon' => 'warning'
-        ],
         'AdminRjLabel' => [
             'name' => 'AdminRJLabel',
             'visible' => true,
@@ -133,6 +126,13 @@ class Rj_Carrier extends Module
             'class_name' => 'AdminRjShipmentGenerate',
             'parent_class_name' => 'AdminParentTabRjCarrier',
             'icon' => 'assessment'
+        ],
+        'AdminRjLogs' => [
+            'name' => 'Log errors',
+            'visible' => true,
+            'class_name' => 'AdminRjLogs',
+            'parent_class_name' => 'AdminParentTabRjCarrier',
+            'icon' => 'warning'
         ]
     ];
 
@@ -665,7 +665,6 @@ class Rj_Carrier extends Module
                     $class_carrier->createLabel($id_shipment, $id_order);
                 }
             }
-
             $shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($id_shipment);
         }
 

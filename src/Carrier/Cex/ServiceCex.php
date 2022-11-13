@@ -31,15 +31,11 @@ Class ServiceCex {
     protected $body;
     protected $id_order;
 
-    public function __construct($shipment)
+    public function __construct($id_order)
     {
-        $this->id_shop_group = Shop::getContextShopGroupID();
-		$this->id_shop = Shop::getContextShopID();
-
-        $this->id_order = $shipment['id_order'];
+        $this->id_order = $id_order;
 
         $this->getConfiguration();
-        $this->getBodyShipment($shipment);
     }
 
     private function getConfiguration()
@@ -49,21 +45,15 @@ Class ServiceCex {
     }
 
     /**
-     * Formatea el código postal
+     * Ejecuta el request
      *
-     * @param string $valor
-     * @param int $longitud
-     * @return void
+     * @param array $body_shipment
+     * @return obj
      */
-    public function rellenarCeros($valor, $longitud)
+    public function postShipment($shipment)
     {
-        $res = str_pad($valor, $longitud, '0', STR_PAD_LEFT);
-        return $res;
-    }
-
-    public function transformCodeClient($cod_client)
-    {
-        return 'P' . $cod_client;
+        $body = $this->getBodyShipment($shipment);
+        return $this->request('POST', $this->configuration['RJ_CEX_WSURL'], $body);
     }
 
     /**
@@ -92,6 +82,61 @@ Class ServiceCex {
         $data = array_merge($data, $shipper, $receiver, $pieces, $informacionAdicional);
 
         return json_encode($data);
+    }
+
+    /**
+     * Crea el formato del la información de los paquetes
+     *
+     * @param array $info_shipment
+     * @return void
+     */
+    public function getPieces($info_shipment)
+    {
+        $weight = (float)$info_shipment['weight'] / (int)$info_shipment['quantity'];
+        
+        //Lista adicional de bultos
+        for ($i = 1; $i <= $info_shipment['quantity']; $i++) {
+            $interior = new \stdClass();
+            $interior->alto = "";
+            $interior->ancho = "";
+            $interior->codBultoCli = $i;
+            $interior->codUnico = "";
+            $interior->descripcion = "";
+            $interior->kilos = "";
+            $interior->largo = "";
+            $interior->observaciones = "";
+            $interior->orden = $i;
+            $interior->referencia = "";
+            $interior->volumen = "";
+            $list_packages[] = $interior;
+        }
+
+        $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['id_type_shipment']);
+        
+        $reembolso = "";
+        if(doubleval($info_shipment['cash_ondelivery'])){
+            $reembolso = (string)round($info_shipment['cash_ondelivery'],2);
+        }
+
+        return [
+            "observac"      => $info_shipment['message'],
+            "numBultos"     => (string)$info_shipment['quantity'],
+            "kilos"         => (string)round($weight,2),
+            "volumen"       => "",
+            "alto"          => (string)round($info_shipment['height'],2),
+            "largo"         => (string)round($info_shipment['length'],2),
+            "ancho"         => (string)round($info_shipment['width'],2),
+            "producto"      => (string)$type_shipment->id_bc,
+            "portes"        => "P",
+            "reembolso"     => $reembolso,
+            "entrSabado"    => "",
+            "seguro"        => "",
+            "numEnvioVuelta" => "",
+            "listaBultos"   => $list_packages,
+            "codDirecDestino" => (isset($info_shipment['delivery_office']))?$info_shipment['cod_office']:"",
+            "password"      => "",
+        ];
+
     }
 
     /**
@@ -169,61 +214,6 @@ Class ServiceCex {
         ];
     }
 
-    /**
-     * Crea el formato del la información de los paquetes
-     *
-     * @param array $info_shipment
-     * @return void
-     */
-    public function getPieces($info_shipment)
-    {
-        $weight = (string)$info_shipment['weight'] / (float)$info_shipment['quantity'];
-        
-        //Lista adicional de bultos
-        for ($i = 1; $i <= $info_shipment['quantity']; $i++) {
-            $interior = new \stdClass();
-            $interior->alto = "";
-            $interior->ancho = "";
-            $interior->codBultoCli = $i;
-            $interior->codUnico = "";
-            $interior->descripcion = "";
-            $interior->kilos = "";
-            $interior->largo = "";
-            $interior->observaciones = "";
-            $interior->orden = $i;
-            $interior->referencia = "";
-            $interior->volumen = "";
-            $list_packages[] = $interior;
-        }
-
-        $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['id_type_shipment']);
-        
-        $reembolso = "";
-        if(doubleval($info_shipment['cash_ondelivery'])){
-            $reembolso = (string)round($info_shipment['cash_ondelivery'],2);
-        }
-
-        return [
-            "observac"      => $info_shipment['message'],
-            "numBultos"     => (string)$info_shipment['quantity'],
-            "kilos"         => (string)round($weight,2),
-            "volumen"       => "",
-            "alto"          => (string)round($info_shipment['height'],2),
-            "largo"         => (string)round($info_shipment['length'],2),
-            "ancho"         => (string)round($info_shipment['width'],2),
-            "producto"      => (string)$type_shipment->id_bc,
-            "portes"        => "P",
-            "reembolso"     => $reembolso,
-            "entrSabado"    => "",
-            "seguro"        => "",
-            "numEnvioVuelta" => "",
-            "listaBultos"   => $list_packages,
-            "codDirecDestino" => (isset($info_shipment['delivery_office']))?$info_shipment['cod_office']:"",
-            "password"      => "",
-        ];
-
-    }
-
     public function obtenerListaAdicional($info_shipment, $esMasiva=false)
     {
         $fecha = date("d-m-Y");
@@ -298,14 +288,21 @@ Class ServiceCex {
     }
 
     /**
-     * Ejecuta el request
+     * Formatea el código postal
      *
-     * @param array $body_shipment
-     * @return obj
+     * @param string $valor
+     * @param int $longitud
+     * @return void
      */
-    public function postShipment()
+    public function rellenarCeros($valor, $longitud)
     {
-        return $this->request('POST', $this->configuration['RJ_CEX_WSURL'], $this->body);
+        $res = str_pad($valor, $longitud, '0', STR_PAD_LEFT);
+        return $res;
+    }
+
+    public function transformCodeClient($cod_client)
+    {
+        return 'P' . $cod_client;
     }
 
     private function headerRequest($body)

@@ -78,7 +78,7 @@ class CarrierGoi extends CarrierCompany
             ],
             [
                 'type' => 'text',
-                'label' => $this->l('Key PRO'),
+                'label' => $this->l('Key'),
                 'name' => 'RJ_GOI_KEY',
                 'required' => true,
             ],
@@ -91,7 +91,7 @@ class CarrierGoi extends CarrierCompany
             [
                 'type' => 'text',
                 'label' => $this->l('Url Production'),
-                'name' => 'RJ_GOI_URL_PRO',
+                'name' => 'RJ_GOI_URL',
                 'required' => true,
                 'desc' => $this->l('Format url http:// or https:// .'),
             ],
@@ -101,6 +101,27 @@ class CarrierGoi extends CarrierCompany
                 'name' => 'RJ_GOI_URL_DEV',
                 'required' => false,
                 'desc' => $this->l('https://test-api-jaw.letsgoi.com'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint login'),
+                'name' => 'RJ_GOI_ENDPOINT_LOGIN',
+                'required' => true,
+                'desc' => $this->l('Example: /oauth/token'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint Shipment'),
+                'name' => 'RJ_GOI_ENDPOINT_SHIPMENT',
+                'required' => true,
+                'desc' => $this->l('Example: /integrations/import'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('Endpoint Label'),
+                'name' => 'RJ_GOI_ENDPOINT_LABEL',
+                'required' => true,
+                'desc' => $this->l('Example: /integrations/labels'),
             ],
             [
                 'type' => 'switch',
@@ -153,26 +174,19 @@ class CarrierGoi extends CarrierCompany
      */
     public function createShipment($shipment)
     {
-        $id_order = (string)$shipment['id_order'];
-
-        $service_goi = new ServiceGoi($shipment);
-        $response = $service_goi->postShipment();
+        $id_order = $shipment['id_order'];
+        $service_goi = new ServiceGoi($id_order);
+        $response = $service_goi->postShipment($shipment);
 
         if(!$response) {
             return false;
         }
-        
-        $pdf = $service_goi->getLabel($id_order);
-
-        if(!$pdf){
-            return false;
-        }
 
         $info_shipment = $this->saveShipment($shipment, $response);
-        $shipment['info_shipment'] = $info_shipment;
 
         if($info_shipment['id_shipment']){
-            return $this->saveLabels($info_shipment['id_shipment'], $response);
+            $pdf = $service_goi->getLabel($id_order);
+            return $this->saveLabels($info_shipment['id_shipment'], $pdf);
         } 
 
         return false;
@@ -180,7 +194,7 @@ class CarrierGoi extends CarrierCompany
 
     public function createLabel($id_shipment, $id_order)
     {
-        $service_goi = new ServiceGoi();
+        $service_goi = new ServiceGoi($id_order);
         $pdf = $service_goi->getLabel($id_order);
 
         if(!$pdf){

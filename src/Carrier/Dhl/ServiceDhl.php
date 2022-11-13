@@ -37,30 +37,24 @@ Class ServiceDhl {
     protected $endpoint_shipments;
     protected $endpoint_labels;
 
-    protected $body;
     protected $id_order;
     protected $token = null;
     protected $access_token = 'access_token_dhl';
     protected $refresh_token = 'refresh_token_dhl';
 
-    public function __construct($shipment)
+    public function __construct($id_order)
     {
-        $this->id_shop_group = Shop::getContextShopGroupID();
-		$this->id_shop = Shop::getContextShopID();
+        $this->id_order = $id_order;
 
-        $this->id_order = (string)$shipment['id_order'];
-        
         $this->getConfiguration();
         $this->postLogin();
-        $this->getBodyShipment($shipment);
     }
 
     private function getConfiguration()
     {
         $dev = '';
-
-        $carrierCex = new CarrierDhl();
-        $this->configuration = $carrierCex->getConfigFieldsValues();
+        $carrier = new CarrierDhl();
+        $this->configuration = $carrier->getConfigFieldsValues();
 
         if(!$this->configuration['RJ_DHL_ENV']){
             $dev = '_DEV';
@@ -138,16 +132,10 @@ Class ServiceDhl {
      * @param array $body
      * @return obj
      */
-    public function postShipment()
+    public function postShipment($shipment)
     {
-        $resp = $this->request('POST', $this->endpoint_shipments, $this->body);
-        return $resp;
-    }
-
-    public function getShipment($id_shipment)
-    {
-        $endpoint_shipments = $this->endpoint_shipments . '/' . $id_shipment;
-        return $this->request('GET', $endpoint_shipments);
+        $body = $this->getBodyShipment($shipment);
+        return $this->request('POST', $this->endpoint_shipments, $body);
     }
 
     /**
@@ -176,7 +164,7 @@ Class ServiceDhl {
 
         $options[] = [
             "key"   => "REFERENCE",
-            "input" => $this->id_order
+            "input" => (string)$this->id_order
         ];
 
         if($info_package['cash_ondelivery'] > 0){
@@ -190,7 +178,7 @@ Class ServiceDhl {
         
         $data = [
             "shipmentId" => $num_shipment,
-            "orderReference" => $this->id_order,
+            "orderReference" => (string)$this->id_order,
             "receiver" => $receiver,
             "shipper" => $shipper,
             "accountId" =>  $this->account_id,
@@ -200,7 +188,7 @@ Class ServiceDhl {
             "pieces" => $pieces
         ];
 
-        $this->body = json_encode($data);
+        return json_encode($data);
     }
 
     public function getPieces($info)

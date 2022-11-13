@@ -13,8 +13,8 @@
     <div class="panel-body">
         <ul class="list-group list-group-flush">
             <li class="list-group-item">
-                <p class="text-info">id_shipment: </p>
-                {$log.id_shipment}
+                <p class="text-info">id_order: </p>
+                {$log.id_order}
             </li>
             <li class="list-group-item">
                 <p class="text-info">name: </p>

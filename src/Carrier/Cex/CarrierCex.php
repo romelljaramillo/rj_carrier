@@ -299,8 +299,10 @@ class CarrierCex extends CarrierCompany
 
     public function createShipment($shipment)
     {
-        $service_cex = new ServiceCex($shipment);
-        $response = $service_cex->postShipment();
+        $id_order = $shipment['id_order'];
+        $shipment['num_shipment'] = Common::getUUID();
+        $service_cex = new ServiceCex($id_order);
+        $response = $service_cex->postShipment($shipment);
 
         if(!$response) {
             return false;

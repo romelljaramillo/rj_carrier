@@ -279,6 +279,13 @@ class CarrierCompany extends Module
                 $typeShipment->save();
             }
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 4, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
+        } elseif (Tools::isSubmit('delete_type_shipment_'. $this->shortname)) {
+            $typeShipment = new RjcarrierTypeShipment((int) Tools::getValue('id_type_shipment'));
+            if(!$typeShipment->delete()){
+                $this->_html .= $this->displayError($this->l('Could not delete.'));
+            } else {
+                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 1, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
+            }
         }
     }
 
@@ -615,7 +622,6 @@ class CarrierCompany extends Module
     public function saveLabels($id_shipment, $pdf, $num_package = 1)
     {
         $uuid = Common::getUUID();
-
         $rj_carrier_label = new RjcarrierLabel();
         $rj_carrier_label->id_shipment = $id_shipment;
         $rj_carrier_label->package_id = $uuid;
@@ -628,30 +634,6 @@ class CarrierCompany extends Module
 
         if (!$rj_carrier_label->add())
             return false;
-
-        return true;
-    }
-
-    /**
-     * Guarda el request que se hace al servicio
-     *
-     * @param array $id_shipment
-     * @param json $request
-     * @return void
-     */
-    public function saveRequestShipment($id_shipment, $request, $response)
-    {
-        $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-        
-        $rj_carrier_shipment->request = $request;
-        $rj_carrier_shipment->response = json_encode($response);
-
-        if (!$id_shipment){
-            if (!$rj_carrier_shipment->add())
-                return false;
-        }elseif (!$rj_carrier_shipment->update()){
-            return false;
-        } 
 
         return true;
     }
