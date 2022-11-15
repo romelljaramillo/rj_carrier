@@ -183,7 +183,7 @@ Class ServiceGoi {
             $volume = (float)$product['depth'] * (float)$product['width'] * (float)$product['height'];
             $array_products["articles"][] = [
                 "id"=> $product["product_id"],
-                "name"=> $product["product_name"],
+                "name"=> substr($product["product_name"],0,128),
                 "quantity"=> (int)$product["product_quantity"],
                 "volume"=> (float)$volume,
                 "weight"=> (float)$product["weight"]
