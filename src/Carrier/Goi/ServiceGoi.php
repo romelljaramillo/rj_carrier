@@ -27,6 +27,8 @@ use Configuration;
 use Shop;
 use Country;
 use Order;
+use Product;
+use Validate;
 
 Class ServiceGoi {
     protected $user_id;
@@ -180,18 +182,32 @@ Class ServiceGoi {
         $array_products["retail_price"] = (float)$order->total_paid;
 
         foreach ($products as $product) {
-            $volume = (float)$product['depth'] * (float)$product['width'] * (float)$product['height'];
+			$product_name = $this->getProducName($product["product_id"]);
+	
+			$volume = (float)$product['depth'] * (float)$product['width'] * (float)$product['height'];
             $array_products["articles"][] = [
                 "id"=> $product["product_id"],
-                "name"=> substr($product["product_name"],0,128),
+                "name"=> substr($product_name,0,128),
                 "quantity"=> (int)$product["product_quantity"],
                 "volume"=> (float)$volume,
                 "weight"=> (float)$product["weight"]
             ];
         }
-        
+
         return $array_products;
     }
+	
+	private function getProducName($product_id) 
+	{
+		$product = new Product($product_id);
+
+		if (Validate::isLoadedObject($product)) {
+			$product_name = $product->name[Configuration::get('PS_LANG_DEFAULT')];
+			return $product_name;
+		}
+
+		return '';
+	}
 
     public function getPieces($info)
     {
