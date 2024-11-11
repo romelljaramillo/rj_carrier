@@ -166,6 +166,11 @@ class CarrierGoi extends CarrierCompany
         ];
     }
 
+    public function getFieldsFormConfigExtra()
+    {
+        return  parent::getConfigFieldsExtra();
+    }
+
     /**
      * Crea envío GOI
      *

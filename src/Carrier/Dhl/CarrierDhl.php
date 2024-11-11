@@ -167,6 +167,41 @@ class CarrierDhl extends CarrierCompany
         ];
     }
 
+    public function getFieldsFormConfigExtra()
+    {
+        $modulesPay = self::getModulesPay();
+
+        $modules_array[] =  array(
+            'id' => '',
+            'name' => ''
+        );
+        foreach ($modulesPay as $module) {
+            $modules_array[] =  array(
+                'id' => $module['name'],
+                'name' => $module['name']
+            );
+        }
+
+        return [
+            [
+                'type' => 'text',
+                'label' => $this->l('Prefix etiqueta'),
+                'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
+                'class' => 'fixed-width-lg',
+            ],
+            [
+                'type' => 'select',
+                'label' => $this->l('Module contrareembolso'),
+                'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
+                'options' => [
+                    'query' => $modules_array,
+                    'id' => 'id',
+                    'name' => 'name'
+                ]
+            ]
+        ];
+    }
+
     /**
      * Crea envío DHL
      *

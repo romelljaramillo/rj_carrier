@@ -40,42 +40,42 @@ class CarrierCex extends CarrierCompany
         $this->fields_config = [
             [
                 'name' => 'RJ_CEX_COD_CLIENT',
-                'require' => true,
+                'required' => true,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_CEX_USER',
-                'require' => true,
+                'required' => true,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_CEX_PASS',
-                'require' => true,
+                'required' => true,
                 'type' => 'password'
             ],
             [
                 'name' => 'RJ_CEX_WSURL',
-                'require' => true,
+                'required' => true,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_CEX_WSURLSEG',
-                'require' => true,
+                'required' => true,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_CEX_WSURLMOD',
-                'require' => true,
+                'required' => true,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_CEX_WSURLANUL',
-                'require' => true,
+                'required' => true,
                 'type' => 'boolean'
             ],
             [
                 'name' => 'RJ_CEX_ACTIVE',
-                'require' => false,
+                'required' => false,
                 'type' => 'string'
             ]
         ];
@@ -83,37 +83,37 @@ class CarrierCex extends CarrierCompany
         $this->fields_config_info_extra = [
             [
                 'name' => 'RJ_ENABLESHIPPINGTRACK',
-                'require' => false,
+                'required' => false,
                 'type' => 'boolean'
             ],
             [
                 'name' => 'RJ_LABELSENDER',
-                'require' => false,
+                'required' => false,
                 'type' => 'boolean'
             ],
             [
                 'name' => 'RJ_LABELSENDER_TEXT',
-                'require' => false,
+                'required' => false,
                 'type' => 'string'
             ],
             [
                 'name' => 'RJ_ENABLEWEIGHT',
-                'require' => false,
+                'required' => false,
                 'type' => 'boolean'
             ],
             [
                 'name' => 'RJ_DEFAULTKG',
-                'require' => false,
+                'required' => false,
                 'type' => 'float'
             ],
             [
                 'name' => 'RJ_HOUR_FROM',
-                'require' => true,
+                'required' => true,
                 'type' => 'time'
             ],
             [
                 'name' => 'RJ_HOUR_UNTIL',
-                'require' => true,
+                'required' => true,
                 'type' => 'time'
             ],
         ];

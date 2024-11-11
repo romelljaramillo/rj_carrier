@@ -113,6 +113,8 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Roanja\\Module\\RjCarrier\\Carrier\\Cex\\ServiceCex' => __DIR__ . '/../..' . '/src/Carrier/Cex/ServiceCex.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\CarrierDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/CarrierDhl.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\ServiceDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/ServiceDhl.php',
+        'Roanja\\Module\\RjCarrier\\Carrier\\Gls\\CarrierGls' => __DIR__ . '/../..' . '/src/Carrier/Gls/CarrierGls.php',
+        'Roanja\\Module\\RjCarrier\\Carrier\\Gls\\ServiceGls' => __DIR__ . '/../..' . '/src/Carrier/Gls/ServiceGls.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\CarrierGoi' => __DIR__ . '/../..' . '/src/Carrier/Goi/CarrierGoi.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\ServiceGoi' => __DIR__ . '/../..' . '/src/Carrier/Goi/ServiceGoi.php',
         'Roanja\\Module\\RjCarrier\\Controller\\Admin\\LabelController' => __DIR__ . '/../..' . '/src/Controller/Admin/LabelController.php',

@@ -30,6 +30,7 @@ Class ServiceCex {
 
     protected $body;
     protected $id_order;
+    protected $configuration;
 
     public function __construct($id_order)
     {
@@ -93,7 +94,7 @@ Class ServiceCex {
     public function getPieces($info_shipment)
     {
         $weight = (float)$info_shipment['weight'] / (int)$info_shipment['quantity'];
-        
+
         //Lista adicional de bultos
         for ($i = 1; $i <= $info_shipment['quantity']; $i++) {
             $interior = new \stdClass();
@@ -112,7 +113,7 @@ Class ServiceCex {
         }
 
         $type_shipment = new RjcarrierTypeShipment((int)$info_shipment['id_type_shipment']);
-        
+
         $reembolso = "";
         if(doubleval($info_shipment['cash_ondelivery'])){
             $reembolso = (string)round($info_shipment['cash_ondelivery'],2);
@@ -224,7 +225,7 @@ Class ServiceCex {
         $lang = $this->obtenerIdioma($iso_lang);
 
         $config_extra_info = $info_shipment['config_extra_info'];
-        $lista = new \stdClass(); 
+        $lista = new \stdClass();
 
         if($esMasiva==true){
             $lista->tipoEtiqueta = "";
@@ -236,7 +237,7 @@ Class ServiceCex {
             $lista->textoRemiAlternativo = ($config_extra_info['RJ_LABELSENDER'] == '1')? $config_extra_info['RJ_LABELSENDER'] : '';
             $lista->etiquetaPDF =  "";
             $lista->creaRecogida = 'N';
-           
+
         }else{
             switch ($info_shipment['tipoEtiqueta']) {
             //ETIQUETA ADHESIVA
@@ -253,7 +254,7 @@ Class ServiceCex {
                 case '3':
                 $lista->tipoEtiqueta = "5";
                 break;
-                
+
                 default:
                 $lista->tipoEtiqueta = "5";
                 break;
@@ -274,7 +275,7 @@ Class ServiceCex {
             }else{
                 $lista->creaRecogida  = 'N';
             }
-        }        
+        }
         return $lista;
     }
 
@@ -317,7 +318,7 @@ Class ServiceCex {
     protected function request($method, $url, $body = null)
     {
         $header = $this->headerRequest($body);
-        
+
         $ch = curl_init();
 
         curl_setopt_array(

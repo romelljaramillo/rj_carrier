@@ -41,6 +41,7 @@ Class ServiceDhl {
     protected $token = null;
     protected $access_token = 'access_token_dhl';
     protected $refresh_token = 'refresh_token_dhl';
+    protected $configuration;
 
     public function __construct($id_order)
     {
@@ -84,7 +85,7 @@ Class ServiceDhl {
     private function bodyLogin()
     {
         $body = array(
-            "userId"=> $this->user_id, 
+            "userId"=> $this->user_id,
             "key"=> $this->key
         );
 
@@ -94,14 +95,14 @@ Class ServiceDhl {
     private function setCookies($cookies)
     {
         setcookie(
-            $this->access_token, 
-            $cookies->accessToken, 
+            $this->access_token,
+            $cookies->accessToken,
             $cookies->accessTokenExpiration
         );
 
         setcookie(
-            $this->refresh_token, 
-            $cookies->refreshToken, 
+            $this->refresh_token,
+            $cookies->refreshToken,
             $cookies->refreshTokenExpiration
         );
 
@@ -116,7 +117,7 @@ Class ServiceDhl {
         } elseif (isset($_COOKIE[$this->refresh_token])) {
             $refresh_token = json_encode(array($this->refresh_token => $_COOKIE[$this->refresh_token]));
             $resp = $this->request('POST', $this->endpoint_refresh_token, $refresh_token);
-            
+
             if($resp){
                 return $this->setCookies($resp);
             }
@@ -174,8 +175,6 @@ Class ServiceDhl {
             ];
         }
 
-        // $type_shipment = new RjcarrierTypeShipment((int)$info_package['id_type_shipment']);
-        
         $data = [
             "shipmentId" => $num_shipment,
             "orderReference" => (string)$this->id_order,
@@ -184,7 +183,6 @@ Class ServiceDhl {
             "accountId" =>  $this->account_id,
             "options" => $options,
             "returnLabel" => false,
-            // 'product' => $type_shipment->id_bc,
             "pieces" => $pieces
         ];
 
@@ -308,7 +306,7 @@ Class ServiceDhl {
     {
         $header = $this->headerRequest();
         $url = $this->base_url . $endpoin;
-        
+
         $ch = curl_init();
 
         curl_setopt_array(
@@ -326,18 +324,18 @@ Class ServiceDhl {
                 CURLOPT_CUSTOMREQUEST  => $method,
             )
         );
-        
+
         $response = utf8_encode(curl_exec($ch));
 
         if ($response === false) {
             return false;
         }
-        
+
         $curl_info = curl_getinfo($ch);
         $curl_error = curl_errno($ch);
 
         curl_close($ch);
-        
+
         if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
             CarrierDhl::saveLog($url, $this->id_order, $body, $response);
             return false;

@@ -57,7 +57,7 @@ class RjcarrierTypeShipment extends \ObjectModel
 
     public static function getTypeShipmentsByIdCarrierCompany($id_carrier_company)
     {
-        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`active`, cc.`name` as carrier_company, cc.`shortname`, c.`name` as reference_carrier 
+        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`active`, cc.`name` as carrier_company, cc.`shortname`, c.`name` as reference_carrier
         FROM `' . _DB_PREFIX_ . 'rj_carrier_type_shipment` cts
         LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_company` cc ON cts.`id_carrier_company` = cc.`id_carrier_company`
         LEFT JOIN `' . _DB_PREFIX_ . 'carrier` c ON cts.`id_reference_carrier` = c.`id_reference` AND c.deleted = 0
@@ -68,14 +68,14 @@ class RjcarrierTypeShipment extends \ObjectModel
 
     public static function getTypeShipmentsActiveByIdCarrierCompany($id_carrier_company)
     {
-        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`id_reference_carrier`, cts.`active`, cc.`name` as carrier_company, 
-        cc.`shortname`, c.`name` as reference_carrier 
+        $sql = 'SELECT cts.`id_type_shipment`, cts.`name`, cts.`id_bc`, cts.`id_reference_carrier`, cts.`active`, cc.`name` as carrier_company,
+        cc.`shortname`, c.`name` as reference_carrier
         FROM `' . _DB_PREFIX_ . 'rj_carrier_type_shipment` cts
         LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_company` cc ON cts.`id_carrier_company` = cc.`id_carrier_company`
         LEFT JOIN `' . _DB_PREFIX_ . 'carrier` c ON cts.`id_reference_carrier` = c.`id_reference` AND c.deleted = 0
         WHERE cts.`id_carrier_company` =' . (int)$id_carrier_company .' AND cts.active = 1';
 
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
     }
 
     public static function getTypeShipmentsActiveByIdReferenceCarrier($id_reference_carrier)

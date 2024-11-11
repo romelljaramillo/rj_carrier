@@ -4,7 +4,7 @@
     <input type="hidden" name="id_order" id="rj_id_order" value="{$id_order}">
     <input type="hidden" name="id_infopackage" value="{$info_package.id_infopackage}">
     <div class="form-group row">
-        <label class="form-control-label label-on-top col-12">{l s='Select Carrier' mod='rj_carrier'}</label>
+        <label class="form-control-label label-on-top col-12" for="id_reference_carrier">{l s='Select Carrier' mod='rj_carrier'}</label>
         <div class="col-12">
             <select class="custom-select form-control" name="id_reference_carrier" id="id_reference_carrier">
                 <option value="0">-</option>
@@ -19,7 +19,7 @@
     </div>
     <div class="form-group row">
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='Contrareembolso' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_contrareembolso">{l s='Contrareembolso' mod='rj_carrier'}</label>
             <div class="input-group mb-3">
                 <div class="input-group-prepend">
                     <div class="input-group-text">
@@ -30,35 +30,35 @@
             </div>
         </div>
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='Packages' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_quantity">{l s='Packages' mod='rj_carrier'}</label>
             <input type="text" class="form-control" name="rj_quantity" id="rj_quantity" value="{$info_package.quantity}">
         </div>
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='Weight' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_weight">{l s='Weight' mod='rj_carrier'}</label>
             <input type="text" class="form-control" name="rj_weight" id="rj_weight" value="{$info_package.weight|string_format:"%.2f"}">
         </div>
     </div>
     <div class="form-group row">
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='length' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_length">{l s='length' mod='rj_carrier'}</label>
             <input type="text" class="form-control" name="rj_length" id="rj_length" value="{$info_package.length|string_format:"%.2f"}">
         </div>
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='width' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_width">{l s='width' mod='rj_carrier'}</label>
             <input type="text" class="form-control" name="rj_width" id="rj_width" value="{$info_package.width|string_format:"%.2f"}">
         </div>
         <div class="col-4">
-            <label class="form-control-label label-on-top col-12">{l s='height' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_height">{l s='height' mod='rj_carrier'}</label>
             <input type="text" class="form-control" name="rj_height" id="rj_height" value="{$info_package.height|string_format:"%.2f"}">
         </div>
     </div>
     <div class="form-group row">
         <div class="col">
-            <label class="form-control-label label-on-top col-12">{l s='hour from' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_hour_from">{l s='hour from' mod='rj_carrier'}</label>
             <input type="time" class="form-control" name="rj_hour_from" id="rj_hour_from" value="{$info_package.hour_from|substr:0:-3}">
         </div>
         <div class="col">
-            <label class="form-control-label label-on-top col-12">{l s='hour until' mod='rj_carrier'}</label>
+            <label class="form-control-label label-on-top col-12" for="rj_hour_until">{l s='hour until' mod='rj_carrier'}</label>
             <input type="time" class="form-control" name="rj_hour_until" id="rj_hour_until" value="{$info_package.hour_until|substr:0:-3}">
         </div>
         <div class="col" id="select_typeshipment">
@@ -66,18 +66,47 @@
             <select class="custom-select form-control" name="id_type_shipment" id="id_type_shipment">
             {if $info_type_shipment}
                 {foreach from=$info_type_shipment item=type_shipment}
-                <option value="{$type_shipment.id_type_shipment}" 
+                <option value="{$type_shipment.id_type_shipment}"
                 {if $type_shipment.id_type_shipment == $info_package.id_type_shipment }
-                    selected 
+                    selected
                 {elseif $type_shipment.id_reference_carrier == $info_package.id_reference_carrier}
-                    selected 
-                {/if}> 
+                    selected
+                {/if}>
                     {$type_shipment.name|escape:'html':'UTF-8'}
                 </option>
                 {/foreach}
             {/if}
             </select>
-        
+
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col">
+            <label class="control-label col-12" for="rj_retorno">{l s='Retorno' mod='rj_carrier'}</label>
+            <select id="rj_retorno" name="rj_retorno" title="Retorno" alt="Retorno" class="form-control" data-toggle="tooltip" data-placement="top">
+                <option value="0"{if $info_package.retorno==0} selected="selected"{/if}>{l s='Sin retorno' mod='rj_carrier'}</option>
+                <option value="1"{if $info_package.retorno==1} selected="selected"{/if}>{l s='Retorno obligatorio' mod='rj_carrier'}</option>
+                <option value="2"{if $info_package.retorno==2} selected="selected"{/if}>{l s='Retorno opcional' mod='rj_carrier'}</option>
+            </select>
+        </div>
+        <div class="col">
+            <label class="control-label col-12" for="rj_rcs_user">RCS</label>
+            <select name="rj_rcs_user" class="form-control" id="rj_rcs_user">
+                <option></option>
+                <option value="0" {if $info_package.rcs_user=='0'} selected="selected"{/if}>{l s='No' mod='rj_carrier'}</option>
+                <option value="1" {if $info_package.rcs_user=='1'} selected="selected"{/if}>{l s='Si' mod='rj_carrier'}</option>
+            </select>
+            <span>{l s='Retorno Copia Sellada' mod='rj_carrier'}</span>
+        </div>
+        <div class="col">
+            <label class="control-label col-12" for="rj_vsec_user">{l s='Valor asegurado' mod='rj_carrier'}</label>
+            <input type="text" id="rj_vsec_user" name="rj_vsec_user" class="form-control " value="{$info_package.vsec_user|string_format:"%.2f"}" />
+        </div>
+    </div>
+    <div class="form-group row">
+        <div class="col">
+            <label class="control-label col-12" for="rj_retorno">{l s='Dep. origen' mod='rj_carrier'}</label>
+            <input type="text" id="rj_dorig_user" name="rj_dorig_user" class="form-control " value="{$info_package.dorig_user}" />
         </div>
     </div>
     <div class="form-group row">
@@ -101,7 +130,7 @@
         $('#rj_contrareembolso').on('click', function(){
             getPriceOrder();
         });
-            
+
         $('#id_reference_carrier').on('change', function(e){
             e.preventDefault();
             getTypeShipment(this.value);
@@ -113,7 +142,7 @@
             $.ajax({
                 type: 'POST',
                 dataType: 'json',
-                url: '{$url_ajax}', 
+                url: '{$url_ajax}',
                 data:
                 {
                     ajax: 1,
@@ -136,7 +165,7 @@
         $.ajax({
             type: 'POST',
             dataType: 'json',
-            url: '{$url_ajax}', 
+            url: '{$url_ajax}',
             data:
             {
                 ajax: 1,

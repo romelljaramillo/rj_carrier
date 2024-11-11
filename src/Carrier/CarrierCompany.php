@@ -52,7 +52,7 @@ class CarrierCompany extends Module
     /** @var string Nombre unico de transportista */
     public $name_carrier = 'name carrier';
 
-    
+
     /** @var string Nombre corto del transportista siglas ejemp: CEX Correo Express */
     public $shortname = 'DEF';
     public $display_pdf = 'S';
@@ -82,20 +82,21 @@ class CarrierCompany extends Module
 
     public $context;
     public $_html;
+    public $module = 'rj_carrier';
 
     public function __construct()
     {
-        $this->module = 'rj_carrier';
+        // $this->module = 'rj_carrier';
         $this->name = 'rj_carrier';
         parent::__construct();
 
     }
 
-    public function renderConfig() 
+    public function renderConfig()
     {
-        if (Tools::isSubmit('add_Type_shipment_'.$this->shortname) 
-            || (Tools::isSubmit('update_type_shipment_'.$this->shortname) 
-            && Tools::isSubmit('id_type_shipment') 
+        if (Tools::isSubmit('add_Type_shipment_'.$this->shortname)
+            || (Tools::isSubmit('update_type_shipment_'.$this->shortname)
+            && Tools::isSubmit('id_type_shipment')
             && RjcarrierTypeShipment::typeShipmentExists((int)Tools::getValue('id_type_shipment')))
         ) {
             $this->_html .= $this->renderFormTypeShipment();
@@ -107,7 +108,7 @@ class CarrierCompany extends Module
             $this->_html .= $this->viewAddTypeShipment();
             $this->_html .= $this->renderListTypeShipment();
         }
-        
+
         return $this->_html;
     }
 
@@ -123,7 +124,7 @@ class CarrierCompany extends Module
             ]),
             'company' => $this->shortname,
         ]);
-        
+
         return $this->display($this->_path, '/views/templates/hook/create-type-shipment.tpl');
     }
 
@@ -180,7 +181,7 @@ class CarrierCompany extends Module
         // valida los campos de configuaración de los carrier company
         foreach ($this->fields_config as $value) {
             if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
-                $warning[] = $this->getTranslator()->trans('Required data module configuration!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $warning[] = $this->getTranslator()->trans('Required data module configuration!. ', [], 'Modules.Rj_Carrier.Admin') .
                 $value['name'];
             }
         }
@@ -188,7 +189,7 @@ class CarrierCompany extends Module
         // valida los campos de configuaración extra de los carrier company
         foreach ($this->fields_config_info_extra as $value) {
             if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
-                $warning[] = $this->getTranslator()->trans('Required data the module extra configuration!. ', [], 'Modules.Rj_Carrier.Admin') . 
+                $warning[] = $this->getTranslator()->trans('Required data the module extra configuration!. ', [], 'Modules.Rj_Carrier.Admin') .
                 $value['name'];
             }
         }
@@ -207,17 +208,17 @@ class CarrierCompany extends Module
         } elseif (Tools::isSubmit('submitConfig'. $this->shortname)) {
             $res = true;
             $shop_context = Shop::getContext();
-    
+
             $shop_groups_list = array();
             $shops = Shop::getContextListShopID();
-    
+
             foreach ($shops as $shop_id) {
                 $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
-    
+
                 if (!in_array($shop_group_id, $shop_groups_list)) {
                     $shop_groups_list[] = $shop_group_id;
                 }
-                
+
                 foreach ($this->fields_config as $field) {
                     if($field['type'] === 'password') {
                         if(Tools::getValue($field['name']))
@@ -227,7 +228,7 @@ class CarrierCompany extends Module
                     }
                 }
             }
-    
+
             switch ($shop_context) {
                 case Shop::CONTEXT_ALL:
                     foreach ($this->fields_config as $field) {
@@ -238,7 +239,7 @@ class CarrierCompany extends Module
                             $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
                         }
                     }
-                    
+
                     if (count($shop_groups_list)) {
                         foreach ($shop_groups_list as $shop_group_id) {
                             if($field['type'] === 'password') {
@@ -266,7 +267,7 @@ class CarrierCompany extends Module
                     }
                     break;
             }
-    
+
             if (!$res)
                 $this->_html .= $this->displayError($this->l('The Configuration could not be added.'));
             else {
@@ -358,7 +359,7 @@ class CarrierCompany extends Module
     }
 
     /**
-     * Devuelve el listado de type shipment 
+     * Devuelve el listado de type shipment
      *
      * @return void
      */
@@ -394,7 +395,7 @@ class CarrierCompany extends Module
                 'type' => 'text',
             ),
             'id_bc' => array(
-                'title' => $this->l('id bc'),
+                'title' => $this->l('Id type service'),
                 'width' => 140,
                 'type' => 'text',
             ),
@@ -432,12 +433,12 @@ class CarrierCompany extends Module
     {
         $carriers = Carrier::getCarriers((int) $this->context->language->id);
         $fieldsValuesTypeShipment = $this->getConfigFieldsValuesTypeShipment();
-        
+
         $carrier_array[] =  [
             'id' => '',
             'name' => ''
         ];
-        
+
         foreach ($carriers as $carrier) {
             if($fieldsValuesTypeShipment['id_reference_carrier'] == $carrier['id_reference'] || !RjcarrierTypeShipment::typeShipmentExistsByIdReference($carrier['id_reference'])){
                 $carrier_array[] =  [
@@ -479,7 +480,7 @@ class CarrierCompany extends Module
                     ],
                     [
                         'type' => 'text',
-                        'label' => $this->l('id bc'),
+                        'label' => $this->l('Id type service'),
                         'name' => 'id_bc',
                     ],
                     [
@@ -592,8 +593,8 @@ class CarrierCompany extends Module
         $info_shipment = $this->saveShipment($shipment);
         $shipment['info_shipment'] = $info_shipment;
         $packages_qty = $shipment['info_package']['quantity'];
-        
-        for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
+
+        for($num_package = 1; $num_package <= $packages_qty; $num_package++) {
             $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
             $pdf = $rjpdf->render($this->display_pdf);
 
@@ -601,7 +602,7 @@ class CarrierCompany extends Module
                 $this->saveLabels($info_shipment['id_shipment'], $pdf, $num_package);
             }
         }
-        
+
         return true;
     }
 
@@ -627,7 +628,7 @@ class CarrierCompany extends Module
         $rj_carrier_label->package_id = $uuid;
         $rj_carrier_label->label_type = $this->label_type;
         $rj_carrier_label->tracker_code = 'TC' .$uuid . '-' . $num_package;
-        
+
         if(Common::createFileLabel($pdf, $uuid)){
             $rj_carrier_label->pdf = $uuid;
         }
@@ -654,7 +655,7 @@ class CarrierCompany extends Module
         if (!$id_order) {
             return false;
         }
-        
+
         $id_shipment = RjcarrierShipment::getIdByIdOrder((int)$id_order);
         $order = new Order((int)$id_order);
 
@@ -678,7 +679,7 @@ class CarrierCompany extends Module
                 return false;
         }elseif (!$rj_carrier_shipment->update()){
             return false;
-        } 
+        }
 
         return $rj_carrier_shipment->getFields();
     }
@@ -715,8 +716,10 @@ class CarrierCompany extends Module
         $rj_carrier_infopackage->id_type_shipment = Tools::getValue('id_type_shipment');
         $rj_carrier_infopackage->hour_from = (self::validateFormatTime($hour_from))?$hour_from:'00:00:00';
         $rj_carrier_infopackage->hour_until = (self::validateFormatTime($hour_until))?$hour_until:'00:00:00';
-        $rj_carrier_infopackage->width = Tools::getValue('rj_width');
-        $rj_carrier_infopackage->height = Tools::getValue('rj_height');
+        $rj_carrier_infopackage->retorno = (int)Tools::getValue('rj_retorno');
+        $rj_carrier_infopackage->rcs_user = (bool)Tools::getValue('rj_rcs_user');
+        $rj_carrier_infopackage->vsec_user = Tools::getValue('rj_vsec_user');
+        $rj_carrier_infopackage->dorig_user = Tools::getValue('rj_dorig_user');
 
         if (!Tools::getValue('id_infopackage'))
         {
@@ -725,7 +728,7 @@ class CarrierCompany extends Module
             }
         }elseif (!$rj_carrier_infopackage->update()){
             return false;
-        } 
+        }
 
         return $rj_carrier_infopackage->getFields();
     }
@@ -768,7 +771,7 @@ class CarrierCompany extends Module
         return false;
     }
 
-    public static function saveLog($name, $id_order, $body, $response) 
+    public static function saveLog($name, $id_order, $body, $response)
     {
         $rjcarrierLog = new RjcarrierLog();
         $rjcarrierLog->name = $name;

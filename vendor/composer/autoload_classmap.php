@@ -64,6 +64,8 @@ return array(
     'Roanja\\Module\\RjCarrier\\Carrier\\Cex\\ServiceCex' => $baseDir . '/src/Carrier/Cex/ServiceCex.php',
     'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\CarrierDhl' => $baseDir . '/src/Carrier/Dhl/CarrierDhl.php',
     'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\ServiceDhl' => $baseDir . '/src/Carrier/Dhl/ServiceDhl.php',
+    'Roanja\\Module\\RjCarrier\\Carrier\\Gls\\CarrierGls' => $baseDir . '/src/Carrier/Gls/CarrierGls.php',
+    'Roanja\\Module\\RjCarrier\\Carrier\\Gls\\ServiceGls' => $baseDir . '/src/Carrier/Gls/ServiceGls.php',
     'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\CarrierGoi' => $baseDir . '/src/Carrier/Goi/CarrierGoi.php',
     'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\ServiceGoi' => $baseDir . '/src/Carrier/Goi/ServiceGoi.php',
     'Roanja\\Module\\RjCarrier\\Controller\\Admin\\LabelController' => $baseDir . '/src/Controller/Admin/LabelController.php',

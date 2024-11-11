@@ -44,6 +44,10 @@ class RjcarrierInfoPackage extends \ObjectModel
     public $message;
     public $hour_from;
     public $hour_until;
+    public $retorno;
+    public $rcs_user;
+    public $vsec_user;
+    public $dorig_user;
     public $date_add;
     public $date_upd;
 
@@ -68,7 +72,11 @@ class RjcarrierInfoPackage extends \ObjectModel
             'hour_from' =>  ['type' => self::TYPE_NOTHING],
             'hour_until' => ['type' => self::TYPE_NOTHING],
             'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
-            'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat']
+            'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'retorno' =>    ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt'],
+            'rcs_user' =>   ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
+            'vsec_user' =>  ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'dorig_user' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml']
         ]
     ];
 
