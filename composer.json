@@ -20,7 +20,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Roanja\\Module\\RjCarrier\\": "src/"
+      "Roanja\\Module\\RjCarrier\\": "src/",
+      "Roanja\\Module\\RjCarrier\\Model\\": "Model/"
     },
     "classmap": ["rj_carrier.php"],
     "exclude-from-classmap": []

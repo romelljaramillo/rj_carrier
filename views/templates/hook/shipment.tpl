@@ -20,7 +20,7 @@
                 {$info_shipment.id_order}
             </td>
             <td class="cellShipmentCarrier">
-                {$name_carrier}
+                {$carrier_name}
             </td>
             <td class="text-right cellShipmentActions">
             <div class="row">
@@ -29,7 +29,7 @@
                         action="{$link->getAdminLink('AdminOrders', true, ['id_order' => $id_order|intval, 'vieworder' => 1])|escape:'html':'UTF-8'}"
                         method="post" class="form-horizontal">
                         <input type="hidden" name="id_shipment" value="{$info_shipment.id_shipment}">
-                        <button type="submit" id="btnDeleteShipment" name="submitDeleteShipment" data-toggle="pstooltip" 
+                        <button type="submit" id="btnDeleteShipment" name="submitDeleteShipment" data-toggle="pstooltip"
                         data-placement="top" data-original-title="delete" class="btn btn-sm tooltip-link js-rjShipment-delete-btn">
                             <i class="material-icons">delete</i>
                         </button>
@@ -50,4 +50,3 @@
         </tr>
     </tbody>
 </table>
-    

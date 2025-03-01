@@ -1,15 +1,15 @@
 {block name='notifications'}
 {include file='./notifications.tpl'}
 {/block}
-<div id="block-rj-carrier" class="carrier-row row">
-    <div class="col-md-6 left-column">
-        <div class="carrier card"  id="rjcarrierPanel">
+<div id="block-rj-carrier" class="row">
+    <div class="col-lg-6 left-column">
+        <div class="carrier card"  id="rj-carrier-block-package">
             <div class="card-header">
                 <h3 class="card-header-title">
                     {l s='Info package' mod='rj_carrier'}
                 </h3>
             </div>
-            <div id="rj_quantity" class="card-body">
+            <div id="rj-carrier-form-package" class="card-body">
                 {block name='package'}
                 {include file='./form-package.tpl'}
                 {/block}
@@ -17,60 +17,60 @@
         </div>
         {if $info_company_carrier}
             {if !$info_shipment.num_shipment && $info_package.id_infopackage}
-            <div class="carrier card"  id="rjcarrierPanel">
-                <div class="card-header">
-                    <h3 class="card-header-title">
-                        {$info_company_carrier.shortname}
-                    </h3>
+                <div class="carrier card" id="rj-carrier-block-create-shipment">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                        {l s='Carrier' mod='rj_carrier'} - {$info_company_carrier.shortname}
+                        </h3>
+                    </div>
+                    <div id="rj-carrier-form-create-shipment" class="card-body">
+                        {block name='create-shipment'}
+                        {include file='./create-shipment.tpl'}
+                        {/block}
+                    </div>
                 </div>
-                <div id="rj_quantity" class="card-body">
-                    {block name='create-shipment'}
-                    {include file='./create-shipment.tpl'}
-                    {/block}
-                </div>
-            </div>
             {/if}
             {if $info_shipment.num_shipment}
-            <div class="card" id="rjlistshipmentPanel">
-                <div class="card-header">
-                    <h3 class="card-header-title">
-                        {l s='Info shipment' mod='rj_carrier'}
-                    </h3>
-                </div>
-                <div class="card-body table-responsive">
-                    <div class="spinner-order-products-container" id="shipmentLoading">
-                        <div class="spinner spinner-primary"></div>
+                <div class="card" id="rj-list-shipment">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                            {l s='Info shipment' mod='rj_carrier'}
+                        </h3>
                     </div>
-                    {block name='shipment'}
-                    {include file='./shipment.tpl'}
-                    {/block}
-                </div>
-            </div>
-            <div class="card" id="rjlistlabelsPanel">
-                <div class="card-header">
-                    <h3 class="card-header-title">
-                        {l s='Info labels' mod='rj_carrier'}
-                    </h3>
-                </div>
-                <div class="card-body table-responsive">
-                    <div class="spinner-order-products-container" id="labelsLoading">
-                        <div class="spinner spinner-primary"></div>
+                    <div class="card-body table-responsive">
+                        <div class="spinner-order-products-container" id="shipmentLoading">
+                            <div class="spinner spinner-primary"></div>
+                        </div>
+                        {block name='shipment'}
+                        {include file='./shipment.tpl'}
+                        {/block}
                     </div>
-                    {if $labels}
-                        {block name='labels'}
-                            {include file='./labels.tpl'}
-                        {/block}
-                    {elseif $show_create_label}
-                        {block name='create-label'}
-                            {include file='./create-label.tpl'}
-                        {/block}
-                    {/if}
                 </div>
-            </div>
+                <div class="card" id="rj-list-labels">
+                    <div class="card-header">
+                        <h3 class="card-header-title">
+                            {l s='Info labels' mod='rj_carrier'}
+                        </h3>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <div class="spinner-order-products-container" id="labelsLoading">
+                            <div class="spinner spinner-primary"></div>
+                        </div>
+                        {if $labels}
+                            {block name='labels'}
+                                {include file='./labels.tpl'}
+                            {/block}
+                        {elseif $show_create_label}
+                            {block name='create-label'}
+                                {include file='./create-label.tpl'}
+                            {/block}
+                        {/if}
+                    </div>
+                </div>
             {/if}
         {/if}
     </div>
-    <div class="col-md-6 right-column">
+    <div class="col-lg-6 right-column">
         <div class="etiqueta card">
             <div class="card-header">
                 <h3 class="card-header-title">

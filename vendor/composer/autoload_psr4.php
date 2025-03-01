@@ -9,6 +9,7 @@ return array(
     'setasign\\Fpdi\\' => array($vendorDir . '/setasign/fpdi/src'),
     'iio\\libmergepdf\\' => array($vendorDir . '/iio/libmergepdf/src'),
     'Symfony\\Polyfill\\Ctype\\' => array($vendorDir . '/symfony/polyfill-ctype'),
+    'Roanja\\Module\\RjCarrier\\Model\\' => array($baseDir . '/Model'),
     'Roanja\\Module\\RjCarrier\\' => array($baseDir . '/src'),
     'Ramsey\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
 );

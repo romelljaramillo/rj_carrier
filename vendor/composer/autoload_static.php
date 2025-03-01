@@ -26,6 +26,7 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         ),
         'R' => 
         array (
+            'Roanja\\Module\\RjCarrier\\Model\\' => 30,
             'Roanja\\Module\\RjCarrier\\' => 24,
             'Ramsey\\Uuid\\' => 12,
         ),
@@ -43,6 +44,10 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Symfony\\Polyfill\\Ctype\\' => 
         array (
             0 => __DIR__ . '/..' . '/symfony/polyfill-ctype',
+        ),
+        'Roanja\\Module\\RjCarrier\\Model\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Model',
         ),
         'Roanja\\Module\\RjCarrier\\' => 
         array (
@@ -109,8 +114,11 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Ramsey\\Uuid\\UuidInterface' => __DIR__ . '/..' . '/ramsey/uuid/src/UuidInterface.php',
         'Rj_Carrier' => __DIR__ . '/../..' . '/rj_carrier.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\CarrierCompany' => __DIR__ . '/../..' . '/src/Carrier/CarrierCompany.php',
+        'Roanja\\Module\\RjCarrier\\Carrier\\CarrierFactory' => __DIR__ . '/../..' . '/src/Carrier/CarrierFactory.php',
+        'Roanja\\Module\\RjCarrier\\Carrier\\CarrierInterface' => __DIR__ . '/../..' . '/src/Carrier/CarrierInterface.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Cex\\CarrierCex' => __DIR__ . '/../..' . '/src/Carrier/Cex/CarrierCex.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Cex\\ServiceCex' => __DIR__ . '/../..' . '/src/Carrier/Cex/ServiceCex.php',
+        'Roanja\\Module\\RjCarrier\\Carrier\\Def\\CarrierDef' => __DIR__ . '/../..' . '/src/Carrier/Def/CarrierDef.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\CarrierDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/CarrierDhl.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Dhl\\ServiceDhl' => __DIR__ . '/../..' . '/src/Carrier/Dhl/ServiceDhl.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Gls\\CarrierGls' => __DIR__ . '/../..' . '/src/Carrier/Gls/CarrierGls.php',
@@ -118,6 +126,7 @@ class ComposerStaticInitfe664b36c32c26407e3ea2324e30cdd0
         'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\CarrierGoi' => __DIR__ . '/../..' . '/src/Carrier/Goi/CarrierGoi.php',
         'Roanja\\Module\\RjCarrier\\Carrier\\Goi\\ServiceGoi' => __DIR__ . '/../..' . '/src/Carrier/Goi/ServiceGoi.php',
         'Roanja\\Module\\RjCarrier\\Controller\\Admin\\LabelController' => __DIR__ . '/../..' . '/src/Controller/Admin/LabelController.php',
+        'Roanja\\Module\\RjCarrier\\Model\\RjCarrierConfiguration' => __DIR__ . '/../..' . '/src/Model/RjCarrierConfiguration.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierCompany' => __DIR__ . '/../..' . '/src/Model/RjcarrierCompany.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoPackage' => __DIR__ . '/../..' . '/src/Model/RjcarrierInfoPackage.php',
         'Roanja\\Module\\RjCarrier\\Model\\RjcarrierInfoshop' => __DIR__ . '/../..' . '/src/Model/RjcarrierInfoshop.php',

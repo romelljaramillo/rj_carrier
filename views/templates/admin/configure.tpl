@@ -38,8 +38,8 @@
                 <i class="fa fa-book"></i> {l s='Configuration' d='Modules.rj_carrier.Admin'} {$key|upper}
             </a>
 			{/foreach}
-            <a href="#form_info_extra" data-toggle="pill" class="list-group-item nav-link" role="tab" aria-controls="form_info_extra" aria-selected="{if $tab == 'infoextra'}true{else}false{/if}">
-                <i class="fa fa-clock-o"></i> {l s='Configuration extra' d='Modules.rj_carrier.Admin'}
+            <a href="#form_additional_config" data-toggle="pill" class="list-group-item nav-link" role="tab" aria-controls="form_additional_config" aria-selected="{if $tab == 'additionalconfig'}true{else}false{/if}">
+                <i class="fa fa-clock-o"></i> {l s='Configuration additional' d='Modules.rj_carrier.Admin'}
             </a>
         </div>
     </div>
@@ -53,8 +53,8 @@
 				{$item}
 			</div>
 			{/foreach}
-			<div id="form_info_extra" class="tab-pane fade {if $tab == 'infoextra'}active in{/if}" role="tabpanel" aria-labelledby="form_info_extra-tab">
-				{$form_info_extra}
+			<div id="form_additional_config" class="tab-pane fade {if $tab == 'additionalconfig'}active in{/if}" role="tabpanel" aria-labelledby="form_additional_config-tab">
+				{$form_additional_config}
 			</div>
 		</div>
     </div>

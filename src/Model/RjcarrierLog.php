@@ -27,6 +27,7 @@
 namespace Roanja\Module\RjCarrier\Model;
 
 use Db;
+use Validate;
 
 class RjcarrierLog extends \ObjectModel
 {
@@ -35,22 +36,64 @@ class RjcarrierLog extends \ObjectModel
     public $request;
     public $response;
     public $date_add;
-	public $date_upd;
+    public $date_upd;
 
+    const TABLE_NAME = _DB_PREFIX_ . 'rj_carrier_log';
 
-    /**
-     * @see ObjectModel::$definition
-     */
     public static $definition = [
         'table' => 'rj_carrier_log',
         'primary' => 'id_carrier_log',
         'fields' => [
-            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'name'     => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 250, 'required' => true],
-            'request'  => ['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],
-            'response' => ['type' => self::TYPE_HTML, 'validate' => 'isCleanHtml'],
+            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'name' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 250, 'required' => true],
+            'request' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'size' => 65535],
+            'response' => ['type' => self::TYPE_STRING, 'validate' => 'isString', 'size' => 65535],
             'date_add' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
             'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
         ]
     ];
+
+    /**
+     * Agrega un nuevo log al sistema.
+     *
+     * @param int $id_order
+     * @param string $name
+     * @param string $request
+     * @param string $response
+     * @return bool
+     */
+    public static function addLog($id_order, $name, $request, $response)
+    {
+        if (!Validate::isUnsignedInt($id_order) || !Validate::isGenericName($name)) {
+            return false;
+        }
+
+        $log = new self();
+        $log->id_order = (int)$id_order;
+        $log->name = pSQL($name);
+        $log->request = pSQL($request);
+        $log->response = pSQL($response);
+
+        return $log->add();
+    }
+
+    /**
+     * Obtiene logs por ID de pedido.
+     *
+     * @param int $id_order
+     * @return array
+     */
+    public static function getLogsByOrder($id_order)
+    {
+        if (!Validate::isUnsignedInt($id_order)) {
+            return [];
+        }
+
+        $sql = 'SELECT *
+                FROM `' . self::TABLE_NAME . '`
+                WHERE `id_order` = ' . (int)$id_order . '
+                ORDER BY `date_add` DESC';
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+    }
 }

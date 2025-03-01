@@ -22,111 +22,101 @@ namespace Roanja\Module\RjCarrier\Carrier\Goi;
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Goi\ServiceGoi;
+use Roanja\Module\RjCarrier\Carrier\CarrierInterface;
 
 /**
  * Class CarrierGoi.
  */
-class CarrierGoi extends CarrierCompany
+class CarrierGoi extends CarrierCompany implements CarrierInterface
 {
 
     public function __construct()
     {
-        $this->show_create_label = true;
-
-        $this->name_carrier = 'GOI';
+        $this->carrier_name = 'GOI';
         $this->shortname = 'GOI';
-        
-        /**
-         * Names of fields config GOI carrier used
-         */
-        $this->setFielConfig();
-
+        $this->show_create_label = true;
         parent::__construct();
+
     }
 
-    /**
-     * Setea los fields config del plugin
-     *
-     * @return void
-     */
-    public function setFielConfig()
+    public function setFieldsConfig()
     {
         $this->fields_config = [
             [
                 'type' => 'text',
                 'label' => $this->l('User Id'),
-                'name' => 'RJ_GOI_USERID',
+                'name' => 'USERID',
                 'required' => true,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('User Id DEV'),
-                'name' => 'RJ_GOI_USERID_DEV',
+                'name' => 'USERID_DEV',
                 'required' => false,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Store Id'),
-                'name' => 'RJ_GOI_STOREID',
+                'name' => 'STOREID',
                 'required' => true,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Store Id DEV'),
-                'name' => 'RJ_GOI_STOREID_DEV',
+                'name' => 'STOREID_DEV',
                 'required' => false,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Key'),
-                'name' => 'RJ_GOI_KEY',
+                'name' => 'KEY',
                 'required' => true,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Key DEV'),
-                'name' => 'RJ_GOI_KEY_DEV',
+                'name' => 'KEY_DEV',
                 'required' => false,
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Url Production'),
-                'name' => 'RJ_GOI_URL',
+                'name' => 'URL',
                 'required' => true,
                 'desc' => $this->l('Format url http:// or https:// .'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Url Develop'),
-                'name' => 'RJ_GOI_URL_DEV',
+                'name' => 'URL_DEV',
                 'required' => false,
                 'desc' => $this->l('https://test-api-jaw.letsgoi.com'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Endpoint login'),
-                'name' => 'RJ_GOI_ENDPOINT_LOGIN',
+                'name' => 'ENDPOINT_LOGIN',
                 'required' => true,
                 'desc' => $this->l('Example: /oauth/token'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Endpoint Shipment'),
-                'name' => 'RJ_GOI_ENDPOINT_SHIPMENT',
+                'name' => 'ENDPOINT_SHIPMENT',
                 'required' => true,
                 'desc' => $this->l('Example: /integrations/import'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Endpoint Label'),
-                'name' => 'RJ_GOI_ENDPOINT_LABEL',
+                'name' => 'ENDPOINT_LABEL',
                 'required' => true,
                 'desc' => $this->l('Example: /integrations/labels'),
             ],
             [
                 'type' => 'switch',
                 'label' => $this->l('Modo producción'),
-                'name' => 'RJ_GOI_ENV',
+                'name' => 'ENV',
                 'values' => [
                     [
                         'id' => 'active_on',
@@ -143,34 +133,6 @@ class CarrierGoi extends CarrierCompany
         ];
     }
 
-    public function renderConfig()
-    {
-        $this->setFieldsFormConfig();
-        
-        return parent::renderConfig();
-    }
-
-    private function setFieldsFormConfig()
-    {
-        $this->fields_form = [
-            'form' => [
-                'legend' => [
-                    'title' => $this->l('GOI information'),
-                    'icon' => 'icon-cogs',
-                ],
-                'input' => $this->fields_config,
-                'submit' => [
-                    'title' => $this->l('Save'),
-                ],
-            ],
-        ];
-    }
-
-    public function getFieldsFormConfigExtra()
-    {
-        return  parent::getConfigFieldsExtra();
-    }
-
     /**
      * Crea envío GOI
      *
@@ -181,20 +143,20 @@ class CarrierGoi extends CarrierCompany
     {
         $id_order = $shipment['id_order'];
         $service_goi = new ServiceGoi($id_order);
-        $response = $service_goi->postShipment($shipment);
+        // $response = $service_goi->postShipment($shipment);
 
-        if(!$response) {
-            return false;
-        }
+        // if(!$response) {
+        //     return false;
+        // }
 
-        $info_shipment = $this->saveShipment($shipment, $response);
+        // $info_shipment = $this->saveShipment($shipment, $response);
 
-        if($info_shipment['id_shipment']){
-            $pdf = $service_goi->getLabel($id_order);
-            return $this->saveLabels($info_shipment['id_shipment'], $pdf);
-        } 
+        // if($info_shipment['id_shipment']){
+        //     $pdf = $service_goi->getLabel($id_order);
+        //     return $this->saveLabels($info_shipment['id_shipment'], $pdf);
+        // }
 
-        return false;
+        // return false;
     }
 
     public function createLabel($id_shipment, $id_order)

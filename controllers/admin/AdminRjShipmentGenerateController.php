@@ -18,7 +18,7 @@ use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 
 class AdminRjShipmentGenerateController extends ModuleAdminController
 {
-    
+
     private $id_order_pack;
 
     public function __construct()
@@ -53,7 +53,7 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
 
         $this->getFieldsList();
     }
-    
+
     /**
      * @param string $token
      * @param int $id
@@ -181,7 +181,7 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
             'action_label' => self::$cache_lang['Generatelabel']
         ]);
 
-        return $tpl->fetch();       
+        return $tpl->fetch();
     }
 
     public function renderUnproducedLabel()
@@ -192,7 +192,7 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
             'id_order' => Tools::getValue('id_order'),
         ]);
 
-        return  $tpl->fetch(); 
+        return  $tpl->fetch();
     }
 
     public function postProcess()
@@ -200,7 +200,7 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
         if (Tools::isSubmit('update' . $this->table)) {
             if(Tools::getValue('id_order')){
                 $rjcarrier_infopack = RjcarrierInfoPackage::getPackageByIdOrder((int)Tools::getValue('id_order'), $this->context->shop->id);
-                
+
                 if(!$rjcarrier_infopack){
                     $this->display = 'viewunproduced';
                     return parent::postProcess();
@@ -228,14 +228,14 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
                 $this->errors[] = $this->l('The label has already been removed, try to generate it again.');
                 return false;
             }
-            
+
             $rjcarrier_shipment = new RjcarrierShipment((int)$id_shipment);
 
             if(!$rjcarrier_shipment->delete()){
                 $this->errors[] = $this->l('Something happened trying to remove the label');
                 return false;
             }
-                
+
             Tools::redirectAdmin($this->context->link->getAdminLink('AdminRjShipmentGenerate', true, [], ['conf' => 1]));
         }
 
@@ -267,18 +267,18 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
 
         $this->_join = " INNER JOIN `"._DB_PREFIX_."carrier` c ON a.id_reference_carrier = c.id_reference AND deleted = 0";
         $this->_join .= " LEFT JOIN `"._DB_PREFIX_."rj_carrier_shipment` b ON a.id_infopackage = b.id_infopackage";
-        $this->_where = " AND b.id_infopackage is null 
+        $this->_where = " AND b.id_infopackage is null
                         OR (b.delete=1 AND b.id_infopackage NOT IN (
-                            SELECT d.id_infopackage                  
-                            FROM ps_rj_carrier_shipment d            
+                            SELECT d.id_infopackage
+                            FROM ps_rj_carrier_shipment d
                             WHERE d.`delete` = 0)
-                        )                     
+                        )
                         OR b.`delete` = 0";
         $this->_group = " GROUP BY a.id_infopackage, a.id_order";
         $this->_defaultOrderBy = 'id_order';
         $this->_defaultOrderWay = 'DESC';
 
-        
+
     }
 
     protected function getFieldsList()

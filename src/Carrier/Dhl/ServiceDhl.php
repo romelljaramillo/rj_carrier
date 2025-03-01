@@ -55,7 +55,7 @@ Class ServiceDhl {
     {
         $dev = '';
         $carrier = new CarrierDhl();
-        $this->configuration = $carrier->getConfigFieldsValues();
+        $this->configuration = $carrier->getValuesConfigFields();
 
         if(!$this->configuration['RJ_DHL_ENV']){
             $dev = '_DEV';

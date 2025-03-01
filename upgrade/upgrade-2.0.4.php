@@ -62,9 +62,9 @@ function upgrade_module_2_0_4($module)
 
     $sql[] = 'ALTER TABLE `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
               ADD COLUMN `retorno` INT UNSIGNED DEFAULT 0 AFTER `hour_until`,
-              ADD COLUMN `rcs_user` TINYINT(1) DEFAULT 0 AFTER `retorno`,
-              ADD COLUMN `vsec_user` FLOAT DEFAULT 0.0 AFTER `rcs_user`,
-              ADD COLUMN `dorig_user` VARCHAR(100) DEFAULT "" AFTER `vsec_user`;';
+              ADD COLUMN `rcs` TINYINT(1) DEFAULT 0 AFTER `retorno`,
+              ADD COLUMN `vsec` FLOAT DEFAULT 0.0 AFTER `rcs`,
+              ADD COLUMN `dorig` VARCHAR(100) DEFAULT "" AFTER `vsec`;';
 
     foreach ($sql as $query) {
         if (Db::getInstance()->execute($query) == false) {

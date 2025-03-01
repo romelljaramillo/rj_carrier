@@ -70,7 +70,7 @@ abstract class TemplateLabel
             $this->datosResultado = $this->response->datosResultado;
             $this->cod_package = $this->response->listaBultos[$num_package - 1];
         }
-        
+
         $this->pdf_class = $pdf_class;
         $this->num_package = $num_package;
     }
@@ -88,7 +88,7 @@ abstract class TemplateLabel
             PDF_HEADER_LOGO_WIDTH,
             PDF_HEADER_TITLE,
             PDF_HEADER_STRING,
-            array(0,64,255), 
+            array(0,64,255),
             array(0,64,128)
         );
         $this->pdf_class->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
@@ -111,7 +111,7 @@ abstract class TemplateLabel
         $this->pdf_class->setY(5+($this->incH*$this->cb)+($this->offset*$this->cb));
         $this->pdf_class->MultiCell(25, 0, $this->l('Trasnporte'), 0, 'L', 1, 0, '', '', true);
         $this->pdf_class->SetFont('dejavusans', '', 14, '', true);
-        $this->pdf_class->MultiCell(70, 0, $this->shipment['name_carrier'], 0, 'R', 0, 1, '', '', true);
+        $this->pdf_class->MultiCell(70, 0, $this->shipment['carrier_name'], 0, 'R', 0, 1, '', '', true);
         // $this->pdf_class->Line(5, 15+($this->incH*$this->cb)+($this->offset*$this->cb), 105, 15+($this->incH*$this->cb)+($this->offset*$this->cb));
         $this->pdf_class->Line(5, 15, 105, 15);
         $this->pdf_class->ln(4);
@@ -138,7 +138,7 @@ abstract class TemplateLabel
     {
         $this->pdf_class->setY(45);
         $this->pdf_class->SetFont('dejavusans', '', 9, '', true);
-        
+
         $style4 = array('L' => array('width' => 1, 'cap' => 'round', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0)),
                         'T' => array('width' => 1, 'cap' => 'butt', 'join' => 'miter', 'dash' => '30,245', 'phase' => 10, 'color' => array(0, 0, 0)),
                         'R' => array('width' => 1, 'cap' => 'round', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0)),
@@ -164,7 +164,7 @@ abstract class TemplateLabel
         $this->pdf_class->SetFont('dejavusans', '', 10, '', true);
         $this->pdf_class->Cell(50, 0, $this->shipment['info_customer']['state'] . " - " . $this->shipment['info_customer']['country'], 0, 1, 'L');
     }
-    
+
     protected function zonePackage()
     {
         $this->pdf_class->setCellPaddings(1, 1, 1, 1);
@@ -172,9 +172,9 @@ abstract class TemplateLabel
         $style2 = array('width' => 0.2, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0));
 
         $this->pdf_class->setY(90);
-        
+
         $this->pdf_class->Line(5, 90, 105, 90, $style2);
-        
+
         $this->pdf_class->SetFont('dejavusans', '', 7, '', true);
 
         $this->pdf_class->Cell(25, 0, $this->l('pedido'), 0, 0, 'C', 1);
@@ -200,7 +200,7 @@ abstract class TemplateLabel
         $this->pdf_class->Line(30, 92, 30, 103, $style2);
         $this->pdf_class->Line(55, 92, 55, 103, $style2);
         $this->pdf_class->Line(75, 92, 75, 103, $style2);
- 
+
         $this->pdf_class->Line(5, 105, 105, 105,$style2);
         $this->pdf_class->ln(4);
 
@@ -211,7 +211,7 @@ abstract class TemplateLabel
         $style2 = array('width' => 0.2, 'cap' => 'butt', 'join' => 'miter', 'dash' => 0, 'color' => array(0, 0, 0));
 
         $this->pdf_class->setY(105);
-        
+
         $this->pdf_class->SetFont('dejavusans', '', 9, '', true);
         $this->pdf_class->setCellMargins(0, 1, 0, 1);
         $this->pdf_class->setCellPaddings(0, 10, 0, 0);
@@ -224,7 +224,7 @@ abstract class TemplateLabel
 
         $this->pdf_class->Line(15, 107, 15, 118, $style2);
         $this->pdf_class->Line(45, 107, 45, 118, $style2);
- 
+
         $this->pdf_class->Line(5, 120, 105, 120, $style2);
         $this->pdf_class->ln();
 
@@ -343,7 +343,7 @@ abstract class TemplateLabel
     {
         return Translate::getPdfTranslation($string);
     }
-    
+
     /**
      * Returns the template's HTML pagination block
      *

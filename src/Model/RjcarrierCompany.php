@@ -27,6 +27,7 @@
 namespace Roanja\Module\RjCarrier\Model;
 
 use Db;
+use Validate;
 
 class RjcarrierCompany extends \ObjectModel
 {
@@ -34,50 +35,60 @@ class RjcarrierCompany extends \ObjectModel
     public $shortname;
     public $icon;
     public $date_add;
-	public $date_upd;
+    public $date_upd;
 
-    /**
-     * @see ObjectModel::$definition
-     */
+    const TABLE_NAME = _DB_PREFIX_ . 'rj_carrier_company';
+
     public static $definition = [
         'table' => 'rj_carrier_company',
         'primary' => 'id_carrier_company',
         'fields' => [
             'name' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 50, 'required' => true],
-            'shortname'    => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 4, 'required' => true],
-            'icon'       => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 250],
-            'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
-            'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'shortname' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName', 'size' => 4, 'required' => true],
+            'icon' => ['type' => self::TYPE_STRING, 'validate' => 'isUrl', 'size' => 250],
+            'date_add' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
         ]
     ];
 
+    /**
+     * Get carrier company ID by shortname
+     *
+     * @param string $shortname
+     * @return int|false
+     */
+    public static function getIdByShortname($shortname)
+    {
+        if (empty($shortname) || !Validate::isGenericName($shortname)) {
+            return false;
+        }
+
+        $sql = 'SELECT id_carrier_company FROM ' . self::TABLE_NAME . ' WHERE shortname = "' . pSQL($shortname) . '"';
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
+    }
+
     public static function getCarrierCompanyByShortname($shortname)
     {
-        $sql = 'SELECT * FROM `' . _DB_PREFIX_ . 'rj_carrier_company` cc
-		WHERE cc.`shortname` ="' . $shortname .'"';
+        if (empty($shortname) || !Validate::isGenericName($shortname)) {
+            return false;
+        }
 
+        $sql = 'SELECT * FROM ' . self::TABLE_NAME . ' WHERE shortname = "' . pSQL($shortname) . '"';
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow($sql);
     }
 
     public static function getIconCompanyByShortname($shortname)
     {
-        $sql = 'SELECT cc.icon FROM `' . _DB_PREFIX_ . 'rj_carrier_company` cc
-		WHERE cc.`shortname` ="' . $shortname .'"';
+        if (empty($shortname) || !Validate::isGenericName($shortname)) {
+            return false;
+        }
 
+        $sql = 'SELECT icon FROM ' . self::TABLE_NAME . ' WHERE shortname = "' . pSQL($shortname) . '"';
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
     }
 
-    public static function getCarrierCompany($shortname = null)
+    public static function getAllCarrierCompany()
     {
-        $where = '';
-
-        if($shortname){
-            $where = ' WHERE c.shortname = ' . $shortname;
-        }
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS(
-            'SELECT * FROM '._DB_PREFIX_.'rj_carrier_company c '
-            .$where
-        );
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT * FROM ' . self::TABLE_NAME);
     }
 }

@@ -1,28 +1,29 @@
 <?php
+
 /**
-* 2007-2021 PrestaShop
-*
-* NOTICE OF LICENSE
-*
-* This source file is subject to the Academic Free License (AFL 3.0)
-* that is bundled with this package in the file LICENSE.txt.
-* It is also available through the world-wide-web at this URL:
-* http://opensource.org/licenses/afl-3.0.php
-* If you did not receive a copy of the license and are unable to
-* obtain it through the world-wide-web, please send an email
-* to license@prestashop.com so we can send you a copy immediately.
-*
-* DISCLAIMER
-*
-* Do not edit or add to this file if you wish to upgrade PrestaShop to newer
-* versions in the future. If you wish to customize PrestaShop for your
-* needs please refer to http://www.prestashop.com for more information.
-*
-*  @author    PrestaShop SA <contact@prestashop.com>
-*  @copyright 2007-2021 PrestaShop SA
-*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*  International Registered Trademark & Property of PrestaShop SA
-*/
+ * 2007-2021 PrestaShop
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@prestashop.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
+ * versions in the future. If you wish to customize PrestaShop for your
+ * needs please refer to http://www.prestashop.com for more information.
+ *
+ *  @author    PrestaShop SA <contact@prestashop.com>
+ *  @copyright 2007-2021 PrestaShop SA
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *  International Registered Trademark & Property of PrestaShop SA
+ */
 $sql = array();
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
@@ -48,11 +49,11 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop` (
     INDEX `id_country` (`id_country`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infoshop_shop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infoshop_shop` (
     `id_infoshop` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_infoshop`, `id_shop`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage` (
     `id_infopackage` INT(11) NOT NULL AUTO_INCREMENT,
@@ -68,17 +69,21 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage`
 	`message` VARCHAR(255) NULL DEFAULT NULL,
 	`hour_from` TIME NULL DEFAULT NULL,
 	`hour_until` TIME NULL DEFAULT NULL,
+	`retorno` INT(10) UNSIGNED NULL DEFAULT NULL,
+    `rcs` TINYINT(1) NOT NULL DEFAULT 0,
+    `vsec` DECIMAL(20,6) NULL DEFAULT NULL,
+    `dorig` VARCHAR(255) NULL DEFAULT NULL,
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY  (`id_infopackage`),
     INDEX `id_infopackage` (`id_infopackage`, `id_order`, `id_reference_carrier`, `id_type_shipment`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_infopackage_shop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_infopackage_shop` (
     `id_infopackage` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_infopackage`, `id_shop`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
     `id_shipment` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -98,11 +103,11 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment` (
 	INDEX `id_shipment` (`id_shipment`, `id_order`, `id_infopackage`, `num_shipment`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_shipment_shop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_shipment_shop` (
     `id_shipment` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_shipment`, `id_shop`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
 $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
     `id_label` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -118,13 +123,13 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label` (
 	INDEX `id_shipment` (`id_shipment`, `package_id`, `tracker_code`)
 ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_label_shop` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_label_shop` (
     `id_label` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_shop` int(10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id_label`, `id_shop`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_company` (
     `id_carrier_company` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`name` VARCHAR(50) NOT NULL,
 	`shortname` VARCHAR(4) NOT NULL,
@@ -132,9 +137,9 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_company` (
 	`date_add` DATETIME NOT NULL,
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_carrier_company`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_type_shipment` (
     `id_type_shipment` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`id_carrier_company` INT(10) NOT NULL,
 	`name` VARCHAR(50) NOT NULL,
@@ -145,9 +150,9 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_type_shipment` (
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_type_shipment`),
     INDEX `id_type_shipment` (`id_type_shipment`,`id_carrier_company`,`id_reference_carrier`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
-$sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_log` (
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_log` (
     `id_carrier_log` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `id_order` INT(10) UNSIGNED NOT NULL,
 	`name` VARCHAR(250) NOT NULL,
@@ -157,15 +162,31 @@ $sql[] = 'CREATE TABLE IF NOT EXISTS `'._DB_PREFIX_.'rj_carrier_log` (
 	`date_upd` DATETIME NOT NULL,
     PRIMARY KEY (`id_carrier_log`),
     INDEX `id_order` (`id_order`)
-) ENGINE='._MYSQL_ENGINE_.' DEFAULT CHARSET=UTF8;';
+) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=UTF8;';
 
-$sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
+$sql[] = 'CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'rj_carrier_configuration` (
+	`id_configuration` INT(10) UNSIGNED AUTO_INCREMENT,
+	`id_shop_group` INT(11) UNSIGNED NULL DEFAULT NULL,
+	`id_shop` INT(11) UNSIGNED NULL DEFAULT NULL,
+	`id_carrier_company` INT(11) UNSIGNED NULL DEFAULT NULL,
+	`name` VARCHAR(254) NOT NULL,
+	`value` TEXT NULL DEFAULT NULL,
+	`date_add` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`date_upd` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id_configuration`),
+	KEY (`name`),
+	KEY (`id_shop`),
+	KEY (`id_shop_group`),
+	KEY (`id_carrier_company`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;';
+
+$sql[] = 'INSERT INTO `' . _DB_PREFIX_ . 'rj_carrier_company` (`id_carrier_company`, `name`, `shortname`, `icon`) VALUES
 	(1, \'Default Carrier\', \'DEF\', NULL),
 	(2, \'DHL\', \'DHL\', NULL),
 	(3, \'Correo Express\', \'CEX\', NULL),
 	(4, \'GOI\', \'GOI\', NULL);';
 
-$sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipment`, `id_carrier_company`, `name`, `id_bc`, `id_reference_carrier`, `active`) VALUES
+$sql[] = 'INSERT INTO `' . _DB_PREFIX_ . 'rj_carrier_type_shipment` (`id_type_shipment`, `id_carrier_company`, `name`, `id_bc`, `id_reference_carrier`, `active`) VALUES
     (1,3,\'PAQ 10\',61,NULL,0),
     (2,3,\'PAQ 14\',62,NULL,0),
     (3,3,\'PAQ 24\',63,NULL,0),
@@ -187,8 +208,9 @@ $sql[] = 'INSERT INTO `'._DB_PREFIX_.'rj_carrier_type_shipment` (`id_type_shipme
     (19, 4, \'Goi carrier\', \'T,M\', 2, 0),
     (20, 4, \'GOI - Montaje\', \'T,I,M\', 1, 0);';
 
+
 foreach ($sql as $query) {
-    if (Db::getInstance()->execute($query) == false) {
-        return false;
-    }
+	if (Db::getInstance()->execute($query) == false) {
+		return false;
+	}
 }

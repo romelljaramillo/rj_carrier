@@ -38,7 +38,7 @@ Class ServiceGoi {
     protected $endpoint_login;
     protected $endpoint_shipments;
     protected $endpoint_labels;
-    
+
     protected $id_order;
     protected $token = null;
     protected $access_token = 'access_token_goi';
@@ -58,7 +58,7 @@ Class ServiceGoi {
     {
         $dev = '';
         $carrier = new CarrierGoi();
-        $this->configuration = $carrier->getConfigFieldsValues();
+        $this->configuration = $carrier->getValuesConfigFields();
 
         if(!$this->configuration['RJ_GOI_ENV']){
             $dev = '_DEV';
@@ -87,7 +87,7 @@ Class ServiceGoi {
     private function bodyLogin()
     {
         $body = array(
-            "client_id"=> $this->user_id, 
+            "client_id"=> $this->user_id,
             "client_secret"=> $this->key,
             "grant_type"=> 'client_credentials'
         );
@@ -98,7 +98,7 @@ Class ServiceGoi {
     private function setCookies($cookies)
     {
         setcookie(
-            $this->access_token, 
+            $this->access_token,
             $cookies->access_token,
             $cookies->expires_in
         );
@@ -147,7 +147,7 @@ Class ServiceGoi {
         $info_receiver = $info_shipment['info_customer'];
         $info_package = $info_shipment['info_package'];
         $info_receiver['notes'] = $info_package['message'];
-        
+
         $products = $this->getProductsOrder();
         $receiver = $this->getReceiver($info_receiver);
         $pieces = $this->getPieces($info_package);
@@ -161,7 +161,7 @@ Class ServiceGoi {
         $metadata = [
             'id_order' => (string)$this->id_order
         ];
-        
+
         $data = [
             "order_id" => (string)$this->id_order,
             "store_id" => $this->store_id,
@@ -183,7 +183,7 @@ Class ServiceGoi {
 
         foreach ($products as $product) {
 			$product_name = $this->getProducName($product["product_id"]);
-	
+
 			$volume = (float)$product['depth'] * (float)$product['width'] * (float)$product['height'];
             $array_products["articles"][] = [
                 "id"=> $product["product_id"],
@@ -196,8 +196,8 @@ Class ServiceGoi {
 
         return $array_products;
     }
-	
-	private function getProducName($product_id) 
+
+	private function getProducName($product_id)
 	{
 		$product = new Product($product_id);
 
@@ -276,7 +276,7 @@ Class ServiceGoi {
     {
         $header = $this->headerRequest();
         $url = $this->base_url . $endpoin;
-        
+
         $ch = curl_init();
 
         curl_setopt_array(
@@ -294,20 +294,20 @@ Class ServiceGoi {
                 CURLOPT_CUSTOMREQUEST  => $method,
             )
         );
-        
+
         $response = curl_exec($ch);
 
         if ($response === false) {
             return false;
         }
-        
+
         $curl_info = curl_getinfo($ch);
         $curl_error = curl_errno($ch);
 
         curl_close($ch);
-        
+
         $res = strpos($endpoin, 'label');
-        
+
         if($res) {
             if($curl_info['content_type'] == "application/pdf") {
                 $this->count = 0;
@@ -317,7 +317,7 @@ Class ServiceGoi {
                     CarrierGoi::saveLog($url, $this->id_order, $body, $response);
                     return false;
                 }
-                
+
                 $this->count++;
                 $response = $this->request($method, $endpoin);
             }

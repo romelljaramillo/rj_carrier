@@ -54,7 +54,7 @@ Class ServiceGls {
     {
         $dev = '';
         $carrier = new CarrierGls();
-        $this->configuration = $carrier->getConfigFieldsValues();
+        $this->configuration = $carrier->getValuesConfigFields();
 
         if(!$this->configuration['RJ_GLS_ENV']){
             $dev = '_DEV';
@@ -90,8 +90,6 @@ Class ServiceGls {
 
     public function getBodyShipment($info_shipment)
     {
-
-
         $num_shipment = $info_shipment['num_shipment'];
         $info_receiver = $info_shipment['info_customer'];
         $info_shipper = $info_shipment['info_shop'];
@@ -127,16 +125,16 @@ Class ServiceGls {
 
     public function getReference($info_shipment)
     {
-        $referencia = sprintf('%010d', $info_shipment['id_order']);
-        $referencia3 = '';
+        $reference = sprintf('%010d', $info_shipment['id_order']);
+        $reference3 = '';
 
         if (version_compare(_PS_VERSION_, '1.5', '>')) {
-            $referencia3 = '<Referencia tipo="C">' . $info_shipment['reference'] . '</Referencia>';
+            $reference3 = '<Referencia tipo="C">' . $info_shipment['reference'] . '</Referencia>';
         }
 
         return '<Referencias>
-                    <Referencia tipo="0">' . $referencia . '</Referencia>
-                    ' . $referencia3 . '
+                    <Referencia tipo="0">' . $reference . '</Referencia>
+                    ' . $reference3 . '
                 </Referencias>';
     }
 
@@ -155,7 +153,7 @@ Class ServiceGls {
     {
         $insuredValue = '';
 
-        if (!empty($vsec_user)) {
+        if (!empty($vsec_user) && $vsec_user > 0) {
             $insuredValue = '<Seguro tipo=\"1\">
                                 <Descripcion></Descripcion>
                                 <Importe>' . $vsec_user . '</Importe>

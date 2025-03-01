@@ -11,7 +11,7 @@
         font-size: {$font_size_h};
     }
 
-    p { 
+    p {
         line-height: {$line_height_p};
         color: {$color_p};
         font-size: {$font_size_p};
@@ -20,7 +20,7 @@
 <table style="width: 100%; top:0;">
     <tr>
         <td>
-            <h4 style="font-size: 20px; text-align: right;">{$name_carrier|escape:'html':'UTF-8'}</h4>
+            <h4 style="font-size: 20px; text-align: right;">{$carrier_name|escape:'html':'UTF-8'}</h4>
             <p>{l s='Transportista' mod='rj_carrier'}</p>
         </td>
     </tr>

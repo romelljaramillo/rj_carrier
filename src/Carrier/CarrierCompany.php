@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -28,7 +29,9 @@ use Roanja\Module\RjCarrier\Model\RjcarrierShipment;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\Model\RjcarrierInfoPackage;
 use Roanja\Module\RjCarrier\Model\RjcarrierLog;
+use Roanja\Module\RjCarrier\Model\RjCarrierConfiguration;
 use Roanja\Module\RjCarrier\lib\Pdf\RjPDF;
+use Roanja\Module\RjCarrier\Carrier\Def\CarrierDef;
 
 use Configuration;
 use Db;
@@ -44,41 +47,30 @@ use Context;
 use Order;
 
 /**
- * Class CarrierCompany.
+ * Abstract Class CarrierCompany
  */
-class CarrierCompany extends Module
+abstract class CarrierCompany extends Module implements CarrierInterface
 {
 
-    /** @var string Nombre unico de transportista */
-    public $name_carrier = 'name carrier';
+    /** @var string Nombre único del transportista */
+    public $carrier_name = 'Generic Carrier';
 
-
-    /** @var string Nombre corto del transportista siglas ejemp: CEX Correo Express */
+    /** @var string Nombre corto del transportista (siglas) */
     public $shortname = 'DEF';
-    public $display_pdf = 'S';
-    public $label_type = 'B2X_Generic_A4_Third';
+    public $carrier_company_id = 'DEF';
+
+    /** @var bool Mostrar opción de crear etiqueta */
     public $show_create_label = false;
 
-    /** @var array Campos de configuración */
+    /** @var array Configuración del transportista */
     protected $fields_config = [];
 
-    protected $fields_config_info_extra = [
-        [
-            'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
-            'require' => false,
-            'type' => 'string'
-        ],
-        [
-            'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
-            'require' => true,
-            'type' => 'float'
-        ]
-    ];
+    /** @var array Configuración adicional */
+    protected $fields_additional_config = [];
 
-    /** @var array Campos del formulario configuración */
-    public $fields_form;
-
-    public $fields_form_extra;
+    /** @var string Nombre corto del transportista siglas ejemp: CEX Correo Express */
+    public $display_pdf = 'S';
+    public $label_type = 'B2X_Generic_A4_Third';
 
     public $context;
     public $_html;
@@ -86,41 +78,98 @@ class CarrierCompany extends Module
 
     public function __construct()
     {
-        // $this->module = 'rj_carrier';
+        $this->module = 'rj_carrier';
         $this->name = 'rj_carrier';
         parent::__construct();
 
+        $this->context = Context::getContext();
+
+        $this->setFieldsConfig();
+        $this->setFieldsAdditionalConfig();
+        $this->carrier_company_id = RjcarrierCompany::getIdByShortname($this->shortname);
     }
 
-    public function renderConfig()
+    public function setFieldsConfig() {}
+    public function setFieldsAdditionalConfig() {}
+
+    public function setFieldsFormConfig()
     {
-        if (Tools::isSubmit('add_Type_shipment_'.$this->shortname)
-            || (Tools::isSubmit('update_type_shipment_'.$this->shortname)
-            && Tools::isSubmit('id_type_shipment')
-            && RjcarrierTypeShipment::typeShipmentExists((int)Tools::getValue('id_type_shipment')))
-        ) {
-            $this->_html .= $this->renderFormTypeShipment();
-        } else {
+        $active[] = [
+            'type' => 'switch',
+            'label' => $this->l('Active'),
+            'name' => $this->shortname . '_ACTIVE',
+            'values' => [
+                [
+                    'id' => 'active_on',
+                    'value' => 1,
+                    'label' => $this->l('Active')
+                ],
+                [
+                    'id' => 'active_off',
+                    'value' => 0,
+                    'label' => $this->l('Inactive')
+                ]
+            ],
+        ];
 
-            $this->_postProcess();
+        $this->fields_config = array_merge($this->fields_config, $active);
+    }
 
-            $this->_html .= $this->renderFormConfig();
-            $this->_html .= $this->viewAddTypeShipment();
-            $this->_html .= $this->renderListTypeShipment();
+    public function getFieldsFormConfig()
+    {
+        $this->setFieldsFormConfig();
+
+        return [
+            'form' => [
+                'legend' => [
+                    'title' => $this->shortname . $this->l('information'),
+                    'icon' => 'icon-cogs',
+                ],
+                'input' => $this->fields_config,
+                'submit' => [
+                    'title' => $this->l('Save'),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Obtiene los datos de configuración
+     *
+     * @param array $fields
+     * @return array
+     */
+    public function getValuesConfigFields()
+    {
+        $id_shop_group = Shop::getContextShopGroupID();
+        $id_shop = Shop::getContextShopID();
+        $fields = [];
+
+        foreach ($this->fields_config as $field) {
+            if ($field['type'] === 'password') {
+                $fields[$field['name']] = Tools::getValue($field['name'], Common::encrypt('decrypt', RjCarrierConfiguration::get($field['name'], $id_shop_group, $id_shop)));
+            } else {
+                $fields[$field['name']] = Tools::getValue($field['name'], RjCarrierConfiguration::get($field['name'], $id_shop_group, $id_shop));
+            }
         }
 
-        return $this->_html;
+        return $fields;
+    }
+
+    public function getAdditionalFormFieldsConfig()
+    {
+        return $this->fields_additional_config;
     }
 
     public function viewAddTypeShipment()
     {
-        $add = 'add_Type_shipment_'. $this->shortname;
         $this->context->smarty->assign([
-            'link' =>$this->context->link->getAdminLink('AdminModules', true, [],[
-                'configure'=> $this->module,
+            'link' => $this->context->link->getAdminLink('AdminModules', true, [], [
+                'configure' => $this->module,
                 'tab_module' => $this->tab,
                 'tab_form' => $this->shortname,
-                $add => '1',
+                'add_type_shipment' => '1',
+                'carrier' => $this->shortname,
             ]),
             'company' => $this->shortname,
         ]);
@@ -128,308 +177,54 @@ class CarrierCompany extends Module
         return $this->display($this->_path, '/views/templates/hook/create-type-shipment.tpl');
     }
 
-    public function getConfigFieldsExtra()
+    public function getListTypeShipmentFields()
     {
-        return $this->fields_config_info_extra;
-    }
-
-    public function getFieldsFormConfigExtra()
-    {
-        $modulesPay = self::getModulesPay();
-        $modules_array[] =  array(
-            'id' => '',
-            'name' => ''
-        );
-        foreach ($modulesPay as $module) {
-            $modules_array[] =  array(
-                'id' => $module['name'],
-                'name' => $module['name']
-            );
-        }
-
         return [
-            [
-                'type' => 'text',
-                'label' => $this->l('Prefix etiqueta'),
-                'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
-                'class' => 'fixed-width-lg',
-            ],
-            [
-                'type' => 'select',
-                'label' => $this->l('Module contrareembolso'),
-                'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
-                'options' => [
-                    'query' => $modules_array,
-                    'id' => 'id',
-                    'name' => 'name'
-                ]
-            ]
-        ];
-    }
-
-    /**
-     * Valida que los carries seleccionados hayan sido configurados
-     *
-     * @return void
-     */
-    public function validationConfiguration()
-    {
-        $id_shop = Context::getContext()->shop->id;
-        $id_shop_group = Context::getContext()->shop->id_shop_group;
-        $warning = [];
-
-        // valida los campos de configuaración de los carrier company
-        foreach ($this->fields_config as $value) {
-            if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
-                $warning[] = $this->getTranslator()->trans('Required data module configuration!. ', [], 'Modules.Rj_Carrier.Admin') .
-                $value['name'];
-            }
-        }
-
-        // valida los campos de configuaración extra de los carrier company
-        foreach ($this->fields_config_info_extra as $value) {
-            if($value['require'] && !Configuration::get($value['name'], null, $id_shop_group, $id_shop)){
-                $warning[] = $this->getTranslator()->trans('Required data the module extra configuration!. ', [], 'Modules.Rj_Carrier.Admin') .
-                $value['name'];
-            }
-        }
-
-        if(count($warning)){
-            return $warning;
-        }
-
-        return false;
-    }
-
-    protected function _postProcess()
-	{
-        if (Tools::isSubmit('submitConfigTypeShipment'. $this->shortname)) {
-            $this->_postProcessTypeShipment();
-        } elseif (Tools::isSubmit('submitConfig'. $this->shortname)) {
-            $res = true;
-            $shop_context = Shop::getContext();
-
-            $shop_groups_list = array();
-            $shops = Shop::getContextListShopID();
-
-            foreach ($shops as $shop_id) {
-                $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
-
-                if (!in_array($shop_group_id, $shop_groups_list)) {
-                    $shop_groups_list[] = $shop_group_id;
-                }
-
-                foreach ($this->fields_config as $field) {
-                    if($field['type'] === 'password') {
-                        if(Tools::getValue($field['name']))
-                            $res &=  Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id, $shop_id);
-                    } else {
-                        $res &=  Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id, $shop_id);
-                    }
-                }
-            }
-
-            switch ($shop_context) {
-                case Shop::CONTEXT_ALL:
-                    foreach ($this->fields_config as $field) {
-                        if($field['type'] === 'password') {
-                            if(Tools::getValue($field['name']))
-                                $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])));
-                        } else {
-                            $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']));
-                        }
-                    }
-
-                    if (count($shop_groups_list)) {
-                        foreach ($shop_groups_list as $shop_group_id) {
-                            if($field['type'] === 'password') {
-                                if(Tools::getValue($field['name']))
-                                    $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id);
-                            }
-                            foreach ($this->fields_config as $field) {
-                                $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
-                            }
-                        }
-                    }
-                    break;
-                case Shop::CONTEXT_GROUP:
-                    if (count($shop_groups_list)) {
-                        foreach ($shop_groups_list as $shop_group_id) {
-                            foreach ($this->fields_config as $field) {
-                                if($field['type'] === 'password') {
-                                    if(Tools::getValue($field['name']))
-                                        $res &= Configuration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id);
-                                } else {
-                                    $res &= Configuration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
-                                }
-                            }
-                        }
-                    }
-                    break;
-            }
-
-            if (!$res)
-                $this->_html .= $this->displayError($this->l('The Configuration could not be added.'));
-            else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
-            }
-        } elseif (Tools::isSubmit('status_type_shipment_'.$this->shortname)) {
-            $typeShipment = new RjcarrierTypeShipment((int) Tools::getValue('id_type_shipment'));
-            if ($typeShipment->id) {
-                $typeShipment->active = (int) (!$typeShipment->active);
-                $typeShipment->save();
-            }
-            Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 4, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
-        } elseif (Tools::isSubmit('delete_type_shipment_'. $this->shortname)) {
-            $typeShipment = new RjcarrierTypeShipment((int) Tools::getValue('id_type_shipment'));
-            if(!$typeShipment->delete()){
-                $this->_html .= $this->displayError($this->l('Could not delete.'));
-            } else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 1, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
-            }
-        }
-    }
-
-    protected function _postProcessTypeShipment()
-    {
-        if (Tools::isSubmit('id_type_shipment') && RjcarrierTypeShipment::typeShipmentExists((int)Tools::getValue('id_type_shipment'))) {
-            $typeShipment = new RjcarrierTypeShipment((int)Tools::getValue('id_type_shipment'));
-        } else {
-            $typeShipment = new RjcarrierTypeShipment();
-        }
-
-        $typeShipment->id_carrier_company = (int)Tools::getValue('id_carrier_company');
-        $typeShipment->name = Tools::getValue('name');
-        $typeShipment->id_bc = Tools::getValue('id_bc');
-        $typeShipment->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
-        $typeShipment->active = (boolean)Tools::getValue('active');
-
-        if (!Tools::getValue('id_type_shipment')) {
-            if (!$typeShipment->add()) {
-                $this->_html .= $this->displayError($this->l('The Type Shipment could not be added.'));
-            } else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 3, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
-            }
-        } elseif (!$typeShipment->update()) {
-            $this->_html = $this->displayError($this->l('The Type Shipment could not be updated.'));
-        } else {
-                Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'conf' => 6, 'module_name' => $this->name, 'tab_form' => $this->shortname]));
-        }
-    }
-
-    /**
-     * Devuelve shortname comapany a partir del id_refernce_carrier
-     *
-     * @param string $id_carrier
-     * @return string
-     */
-    public static function getInfoCompanyByIdReferenceCarrier($id_reference_carrier)
-    {
-        $type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdReferenceCarrier($id_reference_carrier);
-        if($type_shipment){
-            $carrier_company = new RjcarrierCompany((int)$type_shipment['id_carrier_company']);
-            return  $carrier_company->getFields();
-        } else {
-            $carries_company = RjcarrierCompany::getCarrierCompany();
-        }
-
-        return $carries_company[0];
-    }
-
-    public function renderFormConfig()
-    {
-
-        $helper = new HelperForm();
-		$helper->show_toolbar = false;
-		$helper->table = $this->table;
-		$lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
-		$helper->default_form_language = $lang->id;
-		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
-		$helper->identifier = $this->identifier;
-		$helper->submit_action = 'submitConfig' . $this->shortname;
-		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->module.'&tab_module='.$this->tab.'&module_name='.$this->module;
-		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = array(
-			'fields_value' => $this->getConfigFieldsValues(),
-			'languages' => $this->context->controller->getLanguages(),
-			'id_language' => $this->context->language->id
-		);
-
-		return $helper->generateForm(array($this->fields_form));
-    }
-
-    /**
-     * Devuelve el listado de type shipment
-     *
-     * @return void
-     */
-    private function renderListTypeShipment()
-    {
-
-        $carrier_company = RjcarrierCompany::getCarrierCompanyByShortname($this->shortname);
-        $carrier_type_shipments = RjcarrierTypeShipment::getTypeShipmentsByIdCarrierCompany($carrier_company['id_carrier_company']);
-
-        if(!$carrier_type_shipments){
-            return;
-        }
-
-        $fields_list = array(
-            'id_type_shipment' => array(
+            'id_type_shipment' => [
                 'title' => $this->l('Id'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'name' => array(
+            ],
+            'name' => [
                 'title' => $this->l('Name'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'carrier_company' => array(
+            ],
+            'carrier_company' => [
                 'title' => $this->l('Company'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'shortname' => array(
-                'title' => $this->l('shortname'),
+            ],
+            'shortname' => [
+                'title' => $this->l('Short name'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'id_bc' => array(
-                'title' => $this->l('Id type service'),
+            ],
+            'id_bc' => [
+                'title' => $this->l('Type of service'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'reference_carrier' => array(
-                'title' => $this->l('reference carrier'),
+            ],
+            'reference_carrier' => [
+                'title' => $this->l('Carrier reference'),
                 'width' => 140,
                 'type' => 'text',
-            ),
-            'active' => array(
-                'title' => $this->l('active'),
+            ],
+            'active' => [
+                'title' => $this->l('Active'),
                 'active' => 'status',
                 'type' => 'bool',
-            ),
-        );
-
-        $helper_list = new HelperList();
-        $helper_list->module = $this;
-        $helper_list->title = $this->trans('Type shipment', [], 'Modules.rj_carrier.Admin');
-        $helper_list->shopLinkType = '';
-        $helper_list->no_link = false;
-        $helper_list->show_toolbar = true;
-        $helper_list->simple_header = true;
-        $helper_list->identifier = 'id_type_shipment';
-        $helper_list->table = '_type_shipment_'.$this->shortname;
-        $helper_list->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name .'&tab_form='.$this->shortname;
-        $helper_list->token = Tools::getAdminTokenLite('AdminModules');
-        $helper_list->actions = ['edit', 'delete'];
-
-        $helper_list->listTotal = count($carrier_type_shipments);
-
-        return $helper_list->generateList($carrier_type_shipments, $fields_list);
+            ],
+        ];
     }
 
-    public function renderFormTypeShipment()
+    public function getListTypeShipmentValues()
+    {
+        $carrier_company = RjcarrierCompany::getCarrierCompanyByShortname($this->shortname);
+        return RjcarrierTypeShipment::getTypeShipmentsByIdCarrierCompany($carrier_company['id_carrier_company']);
+    }
+
+    public function formTypeShipment()
     {
         $carriers = Carrier::getCarriers((int) $this->context->language->id);
         $fieldsValuesTypeShipment = $this->getConfigFieldsValuesTypeShipment();
@@ -440,7 +235,8 @@ class CarrierCompany extends Module
         ];
 
         foreach ($carriers as $carrier) {
-            if($fieldsValuesTypeShipment['id_reference_carrier'] == $carrier['id_reference'] || !RjcarrierTypeShipment::typeShipmentExistsByIdReference($carrier['id_reference'])){
+            if ($fieldsValuesTypeShipment['id_reference_carrier'] == $carrier['id_reference']
+            || !RjcarrierTypeShipment::typeShipmentExistsByIdReference($carrier['id_reference'])) {
                 $carrier_array[] =  [
                     'id' => $carrier['id_reference'],
                     'name' => $carrier['name']
@@ -504,7 +300,7 @@ class CarrierCompany extends Module
                                 'id' => 'active_on',
                                 'value' => 1,
                                 'label' => $this->getTranslator()->trans('Yes', [], 'Admin.Global')
-                                ],
+                            ],
                             [
                                 'id' => 'active_off',
                                 'value' => 0,
@@ -531,8 +327,8 @@ class CarrierCompany extends Module
         $helper->default_form_language = $lang->id;
         $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
         $helper->identifier = $this->identifier;
-        $helper->submit_action = 'submitConfigTypeShipment'. $this->shortname;
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='.$this->module.'&tab_module='.$this->tab.'&tab_form='.$this->shortname;
+        $helper->submit_action = 'submitConfigTypeShipment';
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->module . '&tab_module=' . $this->tab . '&tab_form=' . $this->shortname;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = array(
             'fields_value' => $fieldsValuesTypeShipment,
@@ -543,8 +339,188 @@ class CarrierCompany extends Module
         return $helper->generateForm(array($fields_form));
     }
 
+    /**
+     * Valida que los carries seleccionados hayan sido configurados
+     *
+     * @return void
+     */
+    public function validationConfiguration()
+    {
+        $id_shop = Context::getContext()->shop->id;
+        $id_shop_group = (int)Context::getContext()->shop->id_shop_group;
+        $warnings = [];
+
+        $allFields = array_merge($this->fields_config, $this->fields_additional_config);
+
+        foreach ($allFields as $field) {
+            $value = RjCarrierConfiguration::get($field['name'], $id_shop_group, $id_shop);
+
+            if (!empty($field['required']) && empty($value)) {
+                $warnings[] = $this->l('Required configuration missing: ') . $field['name'];
+            }
+        }
+
+        return $warnings;
+    }
+
+    public function saveCarrierConfiguration()
+    {
+        $res = true;
+        $shop_context = Shop::getContext();
+        $shop_groups_list = [];
+        $shops = Shop::getContextListShopID();
+
+        $this->setFieldsFormConfig();
+
+        foreach ($shops as $shop_id) {
+            $shop_group_id = (int)Shop::getGroupFromShop($shop_id, true);
+
+            if (!in_array($shop_group_id, $shop_groups_list)) {
+                $shop_groups_list[] = $shop_group_id;
+            }
+
+            foreach ($this->fields_config as $field) {
+                $value = Tools::getValue($field['name']);
+                if ($field['type'] === 'password' && $value) {
+                    $value = Common::encrypt('encrypt', $value);
+                }
+                $res &= RjCarrierConfiguration::updateValue($field['name'], $value, (int)$this->carrier_company_id, $shop_group_id, $shop_id);
+            }
+        }
+
+        if ($shop_context === Shop::CONTEXT_ALL) {
+            $this->_updateConfigForAllShops($shop_groups_list);
+        } elseif ($shop_context === Shop::CONTEXT_GROUP) {
+            $this->_updateConfigForShopGroups($shop_groups_list);
+        }
+
+        if (!$res) {
+            $this->_html .= $this->displayError($this->l('The Configuration could not be added.'));
+        } else {
+            $this->_redirectAfterProcess(6);
+        }
+    }
+
+    protected function _updateConfigForAllShops($shop_groups_list)
+    {
+        foreach ($this->fields_config as $field) {
+            if ($field['type'] === 'password' && Tools::getValue($field['name'])) {
+                RjCarrierConfiguration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])));
+            } else {
+                RjCarrierConfiguration::updateValue($field['name'], Tools::getValue($field['name']));
+            }
+        }
+
+        foreach ($shop_groups_list as $shop_group_id) {
+            foreach ($this->fields_config as $field) {
+                if ($field['type'] === 'password' && Tools::getValue($field['name'])) {
+                    RjCarrierConfiguration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), $shop_group_id);
+                } else {
+                    RjCarrierConfiguration::updateValue($field['name'], Tools::getValue($field['name']), $shop_group_id);
+                }
+            }
+        }
+    }
+
+    protected function _updateConfigForShopGroups($shop_groups_list)
+    {
+        foreach ($shop_groups_list as $shop_group_id) {
+            foreach ($this->fields_config as $field) {
+                if ($field['type'] === 'password' && Tools::getValue($field['name'])) {
+                    RjCarrierConfiguration::updateValue($field['name'], Common::encrypt('encrypt', Tools::getValue($field['name'])), false, $shop_group_id);
+                } else {
+                    RjCarrierConfiguration::updateValue($field['name'], Tools::getValue($field['name']), false, $shop_group_id);
+                }
+            }
+        }
+    }
+
+    /**
+     * Guarda la configuración de un tipo de envío
+     *
+     * @param array $data
+     * @return void
+     */
+    public function saveConfigTypeShipment(array $data)
+    {
+        $typeShipment = new RjcarrierTypeShipment((int)($data['id_type_shipment'] ?? null));
+
+        $typeShipment->id_carrier_company = (int)$data['id_carrier_company'];
+        $typeShipment->name = (string)$data['name'];
+        $typeShipment->id_bc = (string)$data['id_bc'];
+        $typeShipment->id_reference_carrier = (int)$data['id_reference_carrier'];
+        $typeShipment->active = (bool)$data['active'];
+
+        if ($typeShipment->id) {
+            $result = $typeShipment->update();
+            $message = 'The Type Shipment could not be updated.';
+            $confirmationCode = 6;
+        } else {
+            $result = $typeShipment->add();
+            $message = 'The Type Shipment could not be added.';
+            $confirmationCode = 3;
+        }
+
+        if (!$result) {
+            $this->_html .= $this->displayError($this->l($message));
+        } else {
+            $this->_redirectAfterProcess($confirmationCode);
+        }
+    }
+
+    public function updateStatusTypeShipment(int $id_type_shipment)
+    {
+        $typeShipment = new RjcarrierTypeShipment((int)$id_type_shipment);
+        if ($typeShipment->id) {
+            $typeShipment->active = (int) !$typeShipment->active;
+            $typeShipment->save();
+        }
+
+        $this->_redirectAfterProcess(4);
+    }
+
+    public function deleteTypeShipment(int $id_type_shipment)
+    {
+        $typeShipment = new RjcarrierTypeShipment((int)$id_type_shipment);
+        if (!$typeShipment->delete()) {
+            $this->_html .= $this->displayError($this->l('Could not delete.'));
+        } else {
+            $this->_redirectAfterProcess(1);
+        }
+    }
+
+    protected function _redirectAfterProcess($confirmationCode)
+    {
+        Tools::redirectAdmin($this->context->link->getAdminLink('AdminModules', true, [], [
+            'configure' => $this->name,
+            'tab_module' => $this->tab,
+            'conf' => $confirmationCode,
+            'module_name' => $this->name,
+            'tab_form' => $this->shortname
+        ]));
+    }
+
+    /**
+     * Devuelve shortname comapany a partir del id_refernce_carrier
+     *
+     * @param string $id_carrier
+     * @return string
+     */
+    public static function getInfoCompanyByIdReferenceCarrier($id_reference_carrier)
+    {
+        $type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdReferenceCarrier($id_reference_carrier);
+        if ($type_shipment) {
+            $carrier_company = new RjcarrierCompany((int)$type_shipment['id_carrier_company']);
+            return  $carrier_company->getFields();
+        } else {
+            $carries_company = RjcarrierCompany::getAllCarrierCompany();
+        }
+
+        return $carries_company[0];
+    }
+
     public function getConfigFieldsValuesTypeShipment()
-	{
+    {
         $fields = array();
 
         if (Tools::isSubmit('id_type_shipment') && RjcarrierTypeShipment::typeShipmentExists((int)Tools::getValue('id_type_shipment'))) {
@@ -560,33 +536,12 @@ class CarrierCompany extends Module
         $fields['id_reference_carrier'] = Tools::getValue('id_reference_carrier', $typeShipment->id_reference_carrier);
         $fields['active'] = Tools::getValue('active', $typeShipment->active);
 
-
         return $fields;
     }
 
     /**
-     * Obtiene los datos de configuración
-     *
-     * @param array $fields
-     * @return array
+     * Método genérico para crear un envío.
      */
-    public function getConfigFieldsValues()
-	{
-		$id_shop_group = Shop::getContextShopGroupID();
-		$id_shop = Shop::getContextShopID();
-        $fields = [];
-
-        foreach ($this->fields_config as $field) {
-            if($field['type'] === 'password'){
-                $fields[$field['name']] = Tools::getValue($field['name'], Common::encrypt('decrypt',Configuration::get($field['name'], null, $id_shop_group, $id_shop)));
-            }  else {
-                $fields[$field['name']] = Tools::getValue($field['name'], Configuration::get($field['name'], null, $id_shop_group, $id_shop));
-            }
-        }
-
-        return $fields;
-	}
-
     public function createShipment($shipment)
     {
         $shipment['num_shipment'] = Common::getUUID();
@@ -624,12 +579,12 @@ class CarrierCompany extends Module
     {
         $uuid = Common::getUUID();
         $rj_carrier_label = new RjcarrierLabel();
-        $rj_carrier_label->id_shipment = $id_shipment;
+        $rj_carrier_label->id_shipment = (int) $id_shipment;
         $rj_carrier_label->package_id = $uuid;
         $rj_carrier_label->label_type = $this->label_type;
-        $rj_carrier_label->tracker_code = 'TC' .$uuid . '-' . $num_package;
+        $rj_carrier_label->tracker_code = 'TC' . $uuid . '-' . $num_package;
 
-        if(Common::createFileLabel($pdf, $uuid)){
+        if (Common::createFileLabel($pdf, $uuid)) {
             $rj_carrier_label->pdf = $uuid;
         }
 
@@ -670,7 +625,7 @@ class CarrierCompany extends Module
         $rj_carrier_shipment->num_shipment = $num_shipment;
         $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
         $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
-        $rj_carrier_shipment->product = $info_shipment['name_carrier'];
+        $rj_carrier_shipment->product = $info_shipment['carrier_name'];
         $rj_carrier_shipment->request = json_encode($info_shipment);
         $rj_carrier_shipment->response = ($response) ? json_encode($response) : null;
 
@@ -685,62 +640,51 @@ class CarrierCompany extends Module
     }
 
     /**
-     * save data db table rj_carrier_infopackage - data del paquete order
-     *
-     * @return obj
+     * Guarda los datos de un envío.
      */
-    public static function saveInfoPackage()
+    /* protected function saveShipment($info_shipment)
     {
-        $id_shop_group = Shop::getContextShopGroupID();
-		$id_shop = Shop::getContextShopID();
+        $id_order = $info_shipment['id_order'];
+        $num_shipment = $info_shipment['num_shipment'];
+        $id_infopackage = $info_shipment['info_package']['id_infopackage'];
+        $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
 
-        if (Tools::getValue('id_infopackage')) {
-            $rj_carrier_infopackage = new RjcarrierInfoPackage((int)Tools::getValue('id_infopackage'));
+        if (!$id_order) {
+            return false;
+        }
 
-            if (!Validate::isLoadedObject($rj_carrier_infopackage))
+        $rj_carrier_shipment = RjcarrierShipment::getOrCreateShipment($id_order);
+        $rj_carrier_shipment->num_shipment = $num_shipment;
+        $rj_carrier_shipment->id_infopackage = $id_infopackage;
+        $rj_carrier_shipment->id_carrier_company = $id_carrier_company;
+        $rj_carrier_shipment->request = json_encode($info_shipment);
+
+        return $rj_carrier_shipment->save() ? $rj_carrier_shipment->getFields() : false;
+    } */
+
+    public static function saveInfoPackage(array $infopackage)
+    {
+        if ($infopackage['id_infopackage']) {
+            $rj_carrier_infopackage = new RjcarrierInfoPackage((int)$infopackage['id_infopackage']);
+
+            if (!Validate::isLoadedObject($rj_carrier_infopackage)) {
                 return false;
+            }
         } else {
             $rj_carrier_infopackage = new RjcarrierInfoPackage();
         }
 
-        $hour_from = (Tools::getValue('rj_hour_from')) ? Tools::getValue('rj_hour_from') . ':00' : Configuration::get('RJ_HOUR_FROM', null, $id_shop_group, $id_shop) . ':00';
-        $hour_until = (Tools::getValue('rj_hour_until')) ? Tools::getValue('rj_hour_until') . ':00': Configuration::get('RJ_HOUR_UNTIL', null, $id_shop_group, $id_shop) . ':00';
-
-        $rj_carrier_infopackage->id_order = (int)Tools::getValue('id_order');
-        $rj_carrier_infopackage->id_reference_carrier = (int)Tools::getValue('id_reference_carrier');
-        $rj_carrier_infopackage->quantity = (!(int)Tools::getValue('rj_quantity')) ? 1 : (int)Tools::getValue('rj_quantity');
-        $rj_carrier_infopackage->weight = Tools::getValue('rj_weight');
-        $rj_carrier_infopackage->length = Tools::getValue('rj_length');
-        $rj_carrier_infopackage->cash_ondelivery = Tools::getValue('rj_cash_ondelivery');
-        $rj_carrier_infopackage->message = Tools::getValue('rj_message');
-        $rj_carrier_infopackage->id_type_shipment = Tools::getValue('id_type_shipment');
-        $rj_carrier_infopackage->hour_from = (self::validateFormatTime($hour_from))?$hour_from:'00:00:00';
-        $rj_carrier_infopackage->hour_until = (self::validateFormatTime($hour_until))?$hour_until:'00:00:00';
-        $rj_carrier_infopackage->retorno = (int)Tools::getValue('rj_retorno');
-        $rj_carrier_infopackage->rcs_user = (bool)Tools::getValue('rj_rcs_user');
-        $rj_carrier_infopackage->vsec_user = Tools::getValue('rj_vsec_user');
-        $rj_carrier_infopackage->dorig_user = Tools::getValue('rj_dorig_user');
-
-        if (!Tools::getValue('id_infopackage'))
-        {
-            if (!$rj_carrier_infopackage->add()){
-                return false;
+        foreach ($infopackage as $field => $value) {
+            if (isset($infopackage[$field])) {
+                $rj_carrier_infopackage->$field = $infopackage[$field];
             }
-        }elseif (!$rj_carrier_infopackage->update()){
-            return false;
         }
 
-        return $rj_carrier_infopackage->getFields();
-    }
-
-    public static function getModulesPay()
-    {
-        $id_shop = Shop::getContextShopID();
-
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('SELECT m.`name`  FROM `'._DB_PREFIX_.'module` m
-        INNER JOIN `'._DB_PREFIX_.'module_carrier` mc ON m.`id_module` = mc.`id_module`
-        WHERE mc.`id_shop` = ' . $id_shop . '
-        GROUP BY m.`id_module`');
+        if ($rj_carrier_infopackage->id) {
+            return $rj_carrier_infopackage->update() ? $rj_carrier_infopackage->getFields() : false;
+        } else {
+            return $rj_carrier_infopackage->add() ? $rj_carrier_infopackage->getFields() : false;
+        }
     }
 
     public function getPosicionLabel($posicionLabel)
@@ -760,12 +704,11 @@ class CarrierCompany extends Module
                 return '0';
                 break;
         }
-
     }
 
     public static function validateFormatTime($time)
     {
-        if(preg_match("/(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)/",$time)){
+        if (preg_match("/(?:[01]\d|2[0-3]):(?:[0-5]\d):(?:[0-5]\d)/", $time)) {
             return true;
         }
         return false;

@@ -42,7 +42,7 @@ Class ServiceCex {
     private function getConfiguration()
     {
         $carrierCex = new CarrierCex();
-        $this->configuration = $carrierCex->getConfigFieldsValues();
+        $this->configuration = $carrierCex->getValuesConfigFields();
     }
 
     /**

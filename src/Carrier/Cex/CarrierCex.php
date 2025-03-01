@@ -26,115 +26,82 @@ use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\Cex\ServiceCex;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\lib\Pdf\RjPDF;
+use Roanja\Module\RjCarrier\Carrier\CarrierInterface;
 
 /**
  * Class CarrierCex.
  */
-class CarrierCex extends CarrierCompany
+class CarrierCex extends CarrierCompany implements CarrierInterface
 {
     public function __construct()
     {
-        $this->name_carrier = 'Correo Express';
+        $this->carrier_name = 'Correo Express';
         $this->shortname = 'CEX';
+        $this->show_create_label = false;
+        parent::__construct();
+    }
 
+    public function setFieldsConfig()
+    {
         $this->fields_config = [
             [
-                'name' => 'RJ_CEX_COD_CLIENT',
+                'type' => 'text',
+                'label' => $this->l('Código cliente'),
+                'name' => $this->shortname . '_COD_CLIENT',
                 'required' => true,
-                'type' => 'string'
+                'class' => 'fixed-width-lg'
             ],
             [
-                'name' => 'RJ_CEX_USER',
+                'type' => 'text',
+                'label' => $this->l('User'),
+                'name' => $this->shortname . '_USER',
                 'required' => true,
-                'type' => 'string'
             ],
             [
-                'name' => 'RJ_CEX_PASS',
+                'type' => 'password',
+                'label' => $this->l('Password'),
+                'name' => $this->shortname . '_PASS',
                 'required' => true,
-                'type' => 'password'
             ],
             [
-                'name' => 'RJ_CEX_WSURL',
+                'type' => 'text',
+                'label' => $this->l('Url servicio web'),
+                'name' => $this->shortname . '_URL',
                 'required' => true,
-                'type' => 'string'
+                'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc')
             ],
             [
-                'name' => 'RJ_CEX_WSURLSEG',
+                'type' => 'text',
+                'label' => $this->l('Endpoint grabacionEnvio'),
+                'name' => $this->shortname . '_WSURL',
                 'required' => true,
-                'type' => 'string'
+                'desc' => $this->l('Example: /apiRestGrabacionEnviok8s/json/grabacionEnvio')
             ],
             [
-                'name' => 'RJ_CEX_WSURLMOD',
+                'type' => 'text',
+                'label' => $this->l('Endpoint listaEnvios'),
+                'name' => $this->shortname . '_WSURLSEG',
                 'required' => true,
-                'type' => 'string'
+                'desc' => $this->l('Example: /apiRestListaEnvios/json/listaEnvios')
             ],
             [
-                'name' => 'RJ_CEX_WSURLANUL',
+                'type' => 'text',
+                'label' => $this->l('Endpoint modificarRecogida'),
+                'name' => $this->shortname . '_WSURLMOD',
                 'required' => true,
-                'type' => 'boolean'
+                'desc' => $this->l('Example: /apiRestGrabacionRecogidaEnviok8s/json/modificarRecogida')
             ],
             [
-                'name' => 'RJ_CEX_ACTIVE',
-                'required' => false,
-                'type' => 'string'
-            ]
-        ];
-
-        $this->fields_config_info_extra = [
-            [
-                'name' => 'RJ_ENABLESHIPPINGTRACK',
-                'required' => false,
-                'type' => 'boolean'
-            ],
-            [
-                'name' => 'RJ_LABELSENDER',
-                'required' => false,
-                'type' => 'boolean'
-            ],
-            [
-                'name' => 'RJ_LABELSENDER_TEXT',
-                'required' => false,
-                'type' => 'string'
-            ],
-            [
-                'name' => 'RJ_ENABLEWEIGHT',
-                'required' => false,
-                'type' => 'boolean'
-            ],
-            [
-                'name' => 'RJ_DEFAULTKG',
-                'required' => false,
-                'type' => 'float'
-            ],
-            [
-                'name' => 'RJ_HOUR_FROM',
+                'type' => 'text',
+                'label' => $this->l('Endpoint anularRecogida'),
+                'name' => $this->shortname . '_WSURLANUL',
                 'required' => true,
-                'type' => 'time'
+                'desc' => $this->l('Example: /apiRestGrabacionRecogidaEnviok8s/json/anularRecogida')
             ],
-            [
-                'name' => 'RJ_HOUR_UNTIL',
-                'required' => true,
-                'type' => 'time'
-            ],
-        ];
-
-        parent::__construct();
-
-    }
-
-    public function renderConfig()
-    {
-        $this->setFieldsFormConfig();
-        return parent::renderConfig();
-    }
-
-    public function getFieldsFormConfigExtra()
-    {
-        return  [
             [
                 'type' => 'switch',
                 'label' => $this->l('Activar shipping track'),
-                'name' => 'RJ_ENABLESHIPPINGTRACK',
+                'name' => $this->shortname . '_ENABLESHIPPINGTRACK',
                 'desc' => $this->l('Activar enlace de seguimiento en el historial de compras del cliente'),
                 'values' => [
                     [
@@ -152,7 +119,7 @@ class CarrierCex extends CarrierCompany
             [
                 'type' => 'switch',
                 'label' => $this->l('Activar quitar remitente'),
-                'name' => 'RJ_LABELSENDER',
+                'name' => $this->shortname . '_LABELSENDER',
                 'desc' => $this->l('Quitar remitente de las etiquetas'),
                 'values' => [
                     [
@@ -170,12 +137,12 @@ class CarrierCex extends CarrierCompany
             [
                 'type' => 'text',
                 'label' => $this->l('Remitente alternativo'),
-                'name' => 'RJ_LABELSENDER_TEXT',
+                'name' => $this->shortname . '_LABELSENDER_TEXT',
             ],
             [
                 'type' => 'switch',
                 'label' => $this->l('Activar peso'),
-                'name' => 'RJ_ENABLEWEIGHT',
+                'name' => $this->shortname . '_ENABLEWEIGHT',
                 'desc' => $this->l('Activar peso por defecto'),
                 'values' => [
                     [
@@ -192,15 +159,21 @@ class CarrierCex extends CarrierCompany
             ],
             [
                 'type' => 'text',
+                'label' => $this->l('Nº Paquetes por defecto'),
+                'name' => $this->shortname . '_QUANTITY',
+                'class' => 'fixed-width-lg',
+            ],
+            [
+                'type' => 'text',
                 'label' => $this->l('Peso por defecto'),
-                'name' => 'RJ_DEFAULTKG',
+                'name' => $this->shortname . '_WEIGHT',
                 'suffix' => 'kg',
                 'class' => 'fixed-width-lg',
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Hour from'),
-                'name' => 'RJ_HOUR_FROM',
+                'name' => $this->shortname . '_HOUR_FROM',
                 'class' => 'fixed-width-lg',
                 'suffix' => '<',
                 'desc' => $this->l('format 09:00'),
@@ -208,93 +181,29 @@ class CarrierCex extends CarrierCompany
             [
                 'type' => 'text',
                 'label' => $this->l('hour until'),
-                'name' => 'RJ_HOUR_UNTIL',
+                'name' => $this->shortname . '_HOUR_UNTIL',
                 'class' => 'fixed-width-lg',
                 'suffix' => '>',
                 'desc' => $this->l('format 18:00'),
-            ]
+            ],
+            [
+                'type' => 'switch',
+                'label' => $this->l('Production Mode'),
+                'name' => $this->shortname . '_ENV',
+                'values' => [
+                    [
+                        'id' => 'active_on',
+                        'value' => 1,
+                        'label' => $this->l('Production')
+                    ],
+                    [
+                        'id' => 'active_off',
+                        'value' => 0,
+                        'label' => $this->l('Develop')
+                    ]
+                ],
+            ],
         ];
-    }
-
-    private function setFieldsFormConfig()
-    {
-        $this->fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('Correo Express information'),
-                    'icon' => 'icon-cogs'
-                ),
-                'input' => array(
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Código cliente'),
-                        'name' => 'RJ_CEX_COD_CLIENT',
-                        'required' => true,
-                        'class' => 'fixed-width-lg'
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('User'),
-                        'name' => 'RJ_CEX_USER',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'password',
-                        'label' => $this->l('Password'),
-                        'name' => 'RJ_CEX_PASS',
-                        'required' => true,
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url servicio web'),
-                        'name' => 'RJ_CEX_WSURL',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionEnviok8s/json/grabacionEnvio')
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url servicio web'),
-                        'name' => 'RJ_CEX_WSURLSEG',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestListaEnvios/json/listaEnvios')
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url servicio web'),
-                        'name' => 'RJ_CEX_WSURLMOD',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionRecogidaEnviok8s/json/modificarRecogida')
-                    ),
-                    array(
-                        'type' => 'text',
-                        'label' => $this->l('Url servicio web'),
-                        'name' => 'RJ_CEX_WSURLANUL',
-                        'required' => true,
-                        'desc' => $this->l('Format url http:// or https:// . defaul: https://www.cexpr.es/wspsc/apiRestGrabacionRecogidaEnviok8s/json/anularRecogida')
-                    ),
-                    array(
-						'type' => 'switch',
-						'label' => $this->l('Activar'),
-						'name' => 'RJ_CEX_ACTIVE',
-						'values' => array(
-							array(
-								'id' => 'active_on',
-								'value' => 1,
-								'label' => $this->l('Production')
-							),
-							array(
-								'id' => 'active_off',
-								'value' => 0,
-								'label' => $this->l('Develop')
-							)
-						),
-					),
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save'),
-                )
-            ),
-        );
     }
 
     public function createShipment($shipment)
@@ -307,7 +216,7 @@ class CarrierCex extends CarrierCompany
         if(!$response) {
             return false;
         }
-        
+
         $response = $this->deletedEtiquetaResponse($response);
 
         $info_shipment = $this->saveShipment($shipment, $response);
@@ -319,9 +228,9 @@ class CarrierCex extends CarrierCompany
 
             $shipment['response'] = $response;
 
-            for($num_package = 1; $num_package <= $packages_qty; $num_package++) { 
+            for($num_package = 1; $num_package <= $packages_qty; $num_package++) {
                 $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
-                
+
                 $pdf = $rjpdf->render($this->display_pdf);
 
                 if ($pdf) {
@@ -344,11 +253,11 @@ class CarrierCex extends CarrierCompany
         $rj_carrier_label->package_id = $reponse_pdf->codUnico;
         $rj_carrier_label->tracker_code = $reponse_pdf->codUnico;
         $rj_carrier_label->label_type = $this->label_type;
-        
+
         if(Common::createFileLabel($reponse_pdf->pdf, $reponse_pdf->codUnico)){
             $rj_carrier_label->pdf = $reponse_pdf->codUnico;
         }
-        
+
         if (!$rj_carrier_label->add())
             return false;
 
@@ -356,14 +265,14 @@ class CarrierCex extends CarrierCompany
     }
 
     /**
-     * Elimina la etiqueta que viene en el response 
+     * Elimina la etiqueta que viene en el response
      *
      * @param obj $response
      * @return obj $response
      */
     public function deletedEtiquetaResponse($response)
     {
-        if(isset($response->etiqueta)){ 
+        if(isset($response->etiqueta)){
             $response->etiqueta = [];
             return $response;
         }

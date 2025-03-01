@@ -28,6 +28,7 @@ namespace Roanja\Module\RjCarrier\Model;
 use Db;
 use Shop;
 use Context;
+use Validate;
 
 class RjcarrierInfoPackage extends \ObjectModel
 {
@@ -45,64 +46,78 @@ class RjcarrierInfoPackage extends \ObjectModel
     public $hour_from;
     public $hour_until;
     public $retorno;
-    public $rcs_user;
-    public $vsec_user;
-    public $dorig_user;
+    public $rcs;
+    public $vsec;
+    public $dorig;
     public $date_add;
     public $date_upd;
 
-    /**
-     * @see ObjectModel::$definition
-     */
+    const TABLE_NAME = _DB_PREFIX_ . 'rj_carrier_infopackage';
+
     public static $definition = [
         'table' => 'rj_carrier_infopackage',
         'primary' => 'id_infopackage',
         'multishop' => true,
         'fields' => [
-            'id_order'   => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'id_reference_carrier'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'id_type_shipment'  => ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'quantity' =>	['type' => self::TYPE_INT, 'validate' => 'isunsignedInt', 'required' => true],
-            'weight' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
-            'length' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
-            'width' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
-            'height' =>		['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'id_order' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'id_reference_carrier' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'id_type_shipment' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'quantity' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt', 'required' => true],
+            'weight' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat', 'required' => true],
+            'length' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'width' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'height' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
             'cash_ondelivery' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
-            'message' =>	['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
-            'hour_from' =>  ['type' => self::TYPE_NOTHING],
+            'message' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml', 'size' => 255],
+            'hour_from' => ['type' => self::TYPE_NOTHING],
             'hour_until' => ['type' => self::TYPE_NOTHING],
-            'date_add' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
-            'date_upd' =>   ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
-            'retorno' =>    ['type' => self::TYPE_INT, 'validate' => 'isunsignedInt'],
-            'rcs_user' =>   ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
-            'vsec_user' =>  ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
-            'dorig_user' => ['type' => self::TYPE_STRING, 'validate' => 'isCleanHtml']
+            'retorno' => ['type' => self::TYPE_INT, 'validate' => 'isUnsignedInt'],
+            'rcs' => ['type' => self::TYPE_BOOL, 'validate' => 'isBool'],
+            'vsec' => ['type' => self::TYPE_FLOAT, 'validate' => 'isFloat'],
+            'dorig' => ['type' => self::TYPE_STRING, 'validate' => 'isGenericName'],
+            'date_add' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat'],
+            'date_upd' => ['type' => self::TYPE_DATE, 'validate' => 'isDateFormat']
         ]
     ];
 
-    public	function __construct($id_infopackage = null, $id_lang = null, $id_shop = null, Context $context = null)
-	{
+    public function __construct($id_infopackage = null, $id_lang = null, $id_shop = null, Context $context = null)
+    {
         Shop::addTableAssociation('rj_carrier_infopackage', ['type' => 'shop']);
-		parent::__construct($id_infopackage, $id_lang, $id_shop);
-	}
+        parent::__construct($id_infopackage, $id_lang, $id_shop);
+    }
 
     public static function getQuantityById($id_infopackage)
     {
+        if (!Validate::isUnsignedInt($id_infopackage)) {
+            return false;
+        }
+
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue('
-		SELECT c.quantity
-		FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` c
-		WHERE c.`id_infopackage` = ' . (int)$id_infopackage);
+            SELECT c.quantity
+            FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` c
+            WHERE c.`id_infopackage` = ' . (int)$id_infopackage
+        );
     }
 
-    public static function getPackageByIdOrder($id_order, $id_shop)
+    public static function getPackageByIdOrder($id_order, $id_shop = null)
     {
-        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
-		SELECT *
-		FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` p
-        LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_infopackage_shop` ps
-        ON p.`id_infopackage` = ps.`id_infopackage`
-		WHERE p.`id_order` = ' . (int)$id_order .'
-        AND ps.`id_shop` = ' . (int)$id_shop);
-    }
+        if (!Validate::isUnsignedInt($id_order)) {
+            return false;
+        }
 
+        $id_shop = $id_shop ?: (int)Context::getContext()->shop->id;
+
+        if (!Validate::isUnsignedInt($id_shop)) {
+            return false;
+        }
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->getRow('
+            SELECT *
+            FROM `' . _DB_PREFIX_ . 'rj_carrier_infopackage` p
+            LEFT JOIN `' . _DB_PREFIX_ . 'rj_carrier_infopackage_shop` ps
+            ON p.`id_infopackage` = ps.`id_infopackage`
+            WHERE p.`id_order` = ' . (int)$id_order . '
+            AND ps.`id_shop` = ' . (int)$id_shop
+        );
+    }
 }

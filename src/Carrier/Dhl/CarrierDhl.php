@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
@@ -21,113 +22,105 @@
 namespace Roanja\Module\RjCarrier\Carrier\Dhl;
 
 use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
+use Roanja\Module\RjCarrier\Carrier\CarrierInterface;
 use Roanja\Module\RjCarrier\Carrier\Dhl\ServiceDhl;
 use Roanja\Module\RjCarrier\Model\RjcarrierLabel;
 use Roanja\Module\RjCarrier\lib\Common;
 
 /**
- * Class CarrierDhl.
+ * Class CarrierDhl
+ * Manejo específico del transportista DHL.
  */
-class CarrierDhl extends CarrierCompany
+class CarrierDhl extends CarrierCompany implements CarrierInterface
 {
-
     public function __construct()
     {
-        $this->show_create_label = false;
-
-        $this->name_carrier = 'DHL';
+        $this->carrier_name = 'DHL';
         $this->shortname = 'DHL';
-        
-        /**
-         * Names of fields config DHL carrier used
-         */
-        $this->setFielConfig();
-
+        $this->show_create_label = true;
         parent::__construct();
     }
 
     /**
-     * Setea los fields config del plugin
-     *
-     * @return void
+     * Configuración de los campos específicos para DHL.
      */
-    public function setFielConfig()
+    public function setFieldsConfig()
     {
         $this->fields_config = [
             [
                 'type' => 'text',
-                'label' => $this->l('accountId'),
-                'name' => 'RJ_DHL_ACCOUNID',
+                'label' => $this->l('Account ID'),
+                'name' => $this->shortname . '_ACCOUNID',
                 'required' => true,
                 'class' => 'fixed-width-lg',
             ],
             [
                 'type' => 'text',
-                'label' => $this->l('user Id'),
-                'name' => 'RJ_DHL_USERID',
+                'label' => $this->l('User ID'),
+                'name' => $this->shortname . '_USERID',
                 'required' => true,
-            ],
-            [
-                'type' => 'text',
-                'label' => $this->l('user Id DEV'),
-                'name' => 'RJ_DHL_USERID_DEV',
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Key'),
-                'name' => 'RJ_DHL_KEY',
+                'name' => $this->shortname . '_KEY',
                 'required' => true,
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('URL Production'),
+                'name' => $this->shortname . '_URL',
+                'required' => true,
+                'desc' => $this->l('Format: http:// or https://'),
+            ],
+            [
+                'type' => 'text',
+                'label' => $this->l('User ID DEV'),
+                'name' => $this->shortname . '_USERID_DEV',
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Key DEV'),
-                'name' => 'RJ_DHL_KEY_DEV',
+                'name' => $this->shortname . '_KEY_DEV',
             ],
             [
                 'type' => 'text',
-                'label' => $this->l('Url Production'),
-                'name' => 'RJ_DHL_URL',
-                'required' => true,
-                'desc' => $this->l('Format url http:// or https:// .'),
-            ],
-            [
-                'type' => 'text',
-                'label' => $this->l('Url Develop'),
-                'name' => 'RJ_DHL_URL_DEV',
-                'desc' => $this->l('Format url http:// or https:// .'),
+                'label' => $this->l('URL Develop'),
+                'name' => $this->shortname . '_URL_DEV',
+                'desc' => $this->l('Format: http:// or https://'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Endpoint login'),
-                'name' => 'RJ_DHL_ENDPOINT_LOGIN',
+                'name' => $this->shortname . '_ENDPOINT_LOGIN',
                 'required' => true,
                 'desc' => $this->l('Example: /authenticate/api-key'),
             ],
             [
                 'type' => 'text',
                 'label' => $this->l('Endpoint refresh token'),
-                'name' => 'RJ_DHL_ENDPOINT_REFRESH_TOKEN',
+                'name' => $this->shortname . '_ENDPOINT_REFRESH_TOKEN',
                 'required' => true,
                 'desc' => $this->l('Example: /authenticate/refresh-token'),
             ],
             [
                 'type' => 'text',
-                'label' => $this->l('Endpoint Shipment'),
-                'name' => 'RJ_DHL_ENDPOINT_SHIPMENT',
+                'label' => $this->l('Endpoint shipment'),
+                'name' => $this->shortname . '_ENDPOINT_SHIPMENT',
                 'required' => true,
                 'desc' => $this->l('Example: /shipments'),
             ],
             [
                 'type' => 'text',
-                'label' => $this->l('Endpoint Label'),
-                'name' => 'RJ_DHL_ENDPOINT_LABEL',
+                'label' => $this->l('Endpoint label'),
+                'name' => $this->shortname . '_ENDPOINT_LABEL',
                 'required' => true,
                 'desc' => $this->l('Example: /labels'),
             ],
             [
                 'type' => 'switch',
-                'label' => $this->l('Modo producción'),
-                'name' => 'RJ_DHL_ENV',
+                'label' => $this->l('Production Mode'),
+                'name' => $this->shortname . '_ENV',
                 'values' => [
                     [
                         'id' => 'active_on',
@@ -144,113 +137,75 @@ class CarrierDhl extends CarrierCompany
         ];
     }
 
-    public function renderConfig()
-    {
-        $this->setFieldsFormConfig();
-        
-        return parent::renderConfig();
-    }
-
-    private function setFieldsFormConfig()
-    {
-        $this->fields_form = [
-            'form' => [
-                'legend' => [
-                    'title' => $this->l('DHL information'),
-                    'icon' => 'icon-cogs',
-                ],
-                'input' => $this->fields_config,
-                'submit' => [
-                    'title' => $this->l('Save'),
-                ],
-            ],
-        ];
-    }
-
-    public function getFieldsFormConfigExtra()
-    {
-        $modulesPay = self::getModulesPay();
-
-        $modules_array[] =  array(
-            'id' => '',
-            'name' => ''
-        );
-        foreach ($modulesPay as $module) {
-            $modules_array[] =  array(
-                'id' => $module['name'],
-                'name' => $module['name']
-            );
-        }
-
-        return [
-            [
-                'type' => 'text',
-                'label' => $this->l('Prefix etiqueta'),
-                'name' => 'RJ_ETIQUETA_TRANSP_PREFIX',
-                'class' => 'fixed-width-lg',
-            ],
-            [
-                'type' => 'select',
-                'label' => $this->l('Module contrareembolso'),
-                'name' => 'RJ_MODULE_CONTRAREEMBOLSO',
-                'options' => [
-                    'query' => $modules_array,
-                    'id' => 'id',
-                    'name' => 'name'
-                ]
-            ]
-        ];
-    }
-
     /**
-     * Crea envío DHL
+     * Crea un envío con DHL.
      *
      * @param array $shipment
-     * @return void
+     * @return bool
      */
     public function createShipment($shipment)
     {
         $id_order = $shipment['id_order'];
         $shipment['num_shipment'] = Common::getUUID();
         $service_dhl = new ServiceDhl($id_order);
-        $response = $service_dhl->postShipment($shipment);
 
-        if(!$response) {
-            return false;
-        }
+        // $response = $service_dhl->postShipment($shipment);
 
-        $info_shipment = $this->saveShipment($shipment, $response);
+        // if (!$response) {
+        //     return false;
+        // }
 
-        if($info_shipment['id_shipment']){
-            $labels = $response->pieces;
-            foreach ($labels as $label) {
-                $label_response = $service_dhl->getLabel($label->labelId);
-                $this->saveLabels($info_shipment['id_shipment'], $label_response);
-            }
+        // $info_shipment = $this->saveShipment($shipment, $response);
 
-            return true;
-        } 
+        // if (isset($info_shipment['id_shipment'])) {
+        //     foreach ($response->pieces as $label) {
+        //         $label_response = $service_dhl->getLabel($label->labelId);
+        //         $this->saveLabels($info_shipment['id_shipment'], $label_response);
+        //     }
+        //     return true;
+        // }
 
-        return false;
+        // return false;
     }
 
-    public function saveLabels($id_shipment, $response, $num_package = 1)
+    /**
+     * Guarda las etiquetas proporcionadas por DHL.
+     *
+     * @param int $id_shipment
+     * @param object $response
+     * @return bool
+     */
+    /* public function saveLabels(int $id_shipment, object $response): bool
+     {
+         $rj_carrier_label = new RjcarrierLabel();
+         $rj_carrier_label->id_shipment = $id_shipment;
+         $rj_carrier_label->package_id = $response->labelId;
+         $rj_carrier_label->label_type = $response->labelType;
+         $rj_carrier_label->tracker_code = $response->trackerCode;
+
+         $pdf = base64_decode($response->pdf);
+
+         if (Common::createFileLabel($pdf, $response->labelId)) {
+             $rj_carrier_label->pdf = $response->labelId;
+         }
+
+         return $rj_carrier_label->add();
+     } */
+
+    public function saveLabels($id_shipment, $response, $num_package = 1): bool
     {
         $rj_carrier_label = new RjcarrierLabel();
         $rj_carrier_label->id_shipment = $id_shipment;
         $rj_carrier_label->package_id = $response->labelId;
         $rj_carrier_label->label_type = $response->labelType;
         $rj_carrier_label->tracker_code = $response->trackerCode;
-        
+
         $pdf = base64_decode($response->pdf);
 
-        if(Common::createFileLabel($pdf, $response->labelId)){
+        if (Common::createFileLabel($pdf, $response->labelId)) {
             $rj_carrier_label->pdf = $response->labelId;
         }
-        
-        if (!$rj_carrier_label->add())
-            return false;
-            
-        return true;
+
+        return $rj_carrier_label->add();
     }
 }

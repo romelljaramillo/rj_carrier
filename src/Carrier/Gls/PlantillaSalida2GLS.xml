@@ -1,5 +1,6 @@
 Mejores filtros de spam … Ahora, Drive mueve automáticamente los archivos sospechosos que se han compartido contigo a la carpeta de spam. También puedes seguir marcándolos como spam manualmente.Más información
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿
+<?xml version="1.0" encoding="utf-8"?>
 <Servicios uidcliente="6BAB7A53-3B6D-4D5A-9450-702D2FAC0B11" xmlns="http://www.asmred.com/">
   <Envio codbarras="">
     <Fecha>14/08/2014</Fecha>
@@ -46,5 +47,6 @@ Mejores filtros de spam … Ahora, Drive mueve automáticamente los archivos sos
     </Importes>
     <DevuelveAdicionales>                  <!-- in order to return additional data (optional) -->
       <Etiqueta tipo="JPG"></Etiqueta>     <!-- Shipment label: Format to return, possible values: EPL,ZPL,DPL,JPG,PNG,PDF -->
-    </DevuelveAdicionales>  </Envio>
+    </DevuelveAdicionales>
+  </Envio>
 </Servicios>
