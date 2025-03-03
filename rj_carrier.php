@@ -854,9 +854,19 @@ class Rj_Carrier extends Module
             return false;
         }
 
-        if (!RjcarrierLabel::deleteLabelsByIdShipment($id_shipment)) {
-            $this->_errors[] = $this->l('Labels for the shipment could not be deleted.');
-            return false;
+        $labels = RjcarrierLabel::getLabelsByShipmentId($id_shipment);
+        foreach ($labels as $label) {
+            $label = new RjcarrierLabel($label['id_label']);
+            if (!$label->delete()) {
+                $this->_errors[] = $this->l('Cannot delete label. Check its status.');
+                return false;
+            }
+
+            $label_path = _PS_MODULE_DIR_ . $this->name . '/labels/' . $label->package_id . '.pdf';
+            if (file_exists($label_path) && !unlink($label_path)) {
+                $this->_errors[] = $this->l('Cannot delete label file. Check its status.');
+                return false;
+            }
         }
 
         $this->_success[] = $this->l('Shipment successfully deleted.');
@@ -927,6 +937,7 @@ class Rj_Carrier extends Module
         if(!$id_infopackage){
             return;
         }
+
         $carrier_name = '';
 
         $rjcarrier_infoPackage = new RjcarrierInfoPackage((int)$id_infopackage);
@@ -963,7 +974,10 @@ class Rj_Carrier extends Module
         ];
 
         $class_carrier = $this->getCarrierClass($info_company_carrier["shortname"]);
-        $class_carrier->createShipment($shipment);
+
+        if(!$class_carrier->createShipment($shipment)){
+            $_errors[] = $this->l('The shipment could not be generated.');
+        }
     }
 
     /**
@@ -997,7 +1011,6 @@ class Rj_Carrier extends Module
         if ($type_shipment) {
             $carrier_company = new RjcarrierCompany((int)$type_shipment['id_carrier_company']);
             $info_company_carrier = $carrier_company->getFields();
-            $validate_config = $this->validationConfiguration($carrier_company->shortname);
             $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdCarrierCompany($id_reference_carrier);
         }
 
@@ -1019,7 +1032,7 @@ class Rj_Carrier extends Module
         ];
 
         // Manejar creación de envíos y etiquetado
-        $this->handleShipmentCreationAndLabeling($id_order, $shipment, $validate_config);
+        $this->handleShipmentCreationAndLabeling($id_order, $shipment);
 
         // Preparar notificaciones para la vista
         $shipment['notifications'] = $this->prepareNotifications();
@@ -1031,6 +1044,50 @@ class Rj_Carrier extends Module
         return $this->_html;
     }
 
+    /**
+     * Maneja la creación de envíos y etiquetas.
+     */
+    private function handleShipmentCreationAndLabeling($id_order, &$shipment)
+    {
+        $shortname = $shipment['info_company_carrier']['shortname'] ?? null;
+        if (!$shortname) {
+            $this->_errors[] = $this->l('Carrier shortname is missing.');
+            return;
+        }
+
+        $id_shipment = isset($shipment['info_shipment']['id_shipment']) ? $shipment['info_shipment']['id_shipment'] : null;
+        $carrier_class = $this->getCarrierClass($shortname);
+
+        // Configuración específica del transportista desde la clase obtenida con la fábrica
+        if ($carrier_class) {
+            $shipment['show_create_label'] = $carrier_class->show_create_label ?? false;
+            $shipment['config_carrier_company'] = $carrier_class->getValuesConfigFields();
+        } else {
+            $this->_errors[] = $this->l('Invalid carrier class.');
+            return;
+        }
+
+        if (!$id_shipment && (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend'))) {
+            if ($this->validationConfiguration($shortname)) {
+                if(!$carrier_class->createShipment($shipment)){
+                    $this->_errors[] = $this->l('The shipment could not be generated.');
+                    return;
+                }
+            } else {
+                $this->_errors[] = $this->l('The shipment cannot be generated, the configuration is not valid.');
+                return;
+            }
+        }
+
+        $shipment['info_shipment'] = RjcarrierShipment::getShipmentByIdOrder($id_order);
+        $id_shipment = $shipment['info_shipment']['id_shipment'] ?? null;
+
+        if (!empty($id_shipment) && Tools::isSubmit('submitCreateLabel') && !RjcarrierLabel::getIdsLabelsByIdShipment($id_shipment)) {
+            $carrier_class->createLabel($id_shipment, $id_order);
+        }
+
+        $shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($id_shipment);
+    }
 
     protected function validationConfiguration($company_shorname)
     {
@@ -1097,40 +1154,6 @@ class Rj_Carrier extends Module
     }
 
     /**
-     * Maneja la creación de envíos y etiquetas.
-     */
-    private function handleShipmentCreationAndLabeling($id_order, &$shipment, $validate_config)
-    {
-        $id_shipment = isset($shipment['info_shipment']['id_shipment']) ? $shipment['info_shipment']['id_shipment'] : null;
-        $carrier_class = $this->getCarrierClass($shipment['info_company_carrier']['shortname']);
-
-        // Configuración específica del transportista desde la clase obtenida con la fábrica
-        if ($carrier_class) {
-            $shipment['show_create_label'] = $carrier_class->show_create_label ?? false;
-            $shipment['config_carrier_company'] = $carrier_class->getValuesConfigFields();
-        }
-
-        if (!$id_shipment && (Tools::isSubmit('submitShipment') || Tools::isSubmit('submitSavePackSend'))) {
-            if ($validate_config) {
-                $carrier_class->createShipment($shipment);
-            } else {
-                $this->_errors[] = '<a class="btn btn-primary" target="_blank" href="' . $this->context->link->getAdminLink(
-                    'AdminModules', true, [], ['configure' => $this->name, 'tab_module' => $this->tab, 'module_name' => $this->name]
-                ) . '">' . $this->l('Go to configuration!') . '</a>';
-            }
-        }
-
-        $shipment['info_shipment'] = RjcarrierShipment::getShipmentByIdOrder($id_order);
-        $id_shipment = $shipment['info_shipment']['id_shipment'];
-
-        if ($id_shipment && Tools::isSubmit('submitCreateLabel') && !RjcarrierLabel::getIdsLabelsByIdShipment($id_shipment)) {
-            $carrier_class->createLabel($id_shipment, $id_order);
-        }
-
-        $shipment['labels'] = RjcarrierLabel::getLabelsByIdShipment($id_shipment);
-    }
-
-    /**
      * Obtiene la información de los paquetes
      *
      * @param int $id_order
@@ -1164,9 +1187,10 @@ class Rj_Carrier extends Module
 
         $info_type_shipment = RjcarrierTypeShipment::getTypeShipmentsActiveByIdReferenceCarrier($id_reference_carrier);
         $carrier_company = new RjcarrierCompany((int)$info_type_shipment['id_carrier_company']);
+
         $validate_config = $this->validationConfiguration($carrier_company->shortname);
 
-        if($validate_config) {
+        if(!$validate_config) {
             return false;
         }
 

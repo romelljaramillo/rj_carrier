@@ -32,40 +32,56 @@ use Context;
 use Tools;
 
 class Common {
-    
+
     /**
-     * Devuelve una password encrypt
+     * Encripta y desencripta una cadena
      *
-     * @param string $action 'encrypt' | 'decrypt'
+     * @param string $action
      * @param string $pass
      * @return string
      */
     public static function encrypt($action, $pass)
     {
-        $nP = false;
         $salt = base64_decode(_COOKIE_KEY_);
-        $salt1 = hash('sha256', $salt);
-        $salt2 = substr(hash('sha256', $salt), 0, 16);
-        if ($action == 'encrypt') {
-            $nP = base64_encode(openssl_encrypt($pass, 'AES-256-CBC', $salt1, 0, $salt2));
-        } else if ($action == 'decrypt') {
-            $nP = openssl_decrypt(base64_decode($pass), 'AES-256-CBC', $salt1, 0, $salt2);
+        $salt1 = hash('sha256', $salt, true);
+        $salt2 = substr($salt1, 0, 16);
+
+        if ($action === 'encrypt') {
+            return base64_encode(openssl_encrypt($pass, 'AES-256-CBC', $salt1, 0, $salt2));
+        } elseif ($action === 'decrypt') {
+            return openssl_decrypt(base64_decode($pass), 'AES-256-CBC', $salt1, 0, $salt2);
         }
-        return $nP;
+
+        return false;
     }
 
-    public static function convertAndFormatPrice($price, $currency = false, Context $context = null)
+
+    /**
+     * Convierte y formatea un precio
+     *
+     * @param float $price
+     * @param Currency|null $currency
+     * @param Context|null $context
+     * @return string
+     */
+    public static function convertAndFormatPrice($price, $currency = null, Context $context = null)
     {
-        if (!$context) {
+        if ($context === null) {
             $context = Context::getContext();
         }
-        if (!$currency) {
+        if ($currency === null) {
             $currency = $context->currency;
         }
 
         return $context->getCurrentLocale()->formatPrice(Tools::convertPrice($price, $currency), $currency->iso_code);
     }
 
+    /**
+     * Convierte y formatea un número
+     *
+     * @param float $number
+     * @return string
+     */
     public static function convertAndFormatNumber($number)
     {
         $context = Context::getContext();
@@ -74,30 +90,51 @@ class Common {
         return $locale->formatNumber($number);
     }
 
+    /**
+     * Genera un UUID
+     *
+     * @return string
+     */
     public static function getUUID()
     {
         $uuid = Uuid::uuid4();
         return $uuid->toString(); // i.e. 25769c6c-d34d-4bfe-ba98-e0ee856f3e7a
     }
 
-    public static function mergePdf($array_pdf)
+    /**
+     * Merge multiple PDF files into one
+     *
+     * @param array $array_pdf Array of PDF file paths
+     * @return string Merged PDF content
+     */
+    public static function mergePdf(array $array_pdf)
     {
-        $merger = new Merger;
+        $merger = new Merger();
         $merger->addIterator($array_pdf);
-        $createdPdf = $merger->merge();
-        return $createdPdf;
+        return $merger->merge();
     }
 
+    /**
+     * Crea un archivo PDF
+     *
+     * @param string $pdf
+     * @param string $id_label
+     * @return bool
+     */
     public static function createFileLabel($pdf, $id_label)
     {
-        header('Content-Type: application/pdf');
-        file_put_contents(_PS_MODULE_DIR_.'rj_carrier/labels/'. $id_label .'.pdf', $pdf);
-        return true;
+        $filePath = self::getFileLabel($id_label);
+        return file_put_contents($filePath, $pdf) !== false;
     }
 
+    /**
+     * Obtiene la ruta de un archivo PDF
+     *
+     * @param string $id_label
+     * @return string
+     */
     public static function getFileLabel($id_label)
     {
-        $file = _PS_MODULE_DIR_.'rj_carrier/labels/' . $id_label . '.pdf';
-        return $file;
+        return _PS_MODULE_DIR_.'rj_carrier/labels/' . $id_label . '.pdf';
     }
 }

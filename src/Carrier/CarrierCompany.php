@@ -544,17 +544,23 @@ abstract class CarrierCompany extends Module implements CarrierInterface
      */
     public function createShipment($shipment)
     {
-        $shipment['num_shipment'] = Common::getUUID();
         $info_shipment = $this->saveShipment($shipment);
+
+        if (!$info_shipment) {
+            return false;
+        }
+
         $shipment['info_shipment'] = $info_shipment;
         $packages_qty = $shipment['info_package']['quantity'];
 
-        for($num_package = 1; $num_package <= $packages_qty; $num_package++) {
-            $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
-            $pdf = $rjpdf->render($this->display_pdf);
-
-            if ($pdf) {
-                $this->saveLabels($info_shipment['id_shipment'], $pdf, $num_package);
+        for ($num_package = 1; $num_package <= $packages_qty; $num_package++) {
+            $uuid_label = $this->createLabel($shipment, $num_package);
+            if (!$uuid_label || !$this->saveLabels(
+                $info_shipment['id_shipment'],
+                $info_shipment['num_shipment'],
+                $uuid_label, $num_package
+            )) {
+                return false;
             }
         }
 
@@ -562,48 +568,44 @@ abstract class CarrierCompany extends Module implements CarrierInterface
     }
 
     /**
-     * Procesa el request a la api de carrier para obtener las etiquetas
-     * Se usa para GOI pero se podria sobreescribir para otro transportista
-     * Mirar el funcionamiento en transporte GOI
-     *
-     * @param int $id_shipment
-     * @param int $id_order
-     * @return boolean
+     * Método genérico para crear una etiqueta.
      */
-    public function createLabel($id_shipment, $id_order)
-    {
-        return true;
-    }
-
-    public function saveLabels($id_shipment, $pdf, $num_package = 1)
+    public function createLabel($shipment, $num_package = 1)
     {
         $uuid = Common::getUUID();
+        $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
+        $pdf = $rjpdf->render($this->display_pdf);
+
+        if (Common::createFileLabel($pdf, $uuid)) {
+            return $uuid;
+        }
+
+        return false;
+    }
+
+    public function saveLabels($id_shipment, $num_shipment, $uuid, $num_package = 1)
+    {
         $rj_carrier_label = new RjcarrierLabel();
         $rj_carrier_label->id_shipment = (int) $id_shipment;
         $rj_carrier_label->package_id = $uuid;
         $rj_carrier_label->label_type = $this->label_type;
-        $rj_carrier_label->tracker_code = 'TC' . $uuid . '-' . $num_package;
+        $rj_carrier_label->tracker_code = 'TC-' . $num_shipment . '-' . $num_package;
+        $rj_carrier_label->pdf = '';
 
-        if (Common::createFileLabel($pdf, $uuid)) {
-            $rj_carrier_label->pdf = $uuid;
-        }
-
-        if (!$rj_carrier_label->add())
+        if (!$rj_carrier_label->add()) {
             return false;
+        }
 
         return true;
     }
 
     /**
-     * save data db table rj_carrier_shipment
-     *
-     * @param array $info_shipment
-     * @return obj || boolean
+     * Guarda los datos de un envío.
      */
     public function saveShipment($info_shipment, $response = null)
     {
+        $num_shipment = Common::getUUID();
         $id_order = $info_shipment['id_order'];
-        $num_shipment = $info_shipment['num_shipment'];
         $id_infopackage = $info_shipment['info_package']['id_infopackage'];
         $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
 
@@ -614,53 +616,23 @@ abstract class CarrierCompany extends Module implements CarrierInterface
         $id_shipment = RjcarrierShipment::getIdByIdOrder((int)$id_order);
         $order = new Order((int)$id_order);
 
-        if($id_shipment){
-            $rj_carrier_shipment = new RjcarrierShipment((int)$id_shipment);
-        } else {
-            $rj_carrier_shipment = new RjcarrierShipment();
-        }
+        $carrierShipment = $id_shipment ? new RjcarrierShipment((int)$id_shipment) : new RjcarrierShipment();
 
-        $rj_carrier_shipment->id_order = (int)$id_order;
-        $rj_carrier_shipment->reference_order = $order->reference;
-        $rj_carrier_shipment->num_shipment = $num_shipment;
-        $rj_carrier_shipment->id_infopackage = (int)$id_infopackage;
-        $rj_carrier_shipment->id_carrier_company = (int)$id_carrier_company;
-        $rj_carrier_shipment->product = $info_shipment['carrier_name'];
-        $rj_carrier_shipment->request = json_encode($info_shipment);
-        $rj_carrier_shipment->response = ($response) ? json_encode($response) : null;
+        $carrierShipment->id_order = (int)$id_order;
+        $carrierShipment->reference_order = $order->reference;
+        $carrierShipment->num_shipment = $num_shipment;
+        $carrierShipment->id_infopackage = (int)$id_infopackage;
+        $carrierShipment->id_carrier_company = (int)$id_carrier_company;
+        $carrierShipment->product = $info_shipment['carrier_name'];
+        $carrierShipment->request = json_encode($info_shipment);
+        $carrierShipment->response = $response ? json_encode($response) : null;
 
         if (!$id_shipment) {
-            if (!$rj_carrier_shipment->add())
-                return false;
-        }elseif (!$rj_carrier_shipment->update()){
-            return false;
+            return $carrierShipment->add() ? $carrierShipment->getFields() : false;
         }
 
-        return $rj_carrier_shipment->getFields();
+        return $carrierShipment->update() ? $carrierShipment->getFields() : false;
     }
-
-    /**
-     * Guarda los datos de un envío.
-     */
-    /* protected function saveShipment($info_shipment)
-    {
-        $id_order = $info_shipment['id_order'];
-        $num_shipment = $info_shipment['num_shipment'];
-        $id_infopackage = $info_shipment['info_package']['id_infopackage'];
-        $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
-
-        if (!$id_order) {
-            return false;
-        }
-
-        $rj_carrier_shipment = RjcarrierShipment::getOrCreateShipment($id_order);
-        $rj_carrier_shipment->num_shipment = $num_shipment;
-        $rj_carrier_shipment->id_infopackage = $id_infopackage;
-        $rj_carrier_shipment->id_carrier_company = $id_carrier_company;
-        $rj_carrier_shipment->request = json_encode($info_shipment);
-
-        return $rj_carrier_shipment->save() ? $rj_carrier_shipment->getFields() : false;
-    } */
 
     public static function saveInfoPackage(array $infopackage)
     {

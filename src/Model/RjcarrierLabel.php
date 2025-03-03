@@ -102,6 +102,23 @@ class RjcarrierLabel extends \ObjectModel
         return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
     }
 
+    /**
+     * Get label by id_shipment
+     *
+     * @param int $id_label
+     * @return array
+     */
+    public static function getLabelsByShipmentId($id_shipment)
+    {
+        if (!Validate::isUnsignedInt($id_shipment)) {
+            return [];
+        }
+
+        $sql = 'SELECT * FROM `' . self::TABLE_NAME . '` WHERE `id_shipment` = ' . (int)$id_shipment;
+
+        return Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+    }
+
     public static function getIdsLabelsByIdShipment($id_shipment)
     {
         if (!Validate::isUnsignedInt($id_shipment)) {
@@ -124,8 +141,7 @@ class RjcarrierLabel extends \ObjectModel
 
         $sql = 'SELECT l.`print`
                 FROM `' . self::TABLE_NAME . '` l
-                WHERE l.`id_shipment` = ' . (int)$id_shipment . '
-                LIMIT 1';
+                WHERE l.`id_shipment` = ' . (int)$id_shipment;
 
         return (bool)Db::getInstance(_PS_USE_SQL_SLAVE_)->getValue($sql);
     }
@@ -150,4 +166,5 @@ class RjcarrierLabel extends \ObjectModel
             'id_shipment = ' . (int)$id_shipment
         );
     }
+
 }

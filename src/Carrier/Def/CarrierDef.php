@@ -25,6 +25,7 @@ use Roanja\Module\RjCarrier\Carrier\CarrierCompany;
 use Roanja\Module\RjCarrier\Carrier\CarrierInterface;
 
 use Db;
+use Ramsey\Uuid\Uuid;
 use Shop;
 
 /**
@@ -122,8 +123,6 @@ class CarrierDef extends CarrierCompany implements CarrierInterface
      */
     public function createShipment($shipment)
     {
-        // Puedes extender esta lógica para agregar más detalles si es necesario.
-        $this->logInfo('Default carrier: creating shipment.');
         return parent::createShipment($shipment);
     }
 
@@ -134,20 +133,8 @@ class CarrierDef extends CarrierCompany implements CarrierInterface
      * @param int $id_order
      * @return bool
      */
-    public function createLabel($id_shipment, $id_order)
+    public function createLabel($shipment, $num_package = 1)
     {
-
-        $this->logInfo('Default carrier: labels are not implemented.');
-        return false; // No se implementa la generación de etiquetas en este transportista predeterminado.
-    }
-
-    /**
-     * Log de información para el transportista por defecto.
-     *
-     * @param string $message
-     */
-    private function logInfo(string $message): void
-    {
-        error_log('[CarrierDef] ' . $message);
+        return parent::createLabel($shipment, $num_package);
     }
 }
