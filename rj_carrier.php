@@ -845,7 +845,7 @@ class Rj_Carrier extends Module
      * @param int $id_shipment
      * @return void
      */
-    private function deleteShipment($id_shipment)
+    public function deleteShipment($id_shipment)
     {
         $rjcarrierShipment = new RjcarrierShipment((int)$id_shipment);
 

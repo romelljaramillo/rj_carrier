@@ -148,7 +148,6 @@ class CarrierDhl extends CarrierCompany implements CarrierInterface
         $shipment['num_shipment'] = Common::getUUID();
         $configuration = $this->getValuesConfigFields();
         $serviceDhl = new ServiceDhl($configuration);
-
         $response = $serviceDhl->postShipment($shipment);
 
         if (!$response) {
@@ -157,7 +156,7 @@ class CarrierDhl extends CarrierCompany implements CarrierInterface
 
         $infoShipment = $this->saveShipment($shipment, $response);
 
-        if(!$infoShipment) {
+        if (!$infoShipment) {
             return false;
         }
 
@@ -169,7 +168,8 @@ class CarrierDhl extends CarrierCompany implements CarrierInterface
             }
 
             $pdf = base64_decode($labelResponse->pdf);
-            if (!Common::createFileLabel($pdf, $piece->labelId)) {
+
+            if (!$this->createFile($pdf, $labelResponse->labelId)) {
                 return false;
             }
 
@@ -180,11 +180,10 @@ class CarrierDhl extends CarrierCompany implements CarrierInterface
                 'tracker_code' => $labelResponse->trackerCode,
             ];
 
-            if (!$this->saveLabels($labelData)) {
+            if (!$this->saveLabel($labelData)) {
                 return false;
             }
         }
-
         return true;
     }
 }

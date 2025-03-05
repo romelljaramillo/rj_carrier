@@ -25,7 +25,7 @@ class AdminRjShipmentsController extends ModuleAdminController
 
         $this->bootstrap = true;
         $this->lang = false;
-        
+
         $this->table = 'rj_carrier_shipment';
         $this->className = 'Roanja\Module\RjCarrier\Model\RjcarrierShipment';
         $this->actions = ['printlabel', 'delete'];
@@ -53,7 +53,7 @@ class AdminRjShipmentsController extends ModuleAdminController
         $this->getFieldsList();
 
     }
-    
+
     /**
      * @param string $token
      * @param int $id
@@ -87,6 +87,12 @@ class AdminRjShipmentsController extends ModuleAdminController
         }
 
         return parent::postProcess();
+    }
+
+    public function processDelete()
+    {
+        $this->module->deleteShipment(Tools::getValue('id_shipment'));
+        return parent::processDelete();
     }
 
     protected function querySql(){
