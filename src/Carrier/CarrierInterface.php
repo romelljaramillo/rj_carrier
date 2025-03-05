@@ -5,5 +5,5 @@ namespace Roanja\Module\RjCarrier\Carrier;
 interface CarrierInterface
 {
     public function setFieldsConfig();
-    public function createShipment($shipment);
+    // public function createShipment($shipment);
 }

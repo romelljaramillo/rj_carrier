@@ -115,26 +115,4 @@ class CarrierDef extends CarrierCompany implements CarrierInterface
         return $modules_array;
     }
 
-    /**
-     * Crea un envío genérico.
-     *
-     * @param array $shipment
-     * @return array|bool
-     */
-    public function createShipment($shipment)
-    {
-        return parent::createShipment($shipment);
-    }
-
-    /**
-     * Crea etiquetas de manera predeterminada (no hace nada en este caso).
-     *
-     * @param int $id_shipment
-     * @param int $id_order
-     * @return bool
-     */
-    public function createLabel($shipment, $num_package = 1)
-    {
-        return parent::createLabel($shipment, $num_package);
-    }
 }

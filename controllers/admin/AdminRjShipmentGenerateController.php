@@ -258,29 +258,6 @@ class AdminRjShipmentGenerateController extends ModuleAdminController
         Tools::redirectAdmin($this->context->link->getAdminLink('AdminRjShipmentGenerate', true, [], ['conf' => 3]));
     }
 
-    /* public function querySql()
-    {
-        $this->_select = "a.id_order,
-                        c.name,
-                        a.quantity,
-                        a.cash_ondelivery,
-                        a.weight,
-                        a.date_add";
-
-        $this->_join = " INNER JOIN `"._DB_PREFIX_."carrier` c
-                        ON a.id_reference_carrier = c.id_reference
-                        AND c.deleted = 0";
-
-        $this->_join .= " LEFT JOIN `"._DB_PREFIX_."rj_carrier_shipment` b
-                        ON a.id_infopackage = b.id_infopackage";
-
-        $this->_where = " AND b.id_infopackage IS NULL OR b.`delete` <> 0";
-
-        $this->_group = " GROUP BY a.id_infopackage, a.id_order";
-        $this->_defaultOrderBy = 'a.id_order';
-        $this->_defaultOrderWay = 'DESC';
-    } */
-
     protected function querySql()
     {
         $this->_select = "a.id_order,

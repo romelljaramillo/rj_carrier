@@ -540,26 +540,31 @@ abstract class CarrierCompany extends Module implements CarrierInterface
     }
 
     /**
-     * Método genérico para crear un envío.
+     * Crea un envío.
+     *
+     * @param array $shipment
+     * @return bool
      */
     public function createShipment($shipment)
     {
-        $info_shipment = $this->saveShipment($shipment);
+        $infoShipment = $this->saveShipment($shipment);
 
-        if (!$info_shipment) {
+        if (!$infoShipment) {
             return false;
         }
 
-        $shipment['info_shipment'] = $info_shipment;
+        $shipment['info_shipment'] = $infoShipment;
         $packages_qty = $shipment['info_package']['quantity'];
 
         for ($num_package = 1; $num_package <= $packages_qty; $num_package++) {
-            $uuid_label = $this->createLabel($shipment, $num_package);
-            if (!$uuid_label || !$this->saveLabels(
-                $info_shipment['id_shipment'],
-                $info_shipment['num_shipment'],
-                $uuid_label, $num_package
-            )) {
+            $packageId = $this->createLabel($shipment, $num_package);
+
+            if (!$packageId || !$this->saveLabels([
+                'id_shipment' => $infoShipment['id_shipment'],
+                'package_id' => $packageId,
+                'label_type' => $this->label_type,
+                'tracker_code' => 'TC-' . $infoShipment['num_shipment'] . '-' . $num_package,
+            ])) {
                 return false;
             }
         }
@@ -568,43 +573,16 @@ abstract class CarrierCompany extends Module implements CarrierInterface
     }
 
     /**
-     * Método genérico para crear una etiqueta.
-     */
-    public function createLabel($shipment, $num_package = 1)
-    {
-        $uuid = Common::getUUID();
-        $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
-        $pdf = $rjpdf->render($this->display_pdf);
-
-        if (Common::createFileLabel($pdf, $uuid)) {
-            return $uuid;
-        }
-
-        return false;
-    }
-
-    public function saveLabels($id_shipment, $num_shipment, $uuid, $num_package = 1)
-    {
-        $rj_carrier_label = new RjcarrierLabel();
-        $rj_carrier_label->id_shipment = (int) $id_shipment;
-        $rj_carrier_label->package_id = $uuid;
-        $rj_carrier_label->label_type = $this->label_type;
-        $rj_carrier_label->tracker_code = 'TC-' . $num_shipment . '-' . $num_package;
-        $rj_carrier_label->pdf = '';
-
-        if (!$rj_carrier_label->add()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Guarda los datos de un envío.
+     *
+     * @param array $info_shipment
+     * @param object $response
+     * @return array|bool
      */
     public function saveShipment($info_shipment, $response = null)
     {
-        $num_shipment = Common::getUUID();
+        $info_shipment['num_shipment'] = isset($info_shipment['num_shipment']) && !empty($info_shipment['num_shipment']) ? $info_shipment['num_shipment'] : Common::getUUID();
+
         $id_order = $info_shipment['id_order'];
         $id_infopackage = $info_shipment['info_package']['id_infopackage'];
         $id_carrier_company = $info_shipment['info_company_carrier']['id_carrier_company'];
@@ -620,7 +598,7 @@ abstract class CarrierCompany extends Module implements CarrierInterface
 
         $carrierShipment->id_order = (int)$id_order;
         $carrierShipment->reference_order = $order->reference;
-        $carrierShipment->num_shipment = $num_shipment;
+        $carrierShipment->num_shipment = $info_shipment['num_shipment'];
         $carrierShipment->id_infopackage = (int)$id_infopackage;
         $carrierShipment->id_carrier_company = (int)$id_carrier_company;
         $carrierShipment->product = $info_shipment['carrier_name'];
@@ -632,6 +610,51 @@ abstract class CarrierCompany extends Module implements CarrierInterface
         }
 
         return $carrierShipment->update() ? $carrierShipment->getFields() : false;
+    }
+
+    /**
+     * Crea una etiqueta.
+     *
+     * @param array $shipment
+     * @param integer $num_package
+     * @return string|bool
+     */
+    public function createLabel($shipment, $num_package = 1)
+    {
+        $packageId = Common::getUUID();
+        $rjpdf = new RjPDF($this->shortname, $shipment, RjPDF::TEMPLATE_LABEL, $num_package);
+        $pdf = $rjpdf->render($this->display_pdf);
+
+        if (Common::createFileLabel($pdf, $packageId)) {
+            return $packageId;
+        }
+
+        return false;
+    }
+
+    /**
+     * Guarda los datos de una etiqueta.
+     *
+     * @param array $infoLabel
+     * @return bool
+     */
+    public function saveLabels($infoLabel)
+    {
+        if (!$infoLabel['id_shipment'] || !$infoLabel['packageId'] || !$infoLabel['label_type'] || !$infoLabel['tracker_code']) {
+            return false;
+        }
+
+        $rj_carrier_label = new RjcarrierLabel();
+        $rj_carrier_label->id_shipment = (int)$infoLabel['id_shipment'];
+        $rj_carrier_label->package_id = $infoLabel['packageId'];
+        $rj_carrier_label->label_type = $infoLabel['label_type'];
+        $rj_carrier_label->tracker_code = $infoLabel['num_shipment'];
+
+        if (!$rj_carrier_label->add()) {
+            return false;
+        }
+
+        return true;
     }
 
     public static function saveInfoPackage(array $infopackage)

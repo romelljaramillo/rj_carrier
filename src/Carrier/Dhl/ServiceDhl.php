@@ -21,136 +21,184 @@
 namespace Roanja\Module\RjCarrier\Carrier\Dhl;
 
 use Roanja\Module\RjCarrier\Carrier\Dhl\CarrierDhl;
-use Roanja\Module\RjCarrier\Model\RjcarrierTypeShipment;
 
-use Configuration;
-use Shop;
 use Country;
 
 Class ServiceDhl {
-    protected $user_id;
-    protected $account_id;
-    protected $key;
-    protected $base_url;
-    protected $endpoint_login;
-    protected $endpoint_refresh_token;
-    protected $endpoint_shipments;
-    protected $endpoint_labels;
+    private string $userId;
+    private string $accountId;
+    private string $apiKey;
+    private string $baseUrl;
+    private string $endpointLogin;
+    private string $endpointRefreshToken;
+    private string $endpointShipments;
+    private string $endpointLabels;
 
-    protected $id_order;
-    protected $token = null;
-    protected $access_token = 'access_token_dhl';
-    protected $refresh_token = 'refresh_token_dhl';
-    protected $configuration;
+    private ?string $accessToken = null;
+    private ?string $refreshToken = null;
 
-    public function __construct($id_order)
+    private $requiredKeys = [
+        'DHL_ENV',
+        'DHL_ACCOUNID',
+        'DHL_USERID_DEV',
+        'DHL_KEY_DEV',
+        'DHL_URL_DEV',
+        'DHL_ENDPOINT_LOGIN',
+        'DHL_ENDPOINT_REFRESH_TOKEN',
+        'DHL_ENDPOINT_SHIPMENT',
+        'DHL_ENDPOINT_LABEL',
+    ];
+
+    public function __construct(array $config)
     {
-        $this->id_order = $id_order;
-
-        $this->getConfiguration();
-        $this->postLogin();
+        $this->validateConfiguration($config);
+        $this->configure($config);
+        $this->authenticate();
     }
 
-    private function getConfiguration()
+    private function configure(array $config): void
     {
-        $dev = '';
-        $carrier = new CarrierDhl();
-        $this->configuration = $carrier->getValuesConfigFields();
+        $devSuffix = !$config['DHL_ENV'] ? '_DEV' : '';
 
-        if(!$this->configuration['RJ_DHL_ENV']){
-            $dev = '_DEV';
-        }
-
-        $this->account_id = $this->configuration['RJ_DHL_ACCOUNID'];
-        $this->user_id = $this->configuration['RJ_DHL_USERID'. $dev];
-        $this->key = $this->configuration['RJ_DHL_KEY'. $dev];
-        $this->base_url = $this->configuration['RJ_DHL_URL'. $dev];
-        $this->endpoint_login = $this->configuration['RJ_DHL_ENDPOINT_LOGIN'];
-        $this->endpoint_refresh_token = $this->configuration['RJ_DHL_ENDPOINT_REFRESH_TOKEN'];
-        $this->endpoint_shipments = $this->configuration['RJ_DHL_ENDPOINT_SHIPMENT'];
-        $this->endpoint_labels = $this->configuration['RJ_DHL_ENDPOINT_LABEL'];
+        $this->accountId          = $config['DHL_ACCOUNID'];
+        $this->userId            = $config['DHL_USERID' . $devSuffix];
+        $this->apiKey            = $config['DHL_KEY' . $devSuffix];
+        $this->baseUrl           = $config['DHL_URL' . $devSuffix];
+        $this->endpointLogin     = $config['DHL_ENDPOINT_LOGIN'];
+        $this->endpointRefreshToken = $config['DHL_ENDPOINT_REFRESH_TOKEN'];
+        $this->endpointShipments = $config['DHL_ENDPOINT_SHIPMENT'];
+        $this->endpointLabels    = $config['DHL_ENDPOINT_LABEL'];
     }
 
-    public function postLogin()
+    private function validateConfiguration(array $config): void
     {
-        if(!$this->getCookieToken()){
-            $body = $this->bodyLogin();
-            $resp = $this->request('POST', $this->endpoint_login , $body);
-            if($resp){
-                $this->setCookies($resp);
+        $missing = [];
+
+        foreach ($this->requiredKeys as $key) {
+            if (!isset($config[$key]) || empty($config[$key])) {
+                $missing[] = $key;
             }
         }
+
+        if (!empty($missing)) {
+            $keysStr = implode(', ', $missing);
+            throw new \InvalidArgumentException(
+                'Faltan datos de configuración obligatorios: ' . $keysStr
+            );
+        }
     }
 
-    private function bodyLogin()
-    {
-        $body = array(
-            "userId"=> $this->user_id,
-            "key"=> $this->key
-        );
 
-        return json_encode($body);
+    /**
+     * Maneja la autenticación inicial o el refresco del token si ya existe.
+     */
+    private function authenticate(): void
+    {
+        if ($this->loadTokensFromCookies()) {
+            return;
+        }
+
+        $this->login();
     }
 
-    private function setCookies($cookies)
+    private function login(): void
     {
-        setcookie(
-            $this->access_token,
-            $cookies->accessToken,
-            $cookies->accessTokenExpiration
-        );
+        $body = [
+            'userId' => $this->userId,
+            'key'    => $this->apiKey
+        ];
 
-        setcookie(
-            $this->refresh_token,
-            $cookies->refreshToken,
-            $cookies->refreshTokenExpiration
-        );
-
-        $this->token = $cookies->accessToken;
+        $response = $this->request('POST', $this->endpointLogin, json_encode($body));
+        if ($response) {
+            $this->setCookies($response);
+        }
     }
 
-    public function getCookieToken()
+    /**
+     * Intenta cargar el token desde las cookies.
+     *
+     * @return bool True si se encontró un token válido.
+     */
+    private function loadTokensFromCookies(): bool
     {
-        if(isset($_COOKIE[$this->access_token])) {
-            $this->token = $_COOKIE[$this->access_token];
+        // Lógica para ver si existe el token en cookie
+        if (isset($_COOKIE['access_token_dhl'])) {
+            $this->accessToken = $_COOKIE['access_token_dhl'];
             return true;
-        } elseif (isset($_COOKIE[$this->refresh_token])) {
-            $refresh_token = json_encode(array($this->refresh_token => $_COOKIE[$this->refresh_token]));
-            $resp = $this->request('POST', $this->endpoint_refresh_token, $refresh_token);
-
-            if($resp){
-                return $this->setCookies($resp);
-            }
-
-            return false;
+        } elseif (isset($_COOKIE['refresh_token_dhl'])) {
+            // Intentar refrescar el token
+            $this->refreshToken = $_COOKIE['refresh_token_dhl'];
+            return $this->refreshAccessToken();
         }
         return false;
     }
 
-    /**
-     * Crea envío y retorna respuesta de la API
+     /**
+     * Intenta refrescar el access token usando el refresh token.
      *
-     * @param array $body
-     * @return obj
+     * @return bool True si se refrescó el token correctamente.
+     */
+    private function refreshAccessToken(): bool
+    {
+        if (!$this->refreshToken) {
+            return false;
+        }
+
+        $body = json_encode(['refresh_token_dhl' => $this->refreshToken]);
+        $response = $this->request('POST', $this->endpointRefreshToken, $body);
+
+        if (!$response) {
+            return false;
+        }
+
+        $this->setCookies($response);
+        return true;
+    }
+
+    /**
+     * Establece las cookies con los tokens obtenidos.
+     *
+     * @param object $data
+     */
+    private function setCookies($data): void
+    {
+        if (isset($data->accessToken)) {
+            $this->accessToken = $data->accessToken;
+            setcookie(
+                'access_token_dhl',
+                $data->accessToken,
+                $data->accessTokenExpiration ?? 0
+            );
+        }
+
+        if (isset($data->refreshToken)) {
+            $this->refreshToken = $data->refreshToken;
+            setcookie(
+                'refresh_token_dhl',
+                $data->refreshToken,
+                $data->refreshTokenExpiration ?? 0
+            );
+        }
+    }
+
+    /**
+     * Envía una solicitud para crear un envío.
+     *
+     * @param array $shipment
+     * @return object|null Respuesta de la API o null en caso de error.
      */
     public function postShipment($shipment)
     {
         $body = $this->getBodyShipment($shipment);
-        return $this->request('POST', $this->endpoint_shipments, $body);
+        return $this->request('POST', $this->endpointShipments, $body);
     }
 
     /**
-     * Devuelve la respuesta de las etiquetas del servicio DHL
+     * Prepara el cuerpo del envío.
      *
-     * @param string $labelId
-     * @return obj
+     * @param array $info_shipment
+     * @return string JSON codificado.
      */
-    public function getLabel($id_label)
-    {
-        $endpoint_label = $this->endpoint_labels . '/' . $id_label;
-        return $this->request('GET', $endpoint_label);
-    }
-
     public function getBodyShipment($info_shipment)
     {
         $num_shipment = $info_shipment['num_shipment'];
@@ -165,7 +213,7 @@ Class ServiceDhl {
 
         $options[] = [
             "key"   => "REFERENCE",
-            "input" => (string)$this->id_order
+            "input" => (string)$info_shipment['id_order'],
         ];
 
         if($info_package['cash_ondelivery'] > 0){
@@ -177,10 +225,10 @@ Class ServiceDhl {
 
         $data = [
             "shipmentId" => $num_shipment,
-            "orderReference" => (string)$this->id_order,
+            "orderReference" => (string)$info_shipment['id_order'],
             "receiver" => $receiver,
             "shipper" => $shipper,
-            "accountId" =>  $this->account_id,
+            "accountId" =>  $this->accountId,
             "options" => $options,
             "returnLabel" => false,
             "pieces" => $pieces
@@ -189,6 +237,12 @@ Class ServiceDhl {
         return json_encode($data);
     }
 
+    /**
+     * Prepara los datos de las piezas del envío.
+     *
+     * @param array $info
+     * @return array
+     */
     public function getPieces($info)
     {
         $weight = (float)$info['weight'] / (float)$info['quantity'];
@@ -207,10 +261,10 @@ Class ServiceDhl {
     }
 
     /**
-     * Crea el formato de quien recibe
+     * Prepara el formato del receptor.
      *
-     * @param [array] $infoReceiver nota: hacer una interface
-     * @return void
+     * @param array $info
+     * @return array
      */
     public function getReceiver($info)
     {
@@ -224,38 +278,38 @@ Class ServiceDhl {
 
         return [
             "name" => [
-                "firstName"=> $info['firstname'],
-                "lastName"=> $info['lastname'],
-                "companyName"=> $info['company'],
-                "additionalName"=> $info['firstname']
+                "firstName"      => $info['firstname'],
+                "lastName"       => $info['lastname'],
+                "companyName"    => $info['company'],
+                "additionalName" => $info['firstname']
             ],
             "address"=> [
-                "countryCode"=> $info['countrycode'],
-                "postalCode"=> $info['postcode'],
-                "city"=> $info['city'],
-                "street"=> $info['address1'],
-                "additionalAddressLine"=> $info['address2'],
-                "number"=> '',
-                "isBusiness"=> ($info['company'])?true:false,
-                "addition"=> $info['other']
+                "countryCode"           => $info['countrycode'],
+                "postalCode"            => $info['postcode'],
+                "city"                  => $info['city'],
+                "street"                => $info['address1'],
+                "additionalAddressLine" => $info['address2'],
+                "number"                => '',
+                "isBusiness"            => ($info['company'])?true:false,
+                "addition"              => $info['other']
             ],
-            "email"=> $info['email'],
-            "phoneNumber"=> $phone,
-            "vatNumber"=> $info['vat_number'],
-            "eoriNumber"=> $info['dni'],
-            "reference"=> $info['referenceClient']
+            "email"       => $info['email'],
+            "phoneNumber" => $phone,
+            "vatNumber"   => $info['vat_number'],
+            "eoriNumber"  => $info['dni'],
+            "reference"   => $info['referenceClient']
         ];
     }
 
     /**
-     * Crea el formato de quien envia
+     * Prepara el formato del remitente.
      *
-     * @param [array] $infoReceiver nota: hacer una interface
-     * @return void
+     * @param array $info
+     * @return array
      */
     public function getShipper($info)
     {
-        $countrycode = Country::getIsoById($info['id_country']);
+        $countryCode = Country::getIsoById($info['id_country']);
         return [
             "name" => [
                 "firstName"=> $info['firstname'],
@@ -264,13 +318,13 @@ Class ServiceDhl {
                 "additionalName"=> $info['additionalname']
             ],
             "address"=> [
-                "countryCode"=> $countrycode,
+                "countryCode"=> $countryCode,
                 "postalCode"=> $info['postcode'],
                 "city"=> $info['state'],
                 "street"=> $info['street'] . ' ' . $info['city'],
                 "additionalAddressLine"=> $info['additionaladdress'],
                 "number"=> $info['number'],
-                "isBusiness"=> ($info['company'])?true:false,
+                "isBusiness"=> !empty($info['company']),
                 "addition"=> ''
             ],
             "email"=> $info['email'],
@@ -280,67 +334,69 @@ Class ServiceDhl {
         ];
     }
 
-    private function headerRequest()
+    /**
+     * Obtiene la etiqueta del envío.
+     *
+     * @param string $id_label
+     * @return object|null
+     */
+    public function getLabel($id_label)
     {
-        if(!$this->token){
-            if(isset($_COOKIE[$this->access_token]))
-                $this->token = $_COOKIE[$this->access_token];
-        }
-
-        return array(
-            'Content-Type: application/json',
-            'Accept:application/json',
-            'Authorization: Bearer ' . $this->token
-        );
+        $endpointLabel = $this->endpointLabels . '/' . $id_label;
+        return $this->request('GET', $endpointLabel);
     }
 
     /**
-     * request DHL
+     * Realiza la solicitud a la API de DHL.
      *
-     * @param string $method
-     * @param string $endpoin
-     * @param json $body
-     * @return array
+     * @param string      $method   Método HTTP (GET, POST, etc.)
+     * @param string      $endpoint Endpoint de la API.
+     * @param string|null $body     Cuerpo de la solicitud en JSON.
+     *
+     * @return object|null Respuesta decodificada o null en caso de error.
+     * @throws \RuntimeException Si no se puede obtener un access token.
      */
-    private function request($method, $endpoin, $body = null)
+    private function request($method, string $endpoint, $body = null)
     {
-        $header = $this->headerRequest();
-        $url = $this->base_url . $endpoin;
+        if (!$this->accessToken) {
+            if (!$this->refreshAccessToken()) {
+                throw new \RuntimeException('No access token available and refresh failed');
+            }
+        }
+
+        $headers = [
+            'Content-Type: application/json',
+            'Accept: application/json',
+            'Authorization: Bearer ' . $this->accessToken
+        ];
+
+        $url = rtrim($this->baseUrl, '/') . '/' . ltrim($endpoint, '/');
 
         $ch = curl_init();
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_URL            => $url,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_CUSTOMREQUEST  => $method
+        ]);
 
-        curl_setopt_array(
-            $ch,
-            array(
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYHOST  => false,
-                CURLOPT_SSL_VERIFYPEER  => false,
-                CURLOPT_URL            => $url,
-                CURLOPT_POSTFIELDS     => $body,
-                CURLOPT_ENCODING       => "",
-                CURLOPT_MAXREDIRS      => 10,
-                CURLOPT_HTTPHEADER     => $header,
-                CURLOPT_TIMEOUT        => 30,
-                CURLOPT_CUSTOMREQUEST  => $method,
-            )
-        );
-
-        $response = utf8_encode(curl_exec($ch));
-
-        if ($response === false) {
-            return false;
+        if ($body) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
         }
 
-        $curl_info = curl_getinfo($ch);
-        $curl_error = curl_errno($ch);
-
+        $rawResponse = curl_exec($ch);
+        $error       = curl_errno($ch);
+        $info        = curl_getinfo($ch);
         curl_close($ch);
 
-        if (!in_array($curl_info['http_code'], array(200, 201)) || $curl_error) {
-            CarrierDhl::saveLog($url, $this->id_order, $body, $response);
-            return false;
+        if ($error || !in_array($info['http_code'], [200, 201])) {
+            CarrierDhl::saveLog($url, 0, $body, $rawResponse);
+            return null;
         }
 
-        return json_decode($response);
+        return json_decode($rawResponse);
     }
 }

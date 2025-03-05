@@ -145,67 +145,46 @@ class CarrierDhl extends CarrierCompany implements CarrierInterface
      */
     public function createShipment($shipment)
     {
-        $id_order = $shipment['id_order'];
         $shipment['num_shipment'] = Common::getUUID();
-        $service_dhl = new ServiceDhl($id_order);
+        $configuration = $this->getValuesConfigFields();
+        $serviceDhl = new ServiceDhl($configuration);
 
-        // $response = $service_dhl->postShipment($shipment);
+        $response = $serviceDhl->postShipment($shipment);
 
-        // if (!$response) {
-        //     return false;
-        // }
-
-        // $info_shipment = $this->saveShipment($shipment, $response);
-
-        // if (isset($info_shipment['id_shipment'])) {
-        //     foreach ($response->pieces as $label) {
-        //         $label_response = $service_dhl->getLabel($label->labelId);
-        //         $this->saveLabels($info_shipment['id_shipment'], $label_response);
-        //     }
-        //     return true;
-        // }
-
-        // return false;
-    }
-
-    /**
-     * Guarda las etiquetas proporcionadas por DHL.
-     *
-     * @param int $id_shipment
-     * @param object $response
-     * @return bool
-     */
-    /* public function saveLabels(int $id_shipment, object $response): bool
-     {
-         $rj_carrier_label = new RjcarrierLabel();
-         $rj_carrier_label->id_shipment = $id_shipment;
-         $rj_carrier_label->package_id = $response->labelId;
-         $rj_carrier_label->label_type = $response->labelType;
-         $rj_carrier_label->tracker_code = $response->trackerCode;
-
-         $pdf = base64_decode($response->pdf);
-
-         if (Common::createFileLabel($pdf, $response->labelId)) {
-             $rj_carrier_label->pdf = $response->labelId;
-         }
-
-         return $rj_carrier_label->add();
-     } */
-
-    public function saveLabels($id_shipment, $response, $num_package = 1): bool
-    {
-        $rj_carrier_label = new RjcarrierLabel();
-        $rj_carrier_label->id_shipment = $id_shipment;
-        $rj_carrier_label->package_id = $response->labelId;
-        $rj_carrier_label->label_type = $response->labelType;
-        $rj_carrier_label->tracker_code = $response->trackerCode;
-
-        $pdf = base64_decode($response->pdf);
-
-        if (Common::createFileLabel($pdf, $response->labelId)) {
-            $rj_carrier_label->pdf = $response->labelId;
+        if (!$response) {
+            return false;
         }
 
-        return $rj_carrier_label->add();
+        $infoShipment = $this->saveShipment($shipment, $response);
+
+        if(!$infoShipment) {
+            return false;
+        }
+
+        foreach ($response->pieces as $piece) {
+            $labelResponse = $serviceDhl->getLabel($piece->labelId);
+
+            if (!$labelResponse) {
+                return false;
+            }
+
+            $pdf = base64_decode($labelResponse->pdf);
+            if (!Common::createFileLabel($pdf, $piece->labelId)) {
+                return false;
+            }
+
+            $labelData = [
+                'id_shipment'  => $infoShipment['id_shipment'],
+                'package_id'   => $labelResponse->labelId,
+                'label_type'   => $labelResponse->labelType,
+                'tracker_code' => $labelResponse->trackerCode,
+            ];
+
+            if (!$this->saveLabels($labelData)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
